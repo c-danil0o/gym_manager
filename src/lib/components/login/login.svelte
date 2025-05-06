@@ -11,6 +11,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import { toast } from 'svelte-sonner';
+	import { SpinLine } from 'svelte-loading-spinners';
 
 	let loading = false;
 
@@ -56,6 +57,11 @@
 	}
 </script>
 
+{#if loading}
+	<div class="absolute left-1/2 top-1/2">
+		<SpinLine size="60" color="#99c1f1" unit="px" duration="2s" />
+	</div>
+{/if}
 <div class="w-full lg:grid lg:min-h-[600px] h-screen lg:grid-cols-2 xl:min-h-[800px]">
 	<div class="flex items-center justify-center py-12 w-full h-full">
 		<Card.Root class="w-full max-w-sm">
