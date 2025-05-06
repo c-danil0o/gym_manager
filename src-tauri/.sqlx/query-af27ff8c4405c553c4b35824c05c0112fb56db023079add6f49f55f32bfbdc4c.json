@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM memberships",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "af27ff8c4405c553c4b35824c05c0112fb56db023079add6f49f55f32bfbdc4c"
+}

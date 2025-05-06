@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO backup_status (last_check_time, last_successful_upload_time, status, error_message)\n        VALUES (?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "51fe2469881d2a8cf0c2e156ba6293895aeceb436415cbf4c0698e478ca4bc97"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT MAX(max_updated) as \"max_updated_at: Option<NaiveDateTime>\"\n        FROM (\n            SELECT MAX(updated_at) as max_updated FROM members WHERE is_deleted = FALSE\n            UNION ALL\n            SELECT MAX(updated_at) as max_updated FROM memberships WHERE is_deleted = FALSE\n            UNION ALL\n            SELECT MAX(updated_at) as max_updated FROM membership_types WHERE is_deleted = FALSE\n        )\n        WHERE max_updated IS NOT NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "max_updated_at: Option<NaiveDateTime>",
+        "ordinal": 0,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "beb690e0dba45008ae95cc79770a027ec1518c5c159279d3f5c6d5f9f11cbd1c"
+}

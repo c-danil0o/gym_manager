@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM users WHERE username = ?1 LIMIT 1) as \"exists: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "exists: bool",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "05320e6104ce1cb0810266824398594bb53bc1b2a79db91f9388ae3ab1cfc8f2"
+}
