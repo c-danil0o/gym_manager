@@ -149,6 +149,7 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
             id
         )));
     }
+    // will need to delete all memberships with this type
 
     tracing::info!("Successfully soft-deleted membership type with id: {}", id);
     Ok(())

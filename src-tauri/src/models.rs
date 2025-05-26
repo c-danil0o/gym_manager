@@ -86,12 +86,30 @@ pub struct BackupPayload {
     // pub users: Vec<User>,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct NewMemberPayload {
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)] // FromRow for query_as
+pub struct MemberWithMembership {
+    pub id: i64, // Member ID
     pub card_id: Option<String>,
+    pub short_card_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
-    pub date_of_birth: Option<NaiveDate>,
+    pub member_created_at: NaiveDateTime,
+
+    pub membership_id: Option<i64>,
+    pub membership_type_name: Option<String>,
+    pub membership_start_date: Option<NaiveDateTime>,
+    pub membership_end_date: Option<NaiveDateTime>,
+    pub membership_status: Option<String>,
+    pub remaining_visits: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PaginatedMembersResponse {
+    pub members: Vec<MemberWithMembership>,
+    pub total_items: i64,
+    pub total_pages: i64,
+    pub current_page: i32,
+    pub page_size: i32,
 }

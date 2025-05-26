@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted\n                    FROM members\n                    WHERE id = ?\n                    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "card_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "short_card_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "first_name",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_name",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "phone",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_of_birth",
+        "ordinal": 7,
+        "type_info": "Date"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 8,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 9,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "is_deleted",
+        "ordinal": 10,
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e1ddf0986a7e8e787f08f86bac4ccabaae8494cea91ac21fc3ca69b77c4ef6ea"
+}

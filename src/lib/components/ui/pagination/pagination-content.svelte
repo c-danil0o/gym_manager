@@ -2,12 +2,12 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { cn } from "$lib/utils.js";
 
-	type $$Props = HTMLAttributes<HTMLDivElement>;
+	type $$Props = HTMLAttributes<HTMLUListElement>;
 
 	let className: $$Props["class"] = undefined;
 	export { className as class };
 </script>
 
-<div class={cn("flex items-center p-6 pt-0", className)} {...$$restProps}>
+<ul class={cn("flex flex-row items-center gap-1", className)} {...$$restProps}>
 	<slot />
-</div>
+</ul>

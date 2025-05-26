@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO members (card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at)\n            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "1c9654dc0947612837c8ecce96029acf4e854e9bac7f0072f6016beed3a27c54"
+}
