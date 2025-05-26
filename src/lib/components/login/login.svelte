@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import gym from '../../../images/gym_picture.jpg';
 
 	import { auth } from '$lib/stores/auth'; // Use $lib alias for SvelteKit
-	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import { toast } from 'svelte-sonner';
@@ -15,7 +13,7 @@
 
 	let loading = false;
 
-	export const formSchema = z.object({
+	const formSchema = z.object({
 		username: z
 			.string()
 			.min(2, { message: 'Username must be between 2 and 50 characters' })

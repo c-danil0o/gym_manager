@@ -3,17 +3,13 @@
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Package from 'lucide-svelte/icons/package';
 	import Scanner from 'lucide-svelte/icons/scan-barcode';
-	import NewMember from 'lucide-svelte/icons/user-round-plus';
 	import Menu from 'lucide-svelte/icons/menu';
 	import Dumbbell from 'lucide-svelte/icons/dumbbell';
-	import Search from 'lucide-svelte/icons/search';
 	import Log from 'lucide-svelte/icons/book-down';
 
-	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 
 	import '../app.css';
@@ -27,6 +23,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { SpinLine } from 'svelte-loading-spinners';
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
+	import { User } from 'lucide-svelte';
 
 	$: if (browser && !$auth.isAuthenticated && page.url.pathname !== '/') {
 		goto('/');
@@ -51,7 +48,7 @@
 	<div>Loading App...</div>
 {:else if $auth.isAuthenticated}
 	<div class="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-		<div class="bg-muted/40 hidden border-r md:block">
+		<div class="bg-muted/20 hidden border-r md:block">
 			<div class="flex h-full max-h-screen flex-col gap-2">
 				<div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
 					<a href="/" class="flex items-center gap-2 font-semibold">
@@ -60,31 +57,38 @@
 					</a>
 				</div>
 				<div class="flex-1">
-					<nav class="grid items-start px-2 text-sm font-medium lg:px-4">
+					<nav class="grid items-start px-2 space-y-3 text-sm font-medium lg:px-4">
 						<a
-							href="##"
-							class="text-muted-foreground hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							href="/"
+							class="{page.url.pathname === '/' ? 'bg-muted text-primary' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<Scanner class="h-4 w-4" />
 							Scanner
 						</a>
 						<a
-							href="##"
-							class="bg-muted text-primary hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							href="/member-ships"
+							class="{page.url.pathname.startsWith('/member-ships') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<Package class="h-4 w-4" />
 							Memberships
 						</a>
 						<a
-							href="##"
-							class="text-muted-foreground hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							href="/members"
+							class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+						>
+							<User class="h-4 w-4" />
+							Members
+						</a>
+						<a
+							href="/entry-log"
+							class="{page.url.pathname.startsWith('/entry-log') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<Log class="h-4 w-4" />
 							Entry Log
 						</a>
 						<a
-							href="##"
-							class="text-muted-foreground hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							href="/analytics"
+							class="{page.url.pathname.startsWith('/analytics') ? 'bg-muted text-primary' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<ChartLine class="h-4 w-4" />
 							Analytics
@@ -120,29 +124,36 @@
 								<span class="sr-only">Aka Gym</span>
 							</a>
 							<a
-								href="##"
-								class="text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								href="/"
+								class="{page.url.pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground'} text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Scanner class="h-5 w-5" />
 								Scanner
 							</a>
 							<a
-								href="##"
-								class="bg-muted text-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								href="/member-ships"
+								class="{page.url.pathname.startsWith('/member-ships') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Package class="h-5 w-5" />
 								Memberships
 							</a>
 							<a
-								href="##"
-								class="text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								href="/members"
+								class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+							>
+								<User class="h-5 w-5" />
+								Members
+							</a>
+							<a
+								href="/entry-log"
+								class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Log class="h-5 w-5" />
 								Entry Log
 							</a>
 							<a
-								href="##"
-								class="text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								href="/analytics"
+								class="{page.url.pathname.startsWith('/analytics') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<ChartLine class="h-5 w-5" />
 								Analytics
