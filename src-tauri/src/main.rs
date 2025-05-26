@@ -91,24 +91,9 @@ fn main() {
     final_builder
         .invoke_handler(tauri::generate_handler![
             commands::admin_commands::login_admin,
-            // commands::member_commands::add_member,
-            // commands::member_commands::get_member_by_card_id,
-            // commands::member_commands::get_all_members,
-            // ... add other member commands
-            // Membership Commands
-            // commands::membership_commands::add_membership_type,
-            // ... etc.
-            // Entry Log Commands
-            // commands::entry_log_commands::log_entry,
-            // commands::entry_log_commands::get_recent_entries,
-            // Backup Commands
-            // commands::backup_commands::set_backup_url,
-            // commands::backup_commands::get_backup_settings,
-            // commands::backup_commands::trigger_backup_check,
-            // commands::backup_commands::trigger_restore,
-            // commands::backup_commands::get_last_backup_status,
-            // Admin Commands (Optional)
-            // commands::admin_commands::login,
+            commands::membership_commands::add_membership_type,
+            commands::membership_commands::get_all_membership_types,
+            commands::membership_commands::delete_membership_type,
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example

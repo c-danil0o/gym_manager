@@ -10,11 +10,9 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
-	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 
 	let submitting = false;
@@ -23,6 +21,7 @@
 		name: '',
 		duration_days: null,
 		visit_limit: null,
+		enter_by: null,
 		price: 0,
 		description: ''
 	};
@@ -42,16 +41,26 @@
 
 	async function handleSubmit() {
 		submitting = true;
-		const result = await form.validateForm();
-		if (result.valid) {
-		} else {
-			toast.error('Data is not valid!');
+		try {
+			const result = await form.validateForm();
+			if (result.valid) {
+				await invoke('add_membership_type', { payload: result.data });
+				toast.success('New membership type added successfully!');
+				handleCancel();
+			} else {
+				toast.error('Data is not valid!');
+			}
+		} catch (error) {
+			toast.error('Failed to add new membership type!');
+			submitting = false;
+			return;
+		} finally {
+			submitting = false;
 		}
-		submitting = false;
 	}
 	async function handleCancel() {
-    await goto('/member-ships');
-  }
+		await goto('/member-ships');
+	}
 </script>
 
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
@@ -85,6 +94,19 @@
 					</Form.Control>
 				</Form.Field>
 
+				<Form.Field {form} name="enter_by">
+					<Form.Control let:attrs>
+						<Form.Label class="font-semibold">Enter by (hour of the day)</Form.Label>
+						<Input
+							{...attrs}
+							type="number"
+							placeholder="optional"
+							bind:value={$formData.enter_by}
+						/>
+						<Form.FieldErrors />
+					</Form.Control>
+				</Form.Field>
+
 				<Form.Field {form} name="price">
 					<Form.Control let:attrs>
 						<Form.Label class="font-semibold">Price</Form.Label>
@@ -102,8 +124,8 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" on:click={handleCancel}  class="w-full">Cancel</Form.Button>
-					<Form.Button  type="submit" class="w-full">Confirm</Form.Button>
+					<Form.Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Form.Button>
+					<Form.Button type="submit" class="w-full">Confirm</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

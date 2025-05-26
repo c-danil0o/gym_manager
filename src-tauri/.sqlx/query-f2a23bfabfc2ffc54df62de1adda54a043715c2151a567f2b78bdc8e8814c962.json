@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted\n        FROM membership_types\n        WHERE is_deleted = FALSE\n        ORDER BY name ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "duration_days",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "visit_limit",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "price",
+        "ordinal": 4,
+        "type_info": "Float"
+      },
+      {
+        "name": "enter_by",
+        "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "description",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 8,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "is_deleted",
+        "ordinal": 9,
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f2a23bfabfc2ffc54df62de1adda54a043715c2151a567f2b78bdc8e8814c962"
+}
