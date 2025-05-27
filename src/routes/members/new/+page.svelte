@@ -3,17 +3,21 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { z } from 'zod';
 	import { newMemberSchema, type NewMemberTypeSchema } from '$lib/schemas/new_member_schema';
+	import type { Member } from '$lib/models/member';
 	import { invoke } from '@tauri-apps/api/core';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import DateField from '$lib/components/date-field/date-field.svelte';
 
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 
 	let submitting = false;
+	let newMember: null | Member = null;
+	let showMembershipPrompt = false;
 
 	const initialValues: z.infer<NewMemberTypeSchema> = {
 		card_id: '',
@@ -35,11 +39,9 @@
 		}
 	});
 
-
 	const { form: formData, enhance } = form;
 
-		let placeholder: DateValue = today(getLocalTimeZone());
-
+	let placeholder: DateValue = today(getLocalTimeZone());
 
 	function handleDateChange(newValue: DateValue | undefined) {
 		$formData.date_of_birth = newValue ? newValue.toString() : null;
@@ -47,16 +49,19 @@
 
 	async function handleSubmit() {
 		submitting = true;
+		newMember = null;
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
-				await invoke('add_member', { payload: result.data });
+				const member: Member = await invoke('add_member', { payload: result.data });
+				newMember = member;
+				showMembershipPrompt = true;
 				toast.success('New member added successfully!');
-				handleCancel();
 			} else {
 				toast.error('Data is not valid!');
 			}
 		} catch (error) {
+			showMembershipPrompt = false;
 			toast.error('Failed to add new member!');
 			submitting = false;
 			return;
@@ -66,6 +71,13 @@
 	}
 	async function handleCancel() {
 		await goto('/members');
+	}
+
+	async function assignMembership() {
+		if (newMember) {
+			await goto(`/members/${newMember.id}/edit`);
+		}
+		showMembershipPrompt = false;
 	}
 </script>
 
@@ -113,12 +125,7 @@
 				<Form.Field {form} name="date_of_birth">
 					<Form.Control let:attrs>
 						<Form.Label class="font-semibold">Date of birth</Form.Label>
-						<DateField
-									{...attrs}
-									{placeholder}
-									onValueChange={handleDateChange}
-									locale="bs-BA"
-								/>
+						<DateField {...attrs} {placeholder} onValueChange={handleDateChange} locale="bs-BA" />
 						<Form.FieldErrors />
 						<Form.Description class="text-xs">Optional</Form.Description>
 					</Form.Control>
@@ -140,4 +147,23 @@
 			</form>
 		</Card.Content>
 	</Card.Root>
+	{#if newMember}
+		<AlertDialog.Root bind:open={showMembershipPrompt}>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>Assign Membership?</AlertDialog.Title>
+					<AlertDialog.Description>
+						Member <b
+							>{newMember.first_name}
+							{newMember.last_name}</b
+						> has been created. Would you like to assign a membership to this member now?
+					</AlertDialog.Description>
+				</AlertDialog.Header>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel on:click={handleCancel}>No, Later</AlertDialog.Cancel>
+					<AlertDialog.Action on:click={assignMembership}>Yes, Add Membership</AlertDialog.Action>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
+	{/if}
 </div>

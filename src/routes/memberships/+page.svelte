@@ -39,7 +39,7 @@
 	});
 
 	function handleAddNew() {
-		goto('/member-ships/new');
+		goto('/memberships/new');
 	}
 
 	async function handleDelete(typeId: number, typeName: string) {
@@ -54,7 +54,7 @@
 	}
 
 	function handleEdit(typeId: number) {
-		goto(`/member-ships/${typeId}`);
+		goto(`/memberships/${typeId}`);
 	}
 </script>
 
@@ -92,7 +92,6 @@
 		</Card.Root>
 	{:else}
 		<Card.Root>
-			<Card.Content>
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
@@ -150,7 +149,6 @@
 						{/each}
 					</Table.Body>
 				</Table.Root>
-			</Card.Content>
 		</Card.Root>
 	{/if}
 </div>

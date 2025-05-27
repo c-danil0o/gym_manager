@@ -60,35 +60,45 @@
 					<nav class="grid items-start px-2 space-y-3 text-sm font-medium lg:px-4">
 						<a
 							href="/"
-							class="{page.url.pathname === '/' ? 'bg-muted text-primary' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							class="{page.url.pathname === '/'
+								? 'bg-muted text-primary'
+								: 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<Scanner class="h-4 w-4" />
 							Scanner
 						</a>
 						<a
-							href="/member-ships"
-							class="{page.url.pathname.startsWith('/member-ships') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
-						>
-							<Package class="h-4 w-4" />
-							Memberships
-						</a>
-						<a
 							href="/members"
-							class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							class="{page.url.pathname === '/members' || page.url.pathname.startsWith('/members/')
+								? 'bg-muted text-foreground'
+								: 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<User class="h-4 w-4" />
 							Members
 						</a>
 						<a
+							href="/memberships"
+							class="{page.url.pathname.startsWith('/memberships')
+								? 'bg-muted text-foreground'
+								: 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+						>
+							<Package class="h-4 w-4" />
+							Memberships
+						</a>
+						<a
 							href="/entry-log"
-							class="{page.url.pathname.startsWith('/entry-log') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							class="{page.url.pathname.startsWith('/entry-log')
+								? 'bg-muted text-foreground'
+								: 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<Log class="h-4 w-4" />
 							Entry Log
 						</a>
 						<a
 							href="/analytics"
-							class="{page.url.pathname.startsWith('/analytics') ? 'bg-muted text-primary' : 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							class="{page.url.pathname.startsWith('/analytics')
+								? 'bg-muted text-primary'
+								: 'text-muted-foreground'} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
 						>
 							<ChartLine class="h-4 w-4" />
 							Analytics
@@ -125,35 +135,46 @@
 							</a>
 							<a
 								href="/"
-								class="{page.url.pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground'} text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								class="{page.url.pathname === '/'
+									? 'bg-muted text-foreground'
+									: 'text-muted-foreground'} text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Scanner class="h-5 w-5" />
 								Scanner
 							</a>
 							<a
-								href="/member-ships"
-								class="{page.url.pathname.startsWith('/member-ships') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
-							>
-								<Package class="h-5 w-5" />
-								Memberships
-							</a>
-							<a
 								href="/members"
-								class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								class="{page.url.pathname.startsWith('/members/') ||
+								page.url.pathname === '/members'
+									? 'bg-muted text-foreground'
+									: 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<User class="h-5 w-5" />
 								Members
 							</a>
 							<a
+								href="/memberships"
+								class="{page.url.pathname.startsWith('/memberships')
+									? 'bg-muted text-foreground'
+									: 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+							>
+								<Package class="h-5 w-5" />
+								Memberships
+							</a>
+							<a
 								href="/entry-log"
-								class="{page.url.pathname.startsWith('/members') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								class="{page.url.pathname.startsWith('/members')
+									? 'bg-muted text-foreground'
+									: 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Log class="h-5 w-5" />
 								Entry Log
 							</a>
 							<a
 								href="/analytics"
-								class="{page.url.pathname.startsWith('/analytics') ? 'bg-muted text-foreground' : 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								class="{page.url.pathname.startsWith('/analytics')
+									? 'bg-muted text-foreground'
+									: 'text-muted-foreground'} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<ChartLine class="h-5 w-5" />
 								Analytics

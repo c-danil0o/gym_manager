@@ -59,7 +59,7 @@
 		}
 	}
 	async function handleCancel() {
-		await goto('/member-ships');
+		await goto('/memberships');
 	}
 </script>
 

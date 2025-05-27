@@ -1,6 +1,6 @@
 use crate::{
     error::{AppError, Result as AppResult},
-    models::{Member, MemberWithMembership, Membership, MembershipType, PaginatedMembersResponse},
+    models::{Member, MemberInfo, MemberWithMembership, Membership, MembershipType, PaginatedMembersResponse},
     state::AppState,
     utils,
 };
@@ -29,6 +29,11 @@ pub struct GetMembersPaginatedPayload {
     page: Option<i32>,            // 1-indexed page number
     page_size: Option<i32>,       // Number of items per page
     search_query: Option<String>, // Optional search query
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GetMemberByIdPayload {
+  id: i64, // Member ID to fetch
 }
 
 const DEFAULT_PAGE: i32 = 1;
@@ -122,13 +127,42 @@ pub async fn add_member(
 
 const MEMBER_DATA_SELECT_SQL: &str = r#"
 SELECT
-    m.id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.phone, m.created_at as member_created_at,
+    m.id, m.card_id, m.first_name, m.last_name, m.email, m.phone, m.created_at as member_created_at,
     ms.id as membership_id,
     mt.name as membership_type_name,
+    ms.status as membership_status
+FROM
+    members m
+LEFT JOIN (
+    SELECT
+        ms_inner.*,
+        ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY
+            CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,
+            ms_inner.start_date DESC
+        ) as rn
+    FROM memberships ms_inner
+    WHERE ms_inner.is_deleted = FALSE
+) ms ON m.id = ms.member_id AND ms.rn = 1
+LEFT JOIN
+    membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
+WHERE
+    m.is_deleted = FALSE
+"#;
+
+const MEMBER_WITH_MEMBERSHIP_SELECT_SQL: &str = r#"
+SELECT
+    m.id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,
+    ms.id as membership_id,
     ms.start_date as membership_start_date,
     ms.end_date as membership_end_date,
+    ms.remaining_visits as membership_remaining_visits,
+    ms.purchase_date as membership_purchase_date,
     ms.status as membership_status,
-    ms.remaining_visits
+    mt.name as membership_type_name,
+    mt.duration_days as membership_type_duration_days,
+    mt.visit_limit as membership_type_visit_limit,
+    mt.enter_by as membership_type_enter_by,
+    mt.price as membership_type_price
 FROM
     members m
 LEFT JOIN (
@@ -161,7 +195,7 @@ pub async fn get_members_with_memberships_paginated(
         .map(|s| s.trim().to_lowercase())
         .filter(|s| !s.is_empty());
 
-    let members_data: Vec<MemberWithMembership>;
+    let members_data: Vec<MemberInfo>;
     let total_items: i64;
 
     if let Some(term) = search_term {
@@ -169,7 +203,7 @@ pub async fn get_members_with_memberships_paginated(
 
         // --- Fetch Data with Search ---
         let query_string = format!(
-            "{} AND (LOWER(m.first_name) LIKE $1 OR LOWER(m.last_name) LIKE $1 OR LOWER(m.first_name || ' ' || m.last_name) LIKE $1) ORDER BY m.last_name ASC, m.first_name ASC LIMIT $2 OFFSET $3",
+            "{} AND (LOWER(m.first_name) LIKE $1 OR LOWER(m.last_name) LIKE $1 OR LOWER(m.first_name || ' ' || m.last_name) LIKE $1) OR m.card_id LIKE $1 ORDER BY m.last_name ASC, m.first_name ASC LIMIT $2 OFFSET $3",
             MEMBER_DATA_SELECT_SQL
         );
         members_data = sqlx::query_as(&query_string) // Using query_as with runtime string
@@ -221,6 +255,30 @@ pub async fn get_members_with_memberships_paginated(
         page_size,
     })
 }
+
+
+// #[tauri::command]
+// pub async fn get_member_by_id_with_membership(
+//     payload: GetMemberByIdPayload,
+//     state: State<'_, AppState>,
+// ) -> AppResult<MemberWithMembership> {
+
+//   let new_type = sqlx::query_as!(
+//           Member,
+//           r#"
+//           SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted
+//           FROM members
+//           WHERE id = ?
+//           "#,
+//           last_insert_id
+//       )
+//       .fetch_one(&state.db_pool)
+//       .await?;
+
+//   MemberWithMembership {
+//   }
+
+// }
 // #[tauri::command]
 // pub async fn get_all_membership_types(
 //     state: State<'_, AppState>,

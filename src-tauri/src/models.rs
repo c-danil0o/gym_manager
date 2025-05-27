@@ -2,12 +2,12 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct User {
     pub id: i64,
     pub username: String,
-    #[serde(skip_serializing)] pub password_hash: String,
+    #[serde(skip_serializing)]
+    pub password_hash: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -86,7 +86,24 @@ pub struct BackupPayload {
     // pub users: Vec<User>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone)] // FromRow for query_as
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct MemberInfo {
+    pub id: i64, // Member ID
+    pub card_id: Option<String>,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub member_created_at: NaiveDateTime,
+
+    pub membership_type_name: Option<String>,
+
+    pub membership_id: Option<i64>,
+    pub membership_status: Option<String>,
+}
+
+
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct MemberWithMembership {
     pub id: i64, // Member ID
     pub card_id: Option<String>,
@@ -95,19 +112,26 @@ pub struct MemberWithMembership {
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
+    pub date_of_birth: Option<NaiveDate>,
     pub member_created_at: NaiveDateTime,
 
-    pub membership_id: Option<i64>,
     pub membership_type_name: Option<String>,
+    pub membership_type_duration_days: Option<i64>,
+    pub membership_type_visit_limit: Option<i64>,
+    pub membership_type_enter_by: Option<i64>,
+    pub membership_type_price: f64,
+
+    pub membership_id: Option<i64>,
     pub membership_start_date: Option<NaiveDateTime>,
     pub membership_end_date: Option<NaiveDateTime>,
     pub membership_status: Option<String>,
-    pub remaining_visits: Option<i64>,
+    pub membership_remaining_visits: Option<i64>,
+    pub membership_purchase_date: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PaginatedMembersResponse {
-    pub members: Vec<MemberWithMembership>,
+    pub members: Vec<MemberInfo>,
     pub total_items: i64,
     pub total_pages: i64,
     pub current_page: i32,
