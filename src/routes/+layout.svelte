@@ -16,7 +16,8 @@
 	import { auth } from '$lib/stores/auth';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { navigating, page } from '$app/state'; // To show loading during navigation
+	import { page } from '$app/state'; // To show loading during navigation
+	import { navigating } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Login from '$lib/components/login/login.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
@@ -25,11 +26,14 @@
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
 	import { User } from 'lucide-svelte';
 
-	$: if (browser && !$auth.isAuthenticated && page.url.pathname !== '/') {
-		goto('/');
-	}
+	let { children } = $props();
+	$effect(() => {
+		if (browser && !$auth.isAuthenticated && page.url.pathname !== '/') {
+			goto('/');
+		}
+	});
 
-	let mounted = false;
+	let mounted = $state(false);
 	onMount(() => {
 		mounted = true;
 	});
@@ -40,10 +44,12 @@
 	}
 </script>
 
-{#if navigating.complete}
-	<SpinLine size="60" color="#99c1f1" unit="px" duration="2s" />
+{#if $navigating}
+	<!-- Assuming you want a loading spinner while navigating -->
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-background/50">
+		<SpinLine size="60" color="hsl(var(--primary))" unit="px" duration="1.2s" />
+	</div>
 {/if}
-
 {#if !mounted}
 	<div>Loading App...</div>
 {:else if $auth.isAuthenticated}
@@ -56,7 +62,7 @@
 						<span class="">Aka Gym</span>
 					</a>
 				</div>
-				<div class="flex-1">
+				<div class="flex-1 overflow-y-auto">
 					<nav class="grid items-start px-2 space-y-3 text-sm font-medium lg:px-4">
 						<a
 							href="/"
@@ -105,7 +111,7 @@
 						</a>
 					</nav>
 				</div>
-				<div class="mt-auto p-4">
+				<div class="mt-auto p-4 shrink-0">
 					<Card.Root>
 						<Card.Header class="p-2 pt-0 md:p-4">
 							<Card.Title>Add new member</Card.Title>
@@ -118,7 +124,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="flex flex-col">
+		<div class="flex flex-col h-screen overflow-hidden">
 			<header class="bg-muted/40 flex h-14 items-center gap-4 border-b px-4 lg:h-[60px] lg:px-6">
 				<Sheet.Root>
 					<Sheet.Trigger asChild let:builder>
@@ -187,7 +193,13 @@
 									<Card.Description>Create new member and assign him a membership</Card.Description>
 								</Card.Header>
 								<Card.Content>
-									<Button size="sm" class="w-full">Add</Button>
+									<Button
+										size="sm"
+										class="w-full"
+										on:click={() => {
+											goto('/members/new');
+										}}>Add</Button
+									>
 								</Card.Content>
 							</Card.Root>
 						</div>
@@ -212,8 +224,8 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</header>
-			<main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-				<slot />
+			<main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-y-auto">
+				{@render children?.()}
 			</main>
 		</div>
 	</div>

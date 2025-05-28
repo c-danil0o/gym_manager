@@ -83,7 +83,7 @@
 	}
 
 	function handleEditMember(memberId: number) {
-		goto(`/members/${memberId}/edit`);
+		goto(`/members/${memberId}`);
 	}
 
 	// Placeholder for delete if you implement it
