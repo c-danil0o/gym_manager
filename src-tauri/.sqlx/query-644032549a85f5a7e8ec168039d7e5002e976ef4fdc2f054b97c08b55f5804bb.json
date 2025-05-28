@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO memberships (member_id, membership_type_id, start_date, end_date, remaining_visits, status, purchase_date, updated_at, created_at, is_deleted)\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "644032549a85f5a7e8ec168039d7e5002e976ef4fdc2f054b97c08b55f5804bb"
+}

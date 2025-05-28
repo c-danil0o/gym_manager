@@ -39,6 +39,8 @@ export function getSubtleStatusClasses(status: string): string {
 			return cn('border-l-8 !border-l-yellow-500 border-input bg-background');
 		case 'suspended':
 			return cn('border-l-4 !border-l-orange-500 border-input bg-background');
+		case 'inactive':
+			return cn('border-l-4 !border-l-blue-500 border-input bg-background');
 		default:
 			return cn('border-input bg-background');
 	}

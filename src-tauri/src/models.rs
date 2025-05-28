@@ -46,8 +46,8 @@ pub struct Membership {
     pub id: i64,
     pub member_id: i64,
     pub membership_type_id: i64,
-    pub start_date: NaiveDateTime,
-    pub end_date: Option<NaiveDateTime>,
+    pub start_date: NaiveDate,
+    pub end_date: Option<NaiveDate>,
     pub remaining_visits: Option<i64>,
     pub status: String,
     pub purchase_date: NaiveDateTime,
@@ -123,18 +123,9 @@ pub struct MemberWithMembership {
     pub membership_type_price: Option<f64>,
 
     pub membership_id: Option<i64>,
-    pub membership_start_date: Option<NaiveDateTime>,
-    pub membership_end_date: Option<NaiveDateTime>,
+    pub membership_start_date: Option<NaiveDate>,
+    pub membership_end_date: Option<NaiveDate>,
     pub membership_status: Option<String>,
     pub membership_remaining_visits: Option<i64>,
     pub membership_purchase_date: Option<NaiveDateTime>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PaginatedMembersResponse {
-    pub members: Vec<MemberInfo>,
-    pub total_items: i64,
-    pub total_pages: i64,
-    pub current_page: i32,
-    pub page_size: i32,
 }

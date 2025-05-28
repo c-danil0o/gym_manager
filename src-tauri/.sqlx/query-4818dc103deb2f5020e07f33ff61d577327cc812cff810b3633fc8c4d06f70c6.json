@@ -56,12 +56,12 @@
       {
         "name": "membership_start_date",
         "ordinal": 10,
-        "type_info": "Datetime"
+        "type_info": "Date"
       },
       {
         "name": "membership_end_date",
         "ordinal": 11,
-        "type_info": "Datetime"
+        "type_info": "Date"
       },
       {
         "name": "membership_remaining_visits",

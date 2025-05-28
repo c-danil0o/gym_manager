@@ -76,9 +76,9 @@
 				$formData.date_of_birth = result.date_of_birth ?? null;
 				$formData.membership_id = result.membership_id;
 				$formData.membership_type_id = result.membership_type_id;
-				$formData.start_date = result.membership_start_date ?? null;
-				$formData.end_date = result.membership_end_date ?? null;
-				$formData.remaining_visits = result.membership_remaining_visits;
+				$formData.membership_start_date = result.membership_start_date ?? null;
+				$formData.membership_end_date = result.membership_end_date ?? null;
+				$formData.membership_remaining_visits = result.membership_remaining_visits;
 
 				if (result.membership_type_id) {
 					await tick();
@@ -86,7 +86,7 @@
 					selectedMembershipType =
 						membershipTypes.find((t) => t.id === result.membership_type_id) || null;
 				} else {
-					data.membership_status = 'Pending';
+					data.membership_status = 'Inactive';
 				}
 			}
 		} catch (e: any) {
@@ -108,9 +108,9 @@
 		date_of_birth: null,
 		membership_id: null,
 		membership_type_id: null,
-		start_date: null,
-		end_date: null,
-		remaining_visits: 0
+		membership_start_date: null,
+		membership_end_date: null,
+		membership_remaining_visits: 0
 	};
 
 	const form = superForm(initialValues, {
@@ -135,10 +135,13 @@
 					payload: result.data
 				});
 				toast.success('Data saved successfully!');
+				fetchMemberWithMembership();
 			} else {
 				toast.error('Data is not valid!');
 			}
 		} catch (error) {
+			console.log(error);
+
 			toast.error('Failed to save data!');
 			return;
 		} finally {
@@ -160,7 +163,7 @@
 	let purchase_date = $state<DateValue | undefined>();
 
 	$effect(() => {
-		start_date = $formData.start_date ? parseDate($formData.start_date) : undefined;
+		start_date = $formData.membership_start_date ? parseDate($formData.membership_start_date) : undefined;
 	});
 
 	$effect(() => {
@@ -174,7 +177,7 @@
 	});
 
 	$effect(() => {
-		end_date = $formData.end_date ? parseDate($formData.end_date) : undefined;
+		end_date = $formData.membership_end_date ? parseDate($formData.membership_end_date) : undefined;
 	});
 
 	function handleDobChange(newValue: DateValue | undefined) {
@@ -182,16 +185,16 @@
 	}
 
 	function onChangeStartDate(newValue: DateValue | undefined) {
-		$formData.start_date = newValue ? newValue.toString() : null;
+		$formData.membership_start_date = newValue ? newValue.toString() : null;
 		const durationDays = selectedMembershipType?.duration_days;
 		if (newValue && durationDays) {
 			const endDate = newValue.add({ days: durationDays });
-			$formData.end_date = endDate.toString();
+			$formData.membership_end_date = endDate.toString();
 		}
 	}
 
 	function onChangeEndDate(newValue: DateValue | undefined) {
-		$formData.end_date = newValue ? newValue.toString() : null;
+		$formData.membership_end_date = newValue ? newValue.toString() : null;
 	}
 
 	function onMembershipTypeChange(id: number) {
@@ -200,19 +203,19 @@
 		selectedMembershipType = membershipTypes.find((t) => t.id === id) || null;
 		if (!selectedMembershipType) return;
 
-		let start = $formData.start_date;
+		let start = $formData.membership_start_date;
 		if (!start) {
 			start = today(getLocalTimeZone()).toString();
-			$formData.start_date = start;
+			$formData.membership_start_date = start;
 		}
 
 		if (selectedMembershipType.duration_days) {
 			const startDateObj = parseDate(start);
 			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
-			$formData.end_date = newEnd;
+			$formData.membership_end_date = newEnd;
 		}
 		if (selectedMembershipType.visit_limit)
-			$formData.remaining_visits = selectedMembershipType.visit_limit;
+			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
 	}
 
 	const todayVal = today(getLocalTimeZone());
@@ -366,7 +369,7 @@
 						<Separator />
 
 						<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
-							<Form.Field {form} name="start_date" class="w-1/2">
+							<Form.Field {form} name="membership_start_date" class="w-1/2">
 								<Form.Control let:attrs>
 									<Form.Label class="font-semibold">Start Date</Form.Label>
 									<Popover.Root>
@@ -428,7 +431,7 @@
 								/>
 							</div>
 
-							<Form.Field {form} name="remaining_visits" class="w-1/4">
+							<Form.Field {form} name="membership_remaining_visits" class="w-1/4">
 								<Form.Control let:attrs>
 									<Form.Label class="font-semibold">Remaining Visits</Form.Label>
 									<Input
@@ -436,7 +439,7 @@
 										type="number"
 										min={0}
 										max={selectedMembershipType?.duration_days}
-										bind:value={$formData.remaining_visits}
+										bind:value={$formData.membership_remaining_visits}
 									/>
 									<Form.FieldErrors />
 								</Form.Control>

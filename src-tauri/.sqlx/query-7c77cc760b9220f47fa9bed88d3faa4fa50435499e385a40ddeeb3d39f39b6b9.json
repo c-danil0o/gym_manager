@@ -21,12 +21,12 @@
       {
         "name": "start_date",
         "ordinal": 3,
-        "type_info": "Datetime"
+        "type_info": "Date"
       },
       {
         "name": "end_date",
         "ordinal": 4,
-        "type_info": "Datetime"
+        "type_info": "Date"
       },
       {
         "name": "remaining_visits",

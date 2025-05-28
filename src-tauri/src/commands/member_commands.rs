@@ -1,13 +1,10 @@
 use crate::{
     error::{AppError, Result as AppResult},
-    models::{
-        Member, MemberInfo, MemberWithMembership, Membership, MembershipType,
-        PaginatedMembersResponse,
-    },
+    models::{Member, MemberInfo, MemberWithMembership, MembershipType},
     state::AppState,
     utils,
 };
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -37,6 +34,33 @@ pub struct GetMembersPaginatedPayload {
 #[derive(Deserialize, Debug)]
 pub struct GetMemberByIdPayload {
     id: i64, // Member ID to fetch
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MemberWithMembershipUpdate {
+    pub id: i64, // Member ID
+    pub card_id: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub date_of_birth: Option<NaiveDate>,
+
+    pub membership_type_id: Option<i64>,
+
+    pub membership_id: Option<i64>,
+    pub membership_start_date: Option<NaiveDate>,
+    pub membership_end_date: Option<NaiveDate>,
+    pub membership_remaining_visits: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PaginatedMembersResponse {
+    pub members: Vec<MemberInfo>,
+    pub total_items: i64,
+    pub total_pages: i64,
+    pub current_page: i32,
+    pub page_size: i32,
 }
 
 const DEFAULT_PAGE: i32 = 1;
@@ -134,38 +158,6 @@ SELECT
     ms.id as membership_id,
     mt.name as membership_type_name,
     ms.status as membership_status
-FROM
-    members m
-LEFT JOIN (
-    SELECT
-        ms_inner.*,
-        ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY
-            CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,
-            ms_inner.start_date DESC
-        ) as rn
-    FROM memberships ms_inner
-    WHERE ms_inner.is_deleted = FALSE
-) ms ON m.id = ms.member_id AND ms.rn = 1
-LEFT JOIN
-    membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
-WHERE
-    m.is_deleted = FALSE
-"#;
-
-const MEMBER_WITH_MEMBERSHIP_SELECT_SQL: &str = r#"
-SELECT
-    m.id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,
-    ms.id as membership_id,
-    ms.start_date as membership_start_date,
-    ms.end_date as membership_end_date,
-    ms.remaining_visits as membership_remaining_visits,
-    ms.purchase_date as membership_purchase_date,
-    ms.status as membership_status,
-    mt.name as membership_type_name,
-    mt.duration_days as membership_type_duration_days,
-    mt.visit_limit as membership_type_visit_limit,
-    mt.enter_by as membership_type_enter_by,
-    mt.price as membership_type_price
 FROM
     members m
 LEFT JOIN (
@@ -327,6 +319,227 @@ pub async fn get_member_by_id_with_membership(
     }
 }
 
+async fn determine_membership_status(
+    start_date: &Option<NaiveDate>,
+    end_date: &Option<NaiveDate>,
+    remaining_visits: Option<i64>,
+) -> AppResult<String> {
+    let now_date = Utc::now().date_naive();
+    if remaining_visits.is_some() && remaining_visits.unwrap_or(0) <= 0 {
+        return Ok("expired".to_string());
+    }
+
+    let start_date = match start_date {
+        None => return Ok("inactive".to_string()),
+        Some(s) => s,
+    };
+
+    if start_date > &now_date {
+        Ok("pending".to_string())
+    } else if let Some(ed) = end_date {
+        if ed < &now_date {
+            Ok("expired".to_string())
+        } else {
+            Ok("active".to_string())
+        }
+    } else {
+        Ok("active".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn save_member_with_membership(
+    payload: MemberWithMembershipUpdate,
+    state: State<'_, AppState>,
+) -> AppResult<MemberWithMembership> {
+    // Return the full updated/created details
+    tracing::info!(
+        "Attempting to save member and membership data: Member ID {:?}, Membership Type ID {:?}",
+        payload.id,
+        payload.membership_type_id
+    );
+
+    // --- Payload Validation ---
+    if payload.first_name.trim().is_empty() || payload.last_name.trim().is_empty() {
+        return Err(AppError::Validation(
+            "First and last name are required.".to_string(),
+        ));
+    }
+
+    let mut tx = state.db_pool.begin().await?; // Start a transaction
+    let now = Utc::now().naive_utc();
+    let short_card_id = payload.card_id.chars().take(4).collect::<String>();
+
+    // --- 1. Update Member ---
+    tracing::info!("Updating existing member with ID: {}", payload.id);
+    sqlx::query!(
+        r#"
+                UPDATE members SET
+                    card_id = ?, short_card_id = ?, first_name = ?, last_name = ?,
+                    email = ?, phone = ?, date_of_birth = ?, updated_at = ?
+                WHERE id = ? AND is_deleted = FALSE
+                "#,
+        payload.card_id,
+        short_card_id,
+        payload.first_name,
+        payload.last_name,
+        payload.email,
+        payload.phone,
+        payload.date_of_birth,
+        now,
+        payload.id
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    // --- 2. Handle Membership ---
+    // Only proceed with membership operations if either membership_id or membership_type_id is present
+    if payload.membership_id.is_some() || payload.membership_type_id.is_some() {
+        // Determine status based on provided dates, or use status from payload if frontend calculates it
+        let final_status = determine_membership_status(
+            &payload.membership_start_date,
+            &payload.membership_end_date,
+            payload.membership_remaining_visits,
+        )
+        .await?;
+
+        if let Some(existing_membership_id) = payload.membership_id {
+            tracing::info!(
+                "Updating existing membership with ID: {}",
+                existing_membership_id
+            );
+            // Here, you might decide if membership_type_id can change for an existing membership.
+            // Typically, changing type means new membership. So, we'd usually update other fields.
+            // If membership_type_id *is* allowed to change, ensure you fetch the new type and recalculate.
+
+            // If only type_id is changed for an existing membership, it's ambiguous without more rules.
+            // Let's assume for now an update only modifies dates, status, visits of the *existing* type.
+            if payload.membership_type_id.is_some()
+                && payload.membership_type_id
+                    != sqlx::query_scalar!(
+                        "SELECT membership_type_id FROM memberships WHERE id = ?",
+                        existing_membership_id
+                    )
+                    .fetch_one(&mut *tx)
+                    .await
+                    .ok()
+            {
+                // This is complex: changing the type of an existing membership record.
+                // Might be better to end the old one and create a new one.
+                // For now, let's assume we are only updating details of the membership instance, not its fundamental type.
+                // If you allow type change, you MUST refetch the MembershipType here to get its duration/visits for recalculation.
+                tracing::warn!("Changing membership_type_id for an existing membership record is complex. Ensure logic handles this or disallow.");
+            }
+
+            sqlx::query!(
+                r#"
+                UPDATE memberships SET
+                    start_date = ?, end_date = ?, remaining_visits = ?, status = ?, updated_at = ?
+                WHERE id = ? AND member_id = ? AND is_deleted = FALSE
+                "#,
+                payload.membership_start_date,
+                payload.membership_end_date,
+                payload.membership_remaining_visits,
+                final_status,
+                now,
+                existing_membership_id,
+                payload.id // Ensure it belongs to the correct member
+            )
+            .execute(&mut *tx)
+            .await?;
+            tracing::info!("Membership {} updated.", existing_membership_id);
+        } else if let Some(type_id) = payload.membership_type_id {
+            // --- Scenario: Create New Membership (from type_id) ---
+            tracing::info!(
+                "Creating new membership for member ID: {} from type ID: {}",
+                payload.id,
+                type_id
+            );
+
+            if payload.membership_start_date.is_none() {
+                return Err(AppError::Validation(
+                    "Start date is required for a new membership.".to_string(),
+                ));
+            }
+
+            // Fetch the membership type template to get duration, default visits etc.
+            let mem_type = sqlx::query_as!(
+                MembershipType,
+                "SELECT * FROM membership_types WHERE id = ? AND is_deleted = FALSE",
+                type_id
+            )
+            .fetch_optional(&mut *tx)
+            .await?
+            .ok_or_else(|| {
+                AppError::NotFound(format!("Membership type with ID {} not found.", type_id))
+            })?;
+
+            // Calculate end_date if not provided and type has duration
+            let mut end_date_naive: Option<NaiveDate> = None;
+            if payload.membership_end_date.is_none()
+                && mem_type.duration_days.is_some()
+                && mem_type.duration_days.unwrap_or(0) > 0
+            {
+                end_date_naive = Some(
+                    payload.membership_start_date.unwrap()
+                        + chrono::Duration::days(mem_type.duration_days.unwrap()),
+                );
+            }else{
+                end_date_naive = payload.membership_end_date;
+            }
+
+            // Initial remaining visits from type, or payload if provided (payload might override)
+            let initial_remaining_visits = payload.membership_remaining_visits.or(mem_type.visit_limit);
+
+            // Optional: Deactivate other active memberships for this member if only one should be active
+            // sqlx::query!("UPDATE memberships SET status = 'inactive', updated_at = ? WHERE member_id = ? AND status = 'active' AND is_deleted = FALSE", now, member_id)
+            //     .execute(&mut *tx).await?;
+
+            sqlx::query!(
+                r#"
+                INSERT INTO memberships (member_id, membership_type_id, start_date, end_date, remaining_visits, status, purchase_date, updated_at, created_at, is_deleted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)
+                "#,
+                payload.id,
+                type_id,
+                payload.membership_start_date,
+                end_date_naive,
+                initial_remaining_visits,
+                final_status, // Calculated status
+                now, // Purchase date
+                now, // updated_at
+                now  // created_at
+            )
+            .execute(&mut *tx)
+            .await?;
+            tracing::info!("New membership created for member {}.", payload.id);
+        }
+        // Else: No membership_id and no membership_type_id, so no membership action.
+    } else {
+        tracing::info!("No membership data provided in payload, skipping membership operations for member ID: {}", payload.id);
+    }
+
+    // --- 3. Commit Transaction ---
+    tx.commit().await?;
+    tracing::info!(
+        "Successfully saved member and membership data for member ID: {}.",
+        payload.id
+    );
+
+    // --- 4. Fetch and Return the Updated/Created State ---
+    // Call your existing get command to return the full, fresh data
+    let final_data =
+        get_member_by_id_with_membership(GetMemberByIdPayload { id: payload.id }, state).await?; // Re-fetch
+
+    // The previous command returns AppResult<Option<MemberWithMembership>>
+    // This command should ideally return AppResult<MemberWithMembership> if save implies existence
+    final_data.ok_or_else(|| {
+        AppError::NotFound(format!(
+            "Failed to retrieve saved member with ID {} after save.",
+            payload.id
+        ))
+    })
+}
 // #[tauri::command]
 // pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppResult<()> {
 //     tracing::info!(

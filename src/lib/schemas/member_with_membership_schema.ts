@@ -11,9 +11,9 @@ export const memberWithMembershipSchema = z.object({
 
     membership_id: z.number().optional().nullable(),
     membership_type_id: z.number().optional().nullable(),
-    start_date: z.string().optional().nullable(),
-    end_date: z.string().optional().nullable(),
-    remaining_visits: z.number().optional().nullable()
+    membership_start_date: z.string().optional().nullable(),
+    membership_end_date: z.string().optional().nullable(),
+    membership_remaining_visits: z.number().optional().nullable()
 });
 
 export type MemberWithMembershipSchema = typeof memberWithMembershipSchema;

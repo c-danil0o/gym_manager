@@ -6,7 +6,7 @@
       {
         "name": "max_updated_at: Option<NaiveDateTime>",
         "ordinal": 0,
-        "type_info": "Datetime"
+        "type_info": "Text"
       }
     ],
     "parameters": {
