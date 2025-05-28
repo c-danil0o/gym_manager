@@ -1,6 +1,9 @@
 use crate::{
     error::{AppError, Result as AppResult},
-    models::{Member, MemberInfo, MemberWithMembership, Membership, MembershipType, PaginatedMembersResponse},
+    models::{
+        Member, MemberInfo, MemberWithMembership, Membership, MembershipType,
+        PaginatedMembersResponse,
+    },
     state::AppState,
     utils,
 };
@@ -33,7 +36,7 @@ pub struct GetMembersPaginatedPayload {
 
 #[derive(Deserialize, Debug)]
 pub struct GetMemberByIdPayload {
-  id: i64, // Member ID to fetch
+    id: i64, // Member ID to fetch
 }
 
 const DEFAULT_PAGE: i32 = 1;
@@ -256,48 +259,73 @@ pub async fn get_members_with_memberships_paginated(
     })
 }
 
+#[tauri::command]
+pub async fn get_member_by_id_with_membership(
+    payload: GetMemberByIdPayload,
+    state: State<'_, AppState>,
+) -> AppResult<Option<MemberWithMembership>> {
+    let member_id = payload.id;
 
-// #[tauri::command]
-// pub async fn get_member_by_id_with_membership(
-//     payload: GetMemberByIdPayload,
-//     state: State<'_, AppState>,
-// ) -> AppResult<MemberWithMembership> {
+    tracing::info!(
+        "Fetching member with membership details for member_id: {}",
+        member_id
+    );
+    let query_result = sqlx::query_as!(
+      MemberWithMembership,
+      r#"
+      SELECT
+          m.id as id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,
+          ms.id as membership_id,
+          ms.start_date as membership_start_date,
+          ms.end_date as membership_end_date,
+          ms.remaining_visits as membership_remaining_visits,
+          ms.purchase_date as membership_purchase_date,
+          ms.status as membership_status,
+          mt.name as membership_type_name,
+          mt.id as membership_type_id,
+          mt.duration_days as membership_type_duration_days,
+          mt.visit_limit as membership_type_visit_limit,
+          mt.enter_by as membership_type_enter_by,
+          mt.price as membership_type_price
+      FROM
+          members m
+      LEFT JOIN (
+          SELECT
+              ms_inner.*,
+              ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY
+                  CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,
+                  ms_inner.start_date DESC
+              ) as rn
+          FROM memberships ms_inner
+          WHERE ms_inner.is_deleted = FALSE
+      ) ms ON m.id = ms.member_id AND ms.rn = 1
+      LEFT JOIN
+          membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
+      WHERE
+          m.is_deleted = FALSE AND m.id = ?
+      "#,
+      member_id
+  ).fetch_optional(&state.db_pool).await;
 
-//   let new_type = sqlx::query_as!(
-//           Member,
-//           r#"
-//           SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted
-//           FROM members
-//           WHERE id = ?
-//           "#,
-//           last_insert_id
-//       )
-//       .fetch_one(&state.db_pool)
-//       .await?;
-
-//   MemberWithMembership {
-//   }
-
-// }
-// #[tauri::command]
-// pub async fn get_all_membership_types(
-//     state: State<'_, AppState>,
-// ) -> AppResult<Vec<MembershipType>> {
-//     tracing::info!("Fetching all membership types.");
-//     let types = sqlx::query_as!(
-//         MembershipType,
-//         r#"
-//         SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted
-//         FROM membership_types
-//         WHERE is_deleted = FALSE
-//         ORDER BY name ASC
-//         "#
-//     )
-//     .fetch_all(&state.db_pool)
-//     .await?;
-
-//     Ok(types)
-// }
+    match query_result {
+        Ok(Some(data)) => {
+            tracing::info!("Successfully fetched member data for ID: {}", member_id);
+            Ok(Some(data))
+        }
+        Ok(None) => {
+            tracing::warn!("Member with ID {} not found (fetch_optional).", member_id);
+            Ok(None)
+        }
+        Err(e) => {
+            tracing::error!(
+                "Database error while fetching member with ID {}: {:?}",
+                member_id,
+                e
+            );
+            Err(AppError::Sqlx(e))
+        }
+    }
+}
 
 // #[tauri::command]
 // pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppResult<()> {

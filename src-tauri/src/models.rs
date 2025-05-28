@@ -115,11 +115,12 @@ pub struct MemberWithMembership {
     pub date_of_birth: Option<NaiveDate>,
     pub member_created_at: NaiveDateTime,
 
+    pub membership_type_id: Option<i64>,
     pub membership_type_name: Option<String>,
     pub membership_type_duration_days: Option<i64>,
     pub membership_type_visit_limit: Option<i64>,
     pub membership_type_enter_by: Option<i64>,
-    pub membership_type_price: f64,
+    pub membership_type_price: Option<f64>,
 
     pub membership_id: Option<i64>,
     pub membership_start_date: Option<NaiveDateTime>,

@@ -96,6 +96,7 @@ fn main() {
             commands::membership_commands::delete_membership_type,
             commands::member_commands::add_member,
             commands::member_commands::get_members_with_memberships_paginated,
+            commands::member_commands::get_member_by_id_with_membership,
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example

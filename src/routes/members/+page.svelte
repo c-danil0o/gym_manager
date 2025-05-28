@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -17,22 +17,19 @@
 	import PlusCircle from 'lucide-svelte/icons/plus-circle';
 	import Search from 'lucide-svelte/icons/search';
 	import Pencil from 'lucide-svelte/icons/pencil';
-	import type {
-		MemberInfo,
-		PaginatedMembersResponse
-	} from '$lib/models/member_with_membership';
+	import type { MemberInfo, PaginatedMembersResponse } from '$lib/models/member_with_membership';
 
-	let membersData: MemberInfo[] = [];
-	let totalItems = 0;
-	let totalPages = 1;
-	let currentPage = 1;
-	let pageSize = 20;
+	let membersData = $state<MemberInfo[]>([]);
+	let totalItems = $state(0);
+	let totalPages = $state(1);
+	let currentPage = $state(1);
+	let pageSize = $state(20);
 
-	let isLoading = true;
-	let error: string | null = null;
+	let isLoading = $state(true);
+	let error = $state<string | null>(null);
 
-	let searchQuery = '';
-	let debouncedSearchQuery = ''; // For debouncing search input
+	let searchQuery = $state('');
+	let debouncedSearchQuery = $state(''); // For debouncing search input
 
 	// --- Data Fetching ---
 	async function fetchMembers(pageToFetch = currentPage, query = debouncedSearchQuery) {
@@ -55,9 +52,9 @@
 			currentPage = result.current_page;
 			pageSize = result.page_size;
 			console.log('Fetched data:', result);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error('Error fetching members:', e);
-			error = e.message;
+			error = e instanceof Error ? e.message : 'An unknown error occurred';
 			toast.error(error || 'Failed to load members.');
 			membersData = []; // Clear data on error
 			totalItems = 0;

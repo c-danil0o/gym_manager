@@ -14,6 +14,36 @@ type FlyAndScaleParams = {
 	duration?: number;
 };
 
+export function getStatusClasses(status: string): string {
+	switch (status?.toLowerCase()) {
+		case 'active':
+			return cn('border-green-500 bg-green-50 text-green-800 focus-visible:ring-green-500');
+		case 'expired':
+			return cn('border-red-500 bg-red-50 text-red-800 focus-visible:ring-red-500');
+		case 'pending':
+			return cn('border-yellow-500 bg-yellow-50 text-yellow-800 focus-visible:ring-yellow-500');
+		case 'suspended':
+			return cn('border-orange-500 bg-orange-50 text-orange-800 focus-visible:ring-orange-500');
+		default:
+			return cn('border-input bg-background');
+	}
+}
+
+export function getSubtleStatusClasses(status: string): string {
+	switch (status?.toLowerCase()) {
+		case 'active':
+			return cn('border-l-4 !border-l-green-500 border-input bg-background');
+		case 'expired':
+			return cn('border-l-4 !border-l-red-500 border-input bg-background');
+		case 'pending':
+			return cn('border-l-8 !border-l-yellow-500 border-input bg-background');
+		case 'suspended':
+			return cn('border-l-4 !border-l-orange-500 border-input bg-background');
+		default:
+			return cn('border-input bg-background');
+	}
+}
+
 export const flyAndScale = (
 	node: Element,
 	params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }

@@ -1,0 +1,140 @@
+{
+  "db_name": "SQLite",
+  "query": "\n      SELECT\n          m.id as id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,\n          ms.id as membership_id,\n          ms.start_date as membership_start_date,\n          ms.end_date as membership_end_date,\n          ms.remaining_visits as membership_remaining_visits,\n          ms.purchase_date as membership_purchase_date,\n          ms.status as membership_status,\n          mt.name as membership_type_name,\n          mt.id as membership_type_id,\n          mt.duration_days as membership_type_duration_days,\n          mt.visit_limit as membership_type_visit_limit,\n          mt.enter_by as membership_type_enter_by,\n          mt.price as membership_type_price\n      FROM\n          members m\n      LEFT JOIN (\n          SELECT\n              ms_inner.*,\n              ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY\n                  CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,\n                  ms_inner.start_date DESC\n              ) as rn\n          FROM memberships ms_inner\n          WHERE ms_inner.is_deleted = FALSE\n      ) ms ON m.id = ms.member_id AND ms.rn = 1\n      LEFT JOIN\n          membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n      WHERE\n          m.is_deleted = FALSE AND m.id = ?\n      ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "card_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "short_card_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "first_name",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "last_name",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_of_birth",
+        "ordinal": 6,
+        "type_info": "Date"
+      },
+      {
+        "name": "phone",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "member_created_at",
+        "ordinal": 8,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "membership_id",
+        "ordinal": 9,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_start_date",
+        "ordinal": 10,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "membership_end_date",
+        "ordinal": 11,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "membership_remaining_visits",
+        "ordinal": 12,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_purchase_date",
+        "ordinal": 13,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "membership_status",
+        "ordinal": 14,
+        "type_info": "Text"
+      },
+      {
+        "name": "membership_type_name",
+        "ordinal": 15,
+        "type_info": "Text"
+      },
+      {
+        "name": "membership_type_id",
+        "ordinal": 16,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_type_duration_days",
+        "ordinal": 17,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_type_visit_limit",
+        "ordinal": 18,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_type_enter_by",
+        "ordinal": 19,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_type_price",
+        "ordinal": 20,
+        "type_info": "Float"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "4818dc103deb2f5020e07f33ff61d577327cc812cff810b3633fc8c4d06f70c6"
+}
