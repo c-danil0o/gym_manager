@@ -297,10 +297,7 @@ pub async fn save_membership(
 }
 
 #[tauri::command]
-pub async fn delete_membership(
-    id: i64,
-    state: State<'_, AppState>,
-) -> AppResult<()> {
+pub async fn delete_membership(id: i64, state: State<'_, AppState>) -> AppResult<()> {
     tracing::info!("Deleting membership with ID: {}", id);
 
     let now = Utc::now().naive_utc();
@@ -319,7 +316,7 @@ pub async fn delete_membership(
         }
         Err(e) => {
             tracing::error!("Failed to delete membership with ID {}: {:?}", id, e);
-            Err(AppError::Sqlx(e))
+            return Err(AppError::Sqlx(e));
         }
     }
 }

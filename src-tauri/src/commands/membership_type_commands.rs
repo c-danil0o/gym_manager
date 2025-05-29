@@ -118,12 +118,13 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
     tracing::info!("Attempting to (soft) delete membership type with id: {}", id);
 
     let now = chrono::Utc::now().naive_utc();
+    let mut tx = state.db_pool.begin().await.map_err(AppError::Sqlx)?;
     let result = sqlx::query!(
         "UPDATE membership_types SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
         now,
         id
     )
-    .execute(&state.db_pool)
+    .execute(&mut *tx)
     .await?;
 
     if result.rows_affected() == 0 {
@@ -133,8 +134,30 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
             id
         )));
     }
-    // will need to delete all memberships with this type
 
-    tracing::info!("Successfully soft-deleted membership type with id: {}", id);
-    Ok(())
+    // update all memberships with this membership_type_id to inactive
+    let update_result = sqlx::query!(
+        "UPDATE memberships SET status = 'inactive' WHERE membership_type_id = ? AND is_deleted = FALSE",
+        id
+    ).execute(&mut *tx)
+        .await;
+    match update_result {
+        Ok(_) => {
+            tracing::info!(
+                "Successfully updated memberships with membership_type_id: {}",
+                id
+            );
+            tx.commit().await.map_err(AppError::Sqlx)?;
+            Ok(())
+        }
+        Err(e) => {
+            tracing::error!(
+                "Failed to update memberships with membership_type_id {}: {:?}",
+                id,
+                e
+            );
+            tx.rollback().await.map_err(AppError::Sqlx)?;
+            Err(AppError::Sqlx(e))
+        }
+    }
 }

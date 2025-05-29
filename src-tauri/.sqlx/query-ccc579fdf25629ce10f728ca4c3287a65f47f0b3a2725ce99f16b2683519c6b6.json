@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE memberships SET status = 'inactive' WHERE membership_type_id = ? AND is_deleted = FALSE",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ccc579fdf25629ce10f728ca4c3287a65f47f0b3a2725ce99f16b2683519c6b6"
+}
