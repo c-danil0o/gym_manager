@@ -20,6 +20,7 @@
 	import type { MemberInfo, PaginatedMembersResponse } from '$lib/models/member_with_membership';
 	import { getMembershipStatusBadgeVariant } from '$lib/utils';
 	import { setHeader } from '$lib/stores/state';
+	import { RefreshCcw } from 'lucide-svelte';
 
 	let membersData = $state<MemberInfo[]>([]);
 	let totalItems = $state(0);
@@ -84,8 +85,8 @@
 		fetchMembers();
 	});
 	function handleViewMember(memberId: number) {
-    goto(`/members/${memberId}`);
-  }
+		goto(`/members/${memberId}`);
+	}
 
 	function handleAddNewMember() {
 		goto('/members/new');
@@ -95,6 +96,13 @@
 		goto(`/members/${memberId}/edit`);
 	}
 
+	async function handleRenewMembership(
+		memberId: number | null | undefined,
+		membershipId: number | null | undefined
+	) {
+		if (membershipId && memberId)
+			await goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
+	}
 </script>
 
 <div class="space-y-6">
@@ -211,6 +219,20 @@
 								{/if}
 							</Table.Cell>
 							<Table.Cell class="text-center">
+								<Button
+									on:click={(e) => {
+										e.stopPropagation();
+										handleRenewMembership(member?.id, member?.membership_id);
+									}}
+									variant="outline"
+									class="bg-blue-100"
+									size="icon"
+									disabled={member?.membership_status !== 'active' &&
+										member?.membership_status !== 'expired'}
+									title="Renew Membership"
+								>
+									<RefreshCcw class="h-4 w-4" />
+								</Button>
 								<Button
 									on:click={() => handleEditMember(member.id)}
 									variant="outline"

@@ -15,7 +15,7 @@
 	import { getMembershipStatusBadgeVariant, getSubtleStatusClasses } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { Pencil, Plus, Trash2 } from 'lucide-svelte';
+	import { Pencil, Plus, Trash2, RefreshCcw } from 'lucide-svelte';
 	import { setHeader } from '$lib/stores/state';
 
 	let isLoading = $state(false);
@@ -68,6 +68,10 @@
 
 	async function handleEditMember(memberId: number | undefined) {
 		if (memberId) await goto(`/members/${memberId}/edit`);
+	}
+
+	async function handleRenewMembership(membershipId: number | null | undefined) {
+		if (membershipId) await goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
 	}
 
 	async function handleDeleteMember(id: number | null) {
@@ -129,7 +133,7 @@
 					<Card.Title class="text-2xl flex justify-between"
 						>Member
 
-						<div class='space-x-2'>
+						<div class="space-x-2">
 							<Button
 								on:click={() => handleEditMember(data?.id)}
 								variant="outline"
@@ -210,13 +214,26 @@
 						>Membership
 
 						{#if data?.membership_id}
-							<Button
-								on:click={() => handleAddNewMembership(data?.id)}
-								size="icon"
-								title="Add Membership"
-							>
-								<Plus class="h-4 w-4" />
-							</Button>
+							<div class="space-x-2">
+								<Button
+									on:click={() => handleRenewMembership(data?.membership_id)}
+									variant="outline"
+									size="icon"
+									class="bg-blue-100"
+									disabled={data?.membership_status !== 'active' &&
+                    data?.membership_status !== 'expired'}
+									title="Renew Membership"
+								>
+									<RefreshCcw class="h-4 w-4" />
+								</Button>
+								<Button
+									on:click={() => handleAddNewMembership(data?.id)}
+									size="icon"
+									title="Add Membership"
+								>
+									<Plus class="h-4 w-4" />
+								</Button>
+							</div>
 						{/if}
 					</Card.Title>
 				</Card.Header>
@@ -370,7 +387,9 @@
 											on:click={() => handleEditMembership(item.membership_id)}
 											variant="outline"
 											size="icon"
-											title="Edit Member"
+											disabled={item.membership_status !== 'active' &&
+												item.membership_status !== 'pending'}
+											title="Edit Membership"
 										>
 											<Pencil class="h-4 w-4" />
 										</Button>
