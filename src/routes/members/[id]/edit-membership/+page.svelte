@@ -28,6 +28,7 @@
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -62,11 +63,12 @@
 			});
 			if (result) {
 				$formData.member_id = result.member_id;
-				formData.membership_id = result.membership_id;
+				$formData.membership_id = result.membership_id;
 				$formData.membership_type_id = result.membership_type_id;
 				$formData.membership_start_date = result.membership_start_date;
 				$formData.membership_end_date = result.membership_end_date;
 				$formData.membership_remaining_visits = result.membership_remaining_visits;
+				$formData.membership_suspended = result?.membership_status === 'suspended';
 
 				selectedMembershipType =
 					membershipTypes.find((t) => t.id === result.membership_type_id) || null;
@@ -194,6 +196,50 @@
 		if (selectedMembershipType.visit_limit)
 			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
 	}
+
+	$effect(() => {
+		// Get current values from signals to establish dependencies
+		const currentStartDate = $formData.membership_start_date;
+		const currentEndDate = $formData.membership_end_date;
+		const currentRemainingVisits = $formData.membership_remaining_visits;
+		const currentlySuspended = $formData.membership_suspended;
+
+		let newStatus = 'inactive';
+
+		if (currentlySuspended) {
+			newStatus = 'suspended';
+		} else {
+			if (!currentStartDate || !currentEndDate) {
+				newStatus = 'inactive';
+			} else {
+				if (
+					currentRemainingVisits !== null &&
+					currentRemainingVisits !== undefined &&
+					currentRemainingVisits <= 0
+				) {
+					newStatus = 'expired';
+				} else {
+					const todayDate = today(getLocalTimeZone());
+					const startDateVal = parseDate(currentStartDate);
+					const endDateVal = parseDate(currentEndDate);
+
+					if (startDateVal.compare(todayDate) > 0) {
+						newStatus = 'pending';
+					} else {
+						if (endDateVal.compare(todayDate) < 0) {
+							newStatus = 'expired';
+						} else {
+							newStatus = 'active';
+						}
+					}
+				}
+			}
+		}
+
+		if (membership_status !== newStatus) {
+			membership_status = newStatus;
+		}
+	});
 
 	onMount(async () => {
 		await fetchMembershipTypes();
@@ -333,7 +379,7 @@
 					</div>
 
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
-						<div class="w-3/4 space-y-2 pb-2">
+						<div class="w-1/2 space-y-2 pb-2">
 							<Label class="font-semibold">Status</Label>
 							<Input
 								type="text"
@@ -353,6 +399,16 @@
 									max={selectedMembershipType?.duration_days}
 									bind:value={$formData.membership_remaining_visits}
 								/>
+								<Form.FieldErrors />
+							</Form.Control>
+						</Form.Field>
+
+						<Form.Field {form} name="membership_suspended" class="w-1/4">
+							<Form.Control let:attrs>
+								<Form.Label class="font-semibold w-full text-center">Suspended</Form.Label>
+								<div class="flex items-center h-[30px] w-full justify-center">
+									<Checkbox {...attrs} bind:checked={$formData.membership_suspended} />
+								</div>
 								<Form.FieldErrors />
 							</Form.Control>
 						</Form.Field>

@@ -32,15 +32,15 @@ export function getStatusClasses(status: string): string {
 export function getSubtleStatusClasses(status: string): string {
 	switch (status?.toLowerCase()) {
 		case 'active':
-			return cn('border-l-4 !border-l-green-500 border-input bg-background');
+			return cn('border-l-8 !border-l-green-500 border-input bg-background');
 		case 'expired':
-			return cn('border-l-4 !border-l-red-500 border-input bg-background');
+			return cn('border-l-8 !border-l-red-500 border-input bg-background');
 		case 'pending':
 			return cn('border-l-8 !border-l-yellow-500 border-input bg-background');
 		case 'suspended':
-			return cn('border-l-4 !border-l-orange-500 border-input bg-background');
+			return cn('border-l-8 !border-l-orange-500 border-input bg-background');
 		case 'inactive':
-			return cn('border-l-4 !border-l-blue-500 border-input bg-background');
+			return cn('border-l-8 !border-l-blue-500 border-input bg-background');
 		default:
 			return cn('border-input bg-background');
 	}

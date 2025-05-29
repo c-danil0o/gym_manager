@@ -261,7 +261,7 @@
 						</div>
 					{:else}
 						<div class="flex flex-col h-full items-center justify-center space-y-4">
-							<Button on:click={() => handleEditMember(data?.id)} title="Edit Member"
+							<Button on:click={() => handleAddNewMembership(data?.id)} title="Edit Member"
 								>Assign Membership</Button
 							>
 							<p class="text-muted-foreground">No membership assigned yet.</p>

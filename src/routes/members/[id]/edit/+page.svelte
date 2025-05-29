@@ -17,6 +17,7 @@
 	import { onMount } from 'svelte';
 	import {editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
 	import type { Member } from '$lib/models/member';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -182,8 +183,8 @@
 					</Form.Field>
 
 					<div class="flex gap-20 justify-around">
-						<Form.Button variant="outline" on:click={handleCancel} class="w-full"
-							>Cancel</Form.Button
+						<Button variant="outline" on:click={handleCancel} class="w-full"
+							>Cancel</Button
 						>
 						<Form.Button type="submit" class="w-full">Save</Form.Button>
 					</div>

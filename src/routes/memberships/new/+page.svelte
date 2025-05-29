@@ -14,6 +14,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let submitting = false;
 
@@ -124,7 +125,7 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Form.Button>
+					<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
 					<Form.Button type="submit" class="w-full">Confirm</Form.Button>
 				</div>
 			</form>

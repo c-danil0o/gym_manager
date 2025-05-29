@@ -1,13 +1,10 @@
-use crate::dto::{
-    MembershipInfo, MembershipPayload
-};
+use crate::dto::{MembershipInfo, MembershipPayload};
 use crate::{
     error::{AppError, Result as AppResult},
     state::AppState,
 };
-use chrono::{Utc, NaiveDate};
+use chrono::{NaiveDate, Utc};
 use tauri::State;
-
 
 async fn determine_membership_status(
     start_date: &Option<NaiveDate>,
@@ -33,7 +30,7 @@ async fn determine_membership_status(
             Ok("active".to_string())
         }
     } else {
-        Ok("active".to_string())
+        Ok("inactive".to_string())
     }
 }
 
@@ -152,16 +149,14 @@ pub async fn save_membership(
             payload.member_id
         )));
     }
-
-    let final_status = determine_membership_status(
-        &payload.membership_start_date,
-        &payload.membership_end_date,
-        payload.membership_remaining_visits,
-    )
-    .await?;
     if payload.membership_start_date.is_none() || payload.membership_start_date.is_none() {
         return Err(AppError::Validation(
             "Start date and end date are required for a membership.".to_string(),
+        ));
+    }
+    if payload.membership_end_date <= payload.membership_start_date {
+        return Err(AppError::Validation(
+            "End date cannot be before start date.".to_string(),
         ));
     }
     if payload.membership_remaining_visits.is_none() {
@@ -173,6 +168,18 @@ pub async fn save_membership(
         return Err(AppError::Validation(
             "Membership_type_id must be provided.".to_string(),
         ));
+    }
+
+    let final_status;
+    if payload.membership_suspended.is_some() && payload.membership_suspended.unwrap() {
+        final_status = "suspended".to_string();
+    } else {
+        final_status = determine_membership_status(
+            &payload.membership_start_date,
+            &payload.membership_end_date,
+            payload.membership_remaining_visits,
+        )
+        .await?;
     }
     let mut final_membership_id = payload.membership_id;
 
@@ -209,6 +216,40 @@ pub async fn save_membership(
             membership_type_id
         );
 
+        // Check if member already has membership overlapping with the new one
+        let overlapping_membership = sqlx::query_scalar!(
+            r#"
+          SELECT COUNT(*) FROM memberships
+          WHERE member_id = ? AND is_deleted = FALSE
+          AND (
+          (start_date <= ? AND end_date >= ?)
+          OR (start_date <= ? AND end_date IS NULL)
+          )
+          "#,
+            payload.member_id,
+            payload.membership_end_date,
+            payload.membership_start_date,
+            payload.membership_start_date,
+        )
+        .fetch_one(&state.db_pool)
+        .await;
+        match overlapping_membership {
+            Ok(count) if count > 0 => {
+                tracing::warn!(
+                    "Member with ID {} already has an overlapping membership.",
+                    payload.member_id
+                );
+                return Err(AppError::Validation(
+                    "Member already has an overlapping membership.".to_string(),
+                ));
+            }
+            Ok(_) => {}
+            Err(e) => {
+                tracing::error!("Failed to check for overlapping memberships: {:?}", e);
+                return Err(AppError::Sqlx(e));
+            }
+        }
+
         let now = Utc::now().naive_utc();
         let insert_result = sqlx::query!(
             r#"
@@ -240,9 +281,12 @@ pub async fn save_membership(
         }
     }
 
-  let membership = get_membership_by_id(final_membership_id.unwrap(), state).await?;
+    let membership = get_membership_by_id(final_membership_id.unwrap(), state).await?;
     if let Some(m) = membership {
-        tracing::info!("Successfully retrieved membership details for ID: {}", m.membership_id.unwrap_or(-1));
+        tracing::info!(
+            "Successfully retrieved membership details for ID: {}",
+            m.membership_id.unwrap_or(-1)
+        );
         Ok(m)
     } else {
         Err(AppError::NotFound(format!(
@@ -250,5 +294,4 @@ pub async fn save_membership(
             final_membership_id
         )))
     }
-
 }

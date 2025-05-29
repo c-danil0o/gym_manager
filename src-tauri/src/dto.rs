@@ -24,6 +24,7 @@ pub struct MembershipPayload {
     pub membership_start_date: Option<NaiveDate>,
     pub membership_end_date: Option<NaiveDate>,
     pub membership_remaining_visits: Option<i64>,
+    pub membership_suspended: Option<bool>,
 }
 
 #[derive(Serialize)]
