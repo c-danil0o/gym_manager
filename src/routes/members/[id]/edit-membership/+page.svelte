@@ -27,6 +27,7 @@
 	import { cn, getSubtleStatusClasses } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -364,7 +365,7 @@
 				</div>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Form.Button>
+					<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
 					<Form.Button type="submit" class="w-full">Save</Form.Button>
 				</div>
 			</form>

@@ -1,12 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use gym_manager_lib::{
-    backup,
-    config,
-    db,
-    AppState,
-    commands,
-};
+use gym_manager_lib::{backup, commands, config, db, AppState};
 use tauri::Manager;
 
 fn main() {
@@ -91,24 +85,22 @@ fn main() {
     final_builder
         .invoke_handler(tauri::generate_handler![
             commands::admin_commands::login_admin,
-            commands::membership_commands::add_membership_type,
-            commands::membership_commands::get_all_membership_types,
-            commands::membership_commands::delete_membership_type,
+            commands::membership_type_commands::add_membership_type,
+            commands::membership_type_commands::get_all_membership_types,
+            commands::membership_type_commands::delete_membership_type,
             commands::member_commands::add_member,
             commands::member_commands::get_member_by_id,
             commands::member_commands::delete_member,
             commands::member_commands::update_member,
             commands::member_commands::get_members_with_memberships_paginated,
             commands::member_commands::get_member_by_id_with_membership,
-            commands::member_commands::save_member_with_membership,
-            commands::member_commands::get_all_memberships_for_member,
-            commands::member_commands::save_membership,
-            commands::member_commands::get_membership_by_id,
+            commands::membership_commands::get_all_memberships_for_member,
+            commands::membership_commands::save_membership,
+            commands::membership_commands::get_membership_by_id,
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example
         // --- Run the App ---
-        // generate_context!() loads configuration from Tauri.toml/tauri.config.json
         .run(tauri::generate_context!())
         .expect("Error while running Tauri application"); // Use expect for fatal errors on startup
 }
