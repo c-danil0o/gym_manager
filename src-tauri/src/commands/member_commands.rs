@@ -1,21 +1,32 @@
 use crate::{
     error::{AppError, Result as AppResult},
-    models::{Member, MemberInfo, MemberWithMembership, MembershipType},
+    models::{Member, MemberInfo, MemberWithMembership, MembershipInfo, MembershipType},
     state::AppState,
-    utils,
 };
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use chrono::{NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
 #[derive(Deserialize)]
-pub struct NewMemberPayload {
+pub struct MemberPayload {
+  id: Option<i64>, // Optional ID for updates, required for new members
     card_id: String,
     first_name: String,
     last_name: String,
     email: Option<String>,
     phone: Option<String>,
     date_of_birth: Option<NaiveDate>,
+}
+
+#[derive(Deserialize)]
+pub struct MembershipPayload {
+    pub member_id: i64, // Member ID to associate with the membership
+
+    pub membership_id: Option<i64>,
+    pub membership_type_id: Option<i64>,
+    pub membership_start_date: Option<NaiveDate>,
+    pub membership_end_date: Option<NaiveDate>,
+    pub membership_remaining_visits: Option<i64>,
 }
 
 #[derive(Serialize)]
@@ -68,7 +79,7 @@ const DEFAULT_PAGE_SIZE: i32 = 20;
 
 #[tauri::command]
 pub async fn add_member(
-    payload: NewMemberPayload,
+    payload: MemberPayload,
     state: State<'_, AppState>,
 ) -> AppResult<Member> {
     tracing::info!(
@@ -484,12 +495,13 @@ pub async fn save_member_with_membership(
                     payload.membership_start_date.unwrap()
                         + chrono::Duration::days(mem_type.duration_days.unwrap()),
                 );
-            }else{
+            } else {
                 end_date_naive = payload.membership_end_date;
             }
 
             // Initial remaining visits from type, or payload if provided (payload might override)
-            let initial_remaining_visits = payload.membership_remaining_visits.or(mem_type.visit_limit);
+            let initial_remaining_visits =
+                payload.membership_remaining_visits.or(mem_type.visit_limit);
 
             // Optional: Deactivate other active memberships for this member if only one should be active
             // sqlx::query!("UPDATE memberships SET status = 'inactive', updated_at = ? WHERE member_id = ? AND status = 'active' AND is_deleted = FALSE", now, member_id)
@@ -540,31 +552,350 @@ pub async fn save_member_with_membership(
         ))
     })
 }
-// #[tauri::command]
-// pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppResult<()> {
-//     tracing::info!(
-//         "Attempting to (soft) delete membership type with id: {}",
-//         id
-//     );
 
-//     let now = chrono::Utc::now().naive_utc();
-//     let result = sqlx::query!(
-//         "UPDATE membership_types SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
-//         now,
-//         id
-//     )
-//     .execute(&state.db_pool)
-//     .await?;
+#[tauri::command]
+pub async fn get_all_memberships_for_member(
+    id: i64,
+    state: State<'_, AppState>,
+) -> AppResult<Vec<MembershipInfo>> {
+    tracing::info!("Fetching all memberships for member with ID: {}", id);
 
-//     if result.rows_affected() == 0 {
-//         tracing::warn!("No membership type found with id {} to delete.", id);
-//         return Err(AppError::NotFound(format!(
-//             "Membership type with id {} not found.",
-//             id
-//         )));
-//     }
-//     // will need to delete all memberships with this type
+    let memberships = sqlx::query_as!(
+        MembershipInfo,
+        r#"
+        SELECT
+            m.id as member_id,
+            m.first_name as member_first_name,
+            m.last_name as member_last_name,
+            mt.id as membership_type_id,
+            mt.name as membership_type_name,
+            ms.id as membership_id,
+            ms.start_date as membership_start_date,
+            ms.end_date as membership_end_date,
+            ms.status as membership_status,
+            ms.remaining_visits as membership_remaining_visits,
+            ms.purchase_date as membership_purchase_date
+        FROM
+            members m
+        JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE
+        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
+        WHERE
+            m.is_deleted = FALSE AND m.id = ?
+        "#,
+        id
+    )
+    .fetch_all(&state.db_pool)
+    .await?;
 
-//     tracing::info!("Successfully soft-deleted membership type with id: {}", id);
-//     Ok(())
-// }
+    if memberships.is_empty() {
+        tracing::warn!("No memberships found for member with ID: {}", id);
+    } else {
+        tracing::info!(
+            "Found {} memberships for member with ID: {}",
+            memberships.len(),
+            id
+        );
+    }
+
+    Ok(memberships)
+}
+
+#[tauri::command]
+pub async fn get_membership_by_id(
+    id: i64,
+    state: State<'_, AppState>,
+) -> AppResult<Option<MembershipInfo>> {
+    tracing::info!("Fetching membership by ID: {}", id);
+
+    let membership = sqlx::query_as!(
+        MembershipInfo,
+        r#"
+        SELECT
+            m.id as member_id,
+            m.first_name as member_first_name,
+            m.last_name as member_last_name,
+            mt.id as membership_type_id,
+            mt.name as membership_type_name,
+            ms.id as membership_id,
+            ms.start_date as membership_start_date,
+            ms.end_date as membership_end_date,
+            ms.status as membership_status,
+            ms.remaining_visits as membership_remaining_visits,
+            ms.purchase_date as membership_purchase_date
+        FROM
+            memberships ms
+        JOIN members m ON ms.member_id = m.id AND m.is_deleted = FALSE
+        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
+        WHERE
+            ms.is_deleted = FALSE AND ms.id = ?
+        "#,
+        id
+    )
+    .fetch_optional(&state.db_pool)
+    .await?;
+
+    if let Some(m) = &membership {
+        tracing::info!("Found membership for member ID: {}", m.member_id);
+    } else {
+        tracing::warn!("No membership found with ID: {}", id);
+    }
+
+    Ok(membership)
+}
+
+#[tauri::command]
+pub async fn get_member_by_id(
+    payload: GetMemberByIdPayload,
+    state: State<'_, AppState>,
+) -> AppResult<Option<Member>> {
+    let member_id = payload.id;
+
+    tracing::info!("Fetching member by ID: {}", member_id);
+    let member = sqlx::query_as!(
+        Member,
+        r#"
+        SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted
+        FROM members
+        WHERE id = ? AND is_deleted = FALSE
+        "#,
+        member_id
+    )
+    .fetch_optional(&state.db_pool)
+    .await?;
+
+    if let Some(m) = &member {
+        tracing::info!("Found member: {} {}", m.first_name, m.last_name);
+    } else {
+        tracing::warn!("No member found with ID: {}", member_id);
+    }
+
+    Ok(member)
+}
+#[tauri::command]
+pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()> {
+    tracing::info!("Attempting to (soft) delete member with id: {}", id);
+
+    let now = chrono::Utc::now().naive_utc();
+    let result = sqlx::query!(
+        "UPDATE members SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
+        now,
+        id
+    )
+    .execute(&state.db_pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        tracing::warn!("No member found with id {} to delete.", id);
+        return Err(AppError::NotFound(format!(
+            "Member with id {} not found.",
+            id
+        )));
+    }
+
+    tracing::info!("Successfully soft-deleted member with id: {}", id);
+    Ok(())
+}
+#[tauri::command]
+pub async fn update_member(
+  payload: MemberPayload,
+    state: State<'_, AppState>,
+) -> AppResult<Member> {
+    tracing::info!(
+        "Updating member: {} {}",
+        &payload.first_name,
+        &payload.last_name
+    );
+
+    if payload.id.is_none() {
+        return Err(AppError::Validation(
+            "Member ID is required for updates.".to_string(),
+        ));
+    }
+    let member_id = payload.id.unwrap();
+
+    if payload.first_name.trim().is_empty()
+        || payload.last_name.trim().is_empty()
+    {
+        return Err(AppError::Validation(
+            "First and last name are required.".to_string(),
+        ));
+    }
+
+    if payload.card_id.trim().is_empty() {
+        return Err(AppError::Validation(
+            "Card id must not be empty!".to_string(),
+        ));
+    }
+
+    let now = chrono::Utc::now().naive_utc();
+    let short_card_id = payload.card_id.chars().take(4).collect::<String>();
+
+    let result = sqlx::query!(
+        r#"
+        UPDATE members SET
+            card_id = ?, short_card_id = ?, first_name = ?, last_name = ?,
+            email = ?, phone = ?, date_of_birth = ?, updated_at = ?
+        WHERE id = ? AND is_deleted = FALSE
+        "#,
+        payload.card_id,
+        short_card_id,
+        payload.first_name,
+        payload.last_name,
+        payload.email,
+        payload.phone,
+        payload.date_of_birth,
+        now,
+        member_id
+    )
+    .execute(&state.db_pool)
+    .await;
+
+    match result {
+        Ok(_) => {
+            tracing::info!("Successfully updated member with ID: {}", member_id);
+            get_member_by_id(GetMemberByIdPayload { id: payload.id.unwrap() }, state).await?
+                .ok_or_else(|| AppError::NotFound(format!("Member with ID {} not found after update.", payload.id.unwrap())))
+        }
+        Err(sqlx::Error::Database(db_err)) if db_err.is_unique_violation() => {
+            tracing::warn!(
+                "Failed to update member: card_id {} or email already exists! Error: {:?}",
+                payload.card_id,
+                db_err
+            );
+            Err(AppError::Validation(format!(
+                "A card_id or email already exists. Card: {}",
+                payload.card_id
+            )))
+        }
+        Err(e) => {
+            tracing::error!("Failed to update member in database: {:?}", e);
+            Err(AppError::Sqlx(e)) // Convert general SQLx errors
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn save_membership(
+    payload: MembershipPayload,
+    state: State<'_, AppState>,
+) -> AppResult<MembershipInfo> {
+    tracing::info!(
+        "Saving membership for member ID: {}, membership ID: {:?}",
+        payload.member_id,
+        payload.membership_id
+    );
+
+    // Validate member exists
+    let member_exists = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM members WHERE id = ? AND is_deleted = FALSE",
+        payload.member_id
+    )
+    .fetch_one(&state.db_pool)
+    .await?;
+
+    if member_exists == 0 {
+        return Err(AppError::NotFound(format!(
+            "Member with ID {} not found.",
+            payload.member_id
+        )));
+    }
+
+    let final_status = determine_membership_status(
+        &payload.membership_start_date,
+        &payload.membership_end_date,
+        payload.membership_remaining_visits,
+    )
+    .await?;
+    if payload.membership_start_date.is_none() || payload.membership_start_date.is_none() {
+        return Err(AppError::Validation(
+            "Start date and end date are required for a membership.".to_string(),
+        ));
+    }
+    if payload.membership_remaining_visits.is_none() {
+        return Err(AppError::Validation(
+            "Remaining visits must be specified for a membership.".to_string(),
+        ));
+    }
+    if payload.membership_type_id.is_none() {
+        return Err(AppError::Validation(
+            "Membership_type_id must be provided.".to_string(),
+        ));
+    }
+    let mut final_membership_id = payload.membership_id;
+
+    // If membership_id is provided, update existing membership
+    if let Some(membership_id) = payload.membership_id {
+        tracing::info!("Updating existing membership with ID: {}", membership_id);
+        let now = Utc::now().naive_utc();
+
+        sqlx::query!(
+            r#"
+            UPDATE memberships SET
+                start_date = ?, end_date = ?, remaining_visits = ?,
+                status = ?, updated_at = ?, membership_type_id = ?
+            WHERE id = ? AND member_id = ? AND is_deleted = FALSE
+            "#,
+            payload.membership_start_date,
+            payload.membership_end_date,
+            payload.membership_remaining_visits,
+            final_status,
+            now,
+            payload.membership_type_id,
+            membership_id,
+            payload.member_id
+        )
+        .execute(&state.db_pool)
+        .await?;
+
+        tracing::info!("Successfully updated membership with ID: {}", membership_id);
+    } else if let Some(membership_type_id) = payload.membership_type_id {
+        // Create new membership from type
+        tracing::info!(
+            "Creating new membership for member ID: {} from type ID: {}",
+            payload.member_id,
+            membership_type_id
+        );
+
+        let now = Utc::now().naive_utc();
+        let insert_result = sqlx::query!(
+            r#"
+            INSERT INTO memberships (member_id, membership_type_id, start_date, end_date, remaining_visits, status, purchase_date, updated_at, created_at, is_deleted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)
+            "#,
+            payload.member_id,
+            membership_type_id,
+            payload.membership_start_date,
+            payload.membership_end_date,
+            payload.membership_remaining_visits,
+            final_status,
+            now, // purchase_date
+            now, // updated_at
+            now  // created_at
+        )
+        .execute(&state.db_pool)
+        .await;
+
+        match insert_result {
+            Ok(result) => {
+                tracing::info!("Successfully inserted new membership.");
+                final_membership_id = Some(result.last_insert_rowid());
+            }
+            Err(e) => {
+                tracing::error!("Failed to insert new membership: {:?}", e);
+                return Err(AppError::Sqlx(e));
+            }
+        }
+    }
+
+  let membership = get_membership_by_id(final_membership_id.unwrap(), state).await?;
+    if let Some(m) = membership {
+        tracing::info!("Successfully retrieved membership details for ID: {}", m.membership_id.unwrap_or(-1));
+        Ok(m)
+    } else {
+        Err(AppError::NotFound(format!(
+            "Membership with ID {:?} not found after save.",
+            final_membership_id
+        )))
+    }
+
+}

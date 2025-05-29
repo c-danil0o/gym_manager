@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE memberships SET\n                start_date = ?, end_date = ?, remaining_visits = ?,\n                status = ?, updated_at = ?, membership_type_id = ?\n            WHERE id = ? AND member_id = ? AND is_deleted = FALSE\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "78a49852f7f5582355c3a4ecdd49c5367de6b42004f4f49124c8ee52845dcf9b"
+}

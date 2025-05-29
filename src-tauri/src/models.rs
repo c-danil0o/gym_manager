@@ -129,3 +129,20 @@ pub struct MemberWithMembership {
     pub membership_remaining_visits: Option<i64>,
     pub membership_purchase_date: Option<NaiveDateTime>,
 }
+
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct MembershipInfo {
+    pub member_id: i64, // Member ID
+    pub member_first_name: Option<String>,
+    pub member_last_name: Option<String>,
+
+    pub membership_type_id: Option<i64>,
+    pub membership_type_name: Option<String>,
+
+    pub membership_id: Option<i64>,
+    pub membership_start_date: Option<NaiveDate>,
+    pub membership_end_date: Option<NaiveDate>,
+    pub membership_status: Option<String>,
+    pub membership_remaining_visits: Option<i64>,
+    pub membership_purchase_date: Option<NaiveDateTime>,
+}

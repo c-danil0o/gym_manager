@@ -7,66 +7,31 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
 	import DateField from '$lib/components/date-field/date-field.svelte';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import {
-		DateFormatter,
-		getLocalTimeZone,
 		parseDate,
-		today,
 		type DateValue
 	} from '@internationalized/date';
-	import Separator from '$lib/components/ui/separator/separator.svelte';
-	import {
-		memberWithMembershipSchema,
-		type MemberWithMembershipSchema
-	} from '$lib/schemas/member_with_membership_schema';
-	import type { MembershipType } from '$lib/models/membership_type';
-	import type { MemberWithMembership } from '$lib/models/member_with_membership';
-	import { onMount, tick } from 'svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses } from '$lib/utils';
+	import { onMount } from 'svelte';
+	import {editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
+	import type { Member } from '$lib/models/member';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 
-	let membershipTypes = $state<MembershipType[]>([]);
-	let selectedMembershipType: MembershipType | null = $state(null);
-	let data: MemberWithMembership | null = $state(null);
-
-	async function fetchMembershipTypes() {
+	async function fetchMember() {
 		isLoading = true;
 		error = null;
 		try {
-			const result = await invoke<MembershipType[]>('get_all_membership_types');
-			membershipTypes = result || [];
-		} catch (e: any) {
-			console.error('Error fetching membership types:', e);
-			error = e?.message;
-			toast.error(error || 'Failed to load membership types.');
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	async function fetchMemberWithMembership() {
-		isLoading = true;
-		error = null;
-		try {
-			const result = await invoke<MemberWithMembership>('get_member_by_id_with_membership', {
+			const result = await invoke<Member>('get_member_by_id', {
 				payload: {
 					id: Number(memberId)
 				}
 			});
 			if (result) {
-				data = result;
 				$formData.id = result.id;
 				$formData.card_id = result.card_id ?? '';
 				$formData.first_name = result.first_name;
@@ -74,23 +39,9 @@
 				$formData.email = result.email;
 				$formData.phone = result.phone;
 				$formData.date_of_birth = result.date_of_birth ?? null;
-				$formData.membership_id = result.membership_id;
-				$formData.membership_type_id = result.membership_type_id;
-				$formData.membership_start_date = result.membership_start_date ?? null;
-				$formData.membership_end_date = result.membership_end_date ?? null;
-				$formData.membership_remaining_visits = result.membership_remaining_visits;
-
-				if (result.membership_type_id) {
-					await tick();
-					$formData.membership_type_id = result.membership_type_id;
-					selectedMembershipType =
-						membershipTypes.find((t) => t.id === result.membership_type_id) || null;
-				} else {
-					data.membership_status = 'Inactive';
-				}
 			}
 		} catch (e: any) {
-			console.error('Error fetching member with membership:', e);
+			console.error('Error fetching member data:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load member data.');
 		} finally {
@@ -98,7 +49,7 @@
 		}
 	}
 
-	const initialValues: z.infer<MemberWithMembershipSchema> = {
+	const initialValues: z.infer<EditMemberTypeSchema> = {
 		id: 0,
 		card_id: '',
 		first_name: '',
@@ -106,15 +57,10 @@
 		email: '',
 		phone: '',
 		date_of_birth: null,
-		membership_id: null,
-		membership_type_id: null,
-		membership_start_date: null,
-		membership_end_date: null,
-		membership_remaining_visits: 0
 	};
 
 	const form = superForm(initialValues, {
-		validators: zodClient(memberWithMembershipSchema),
+		validators: zodClient(editMemberSchema),
 		syncFlashMessage: true,
 		dataType: 'json',
 		SPA: true,
@@ -131,11 +77,11 @@
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
-				const member = await invoke('save_member_with_membership', {
+				const member = await invoke('update_member', {
 					payload: result.data
 				});
 				toast.success('Data saved successfully!');
-				fetchMemberWithMembership();
+				fetchMember();
 			} else {
 				toast.error('Data is not valid!');
 			}
@@ -153,321 +99,96 @@
 		await goto('/members');
 	}
 
-	const df = new DateFormatter('bs-BA', {
-		dateStyle: 'long'
-	});
-
 	let date_of_birth = $state<DateValue | undefined>();
-	let start_date = $state<DateValue | undefined>();
-	let end_date = $state<DateValue | undefined>();
-	let purchase_date = $state<DateValue | undefined>();
-
-	$effect(() => {
-		start_date = $formData.membership_start_date ? parseDate($formData.membership_start_date) : undefined;
-	});
-
-	$effect(() => {
-		purchase_date = data?.membership_purchase_date
-			? parseDate(data.membership_purchase_date)
-			: undefined;
-	});
 
 	$effect(() => {
 		date_of_birth = $formData.date_of_birth ? parseDate($formData.date_of_birth) : undefined;
-	});
-
-	$effect(() => {
-		end_date = $formData.membership_end_date ? parseDate($formData.membership_end_date) : undefined;
 	});
 
 	function handleDobChange(newValue: DateValue | undefined) {
 		$formData.date_of_birth = newValue ? newValue.toString() : null;
 	}
 
-	function onChangeStartDate(newValue: DateValue | undefined) {
-		$formData.membership_start_date = newValue ? newValue.toString() : null;
-		const durationDays = selectedMembershipType?.duration_days;
-		if (newValue && durationDays) {
-			const endDate = newValue.add({ days: durationDays });
-			$formData.membership_end_date = endDate.toString();
-		}
-	}
-
-	function onChangeEndDate(newValue: DateValue | undefined) {
-		$formData.membership_end_date = newValue ? newValue.toString() : null;
-	}
-
-	function onMembershipTypeChange(id: number) {
-		if (Number.isNaN(id)) return;
-		$formData.membership_type_id = id;
-		selectedMembershipType = membershipTypes.find((t) => t.id === id) || null;
-		if (!selectedMembershipType) return;
-
-		let start = $formData.membership_start_date;
-		if (!start) {
-			start = today(getLocalTimeZone()).toString();
-			$formData.membership_start_date = start;
-		}
-
-		if (selectedMembershipType.duration_days) {
-			const startDateObj = parseDate(start);
-			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
-			$formData.membership_end_date = newEnd;
-		}
-		if (selectedMembershipType.visit_limit)
-			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
-	}
-
-	const todayVal = today(getLocalTimeZone());
-
 	onMount(async () => {
-		await fetchMembershipTypes();
 		if (memberId) {
-			fetchMemberWithMembership();
+			fetchMember();
 		}
 	});
 </script>
 
-<div class="container mx-auto p-4 md:p-8 max-w-7xl">
-	<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10 w-full">
-		<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-10">
-			<Card.Root class="w-full">
-				<Card.Header>
-					<Card.Title class="text-2xl">Member</Card.Title>
-				</Card.Header>
-				<Card.Content>
-					<div class="space-y-6">
-						<Form.Field {form} name="first_name">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">First Name</Form.Label>
-								<Input {...attrs} type="text" bind:value={$formData.first_name} />
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
+<div class="container mx-auto p-4 md:p-8 max-w-2xl">
+	<Card.Root>
+		<Card.Header>
+			<Card.Title class="text-2xl">Member</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10">
+				<div class="space-y-6">
+					<Form.Field {form} name="first_name">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">First Name</Form.Label>
+							<Input {...attrs} type="text" bind:value={$formData.first_name} />
+							<Form.FieldErrors />
+						</Form.Control>
+					</Form.Field>
 
-						<Form.Field {form} name="last_name">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Last Name</Form.Label>
-								<Input {...attrs} type="text" bind:value={$formData.last_name} />
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
+					<Form.Field {form} name="last_name">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">Last Name</Form.Label>
+							<Input {...attrs} type="text" bind:value={$formData.last_name} />
+							<Form.FieldErrors />
+						</Form.Control>
+					</Form.Field>
 
-						<Form.Field {form} name="email">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Email</Form.Label>
-								<Input {...attrs} type="email" bind:value={$formData.email} />
-								<Form.Description class="text-xs">Optional</Form.Description>
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
+					<Form.Field {form} name="email">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">Email</Form.Label>
+							<Input {...attrs} type="email" bind:value={$formData.email} />
+							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.FieldErrors />
+						</Form.Control>
+					</Form.Field>
 
-						<Form.Field {form} name="phone">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Phone</Form.Label>
-								<Input {...attrs} type="text" bind:value={$formData.phone} />
-								<Form.Description class="text-xs">Optional</Form.Description>
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
+					<Form.Field {form} name="phone">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">Phone</Form.Label>
+							<Input {...attrs} type="text" bind:value={$formData.phone} />
+							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.FieldErrors />
+						</Form.Control>
+					</Form.Field>
 
-						<Form.Field {form} name="date_of_birth">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Date of birth</Form.Label>
-								<DateField
-									{...attrs}
-									value={date_of_birth}
-									onValueChange={handleDobChange}
-									locale="bs-BA"
-								/>
-								<Form.FieldErrors />
-								<Form.Description class="text-xs">Optional</Form.Description>
-							</Form.Control>
-						</Form.Field>
-
-						<Form.Field {form} name="card_id">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Card Number</Form.Label>
-								<Input {...attrs} type="text" bind:value={$formData.card_id} />
-								<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
-					</div>
-				</Card.Content>
-			</Card.Root>
-
-			<Card.Root class="w-full">
-				<Card.Header>
-					<Card.Title class="text-2xl">Membership</Card.Title>
-				</Card.Header>
-				<Card.Content>
-					<div class="space-y-6">
-						<Form.Field {form} name="membership_type_id">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Membership Type</Form.Label>
-								<Select.Root
-									selected={membershipTypes.find((t) => t.id === $formData.membership_type_id)
-										? {
-												value: String($formData.membership_type_id),
-												label:
-													membershipTypes.find((t) => t.id === $formData.membership_type_id)
-														?.name ?? ''
-											}
-										: undefined}
-									onSelectedChange={(v) => {
-										if (v) {
-											const numValue = Number(v.value);
-											onMembershipTypeChange(numValue);
-										} else {
-											$formData.membership_type_id = null;
-										}
-									}}
-								>
-									<Select.Trigger {...attrs}>
-										<Select.Value placeholder="Select membership type" />
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Group>
-											{#each membershipTypes as type (type.id)}
-												<Select.Item value={String(type.id)} label={type.name}
-													>{type.name}</Select.Item
-												>
-											{/each}
-											{#if membershipTypes.length === 0 && !isLoading}
-												<div class="px-2 py-1.5 text-sm text-muted-foreground">
-													No types available.
-												</div>
-											{/if}
-										</Select.Group>
-									</Select.Content>
-								</Select.Root>
-								<Form.FieldErrors />
-							</Form.Control>
-						</Form.Field>
-						<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
-							<div class="w-1/2 space-y-2">
-								<Label class="font-semibold">Duration (days)</Label>
-								<Input type="text" readonly value={selectedMembershipType?.duration_days ?? ''} />
-							</div>
-							<div class="w-1/2 space-y-2">
-								<Label class="font-semibold">Visit Limit</Label>
-								<Input type="text" readonly value={selectedMembershipType?.visit_limit ?? ''} />
-							</div>
-
-							<div class="w-1/2 space-y-2">
-								<Label class="font-semibold">Enter by (hours)</Label>
-								<Input type="text" readonly value={selectedMembershipType?.enter_by ?? ''} />
-							</div>
-						</div>
-
-						<div class="w-full space-y-2 pb-2">
-							<Label class="font-semibold">Price</Label>
-							<Input type="text" readonly value={selectedMembershipType?.price ?? ''} />
-						</div>
-
-						<Separator />
-
-						<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
-							<Form.Field {form} name="membership_start_date" class="w-1/2">
-								<Form.Control let:attrs>
-									<Form.Label class="font-semibold">Start Date</Form.Label>
-									<Popover.Root>
-										<Popover.Trigger
-											class={cn(
-												buttonVariants({ variant: 'outline' }),
-												'w-full justify-start pl-4 text-left font-normal',
-												!start_date && 'text-muted-foreground'
-											)}
-										>
-											{start_date
-												? df.format(start_date.toDate(getLocalTimeZone()))
-												: 'Pick a date'}
-											<CalendarIcon class="ml-auto size-4 opacity-50" />
-										</Popover.Trigger>
-										<Popover.Content class="w-auto p-0" side="top">
-											<Calendar
-												type="single"
-												value={start_date}
-												onValueChange={onChangeStartDate}
-											/>
-										</Popover.Content>
-									</Popover.Root>
-									<Form.FieldErrors />
-								</Form.Control>
-							</Form.Field>
-
-							<Form.Field {form} name="end_date" class="w-1/2">
-								<Form.Control let:attrs>
-									<Form.Label class="font-semibold">End Date</Form.Label>
-									<Popover.Root>
-										<Popover.Trigger
-											class={cn(
-												buttonVariants({ variant: 'outline' }),
-												'w-full justify-start pl-4 text-left font-normal',
-												!end_date && 'text-muted-foreground'
-											)}
-										>
-											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
-											<CalendarIcon class="ml-auto size-4 opacity-50" />
-										</Popover.Trigger>
-										<Popover.Content class="w-auto p-0" side="top">
-											<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
-										</Popover.Content>
-									</Popover.Root>
-									<Form.FieldErrors />
-								</Form.Control>
-							</Form.Field>
-						</div>
-
-						<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
-							<div class="w-3/4 space-y-2 pb-2">
-								<Label class="font-semibold">Status</Label>
-								<Input
-									type="text"
-									class={getSubtleStatusClasses(data?.membership_status || '')}
-									readonly
-									value={data?.membership_status}
-								/>
-							</div>
-
-							<Form.Field {form} name="membership_remaining_visits" class="w-1/4">
-								<Form.Control let:attrs>
-									<Form.Label class="font-semibold">Remaining Visits</Form.Label>
-									<Input
-										{...attrs}
-										type="number"
-										min={0}
-										max={selectedMembershipType?.duration_days}
-										bind:value={$formData.membership_remaining_visits}
-									/>
-									<Form.FieldErrors />
-								</Form.Control>
-							</Form.Field>
-						</div>
-
-						<div class="w-full space-y-2 pb-2">
-							<Label class="font-semibold">Purchase Date</Label>
-							<Input
-								type="text"
-								readonly
-								value={data?.membership_purchase_date
-									? df.format(new Date(data.membership_purchase_date))
-									: 'Membership not purchased yet'}
+					<Form.Field {form} name="date_of_birth">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">Date of birth</Form.Label>
+							<DateField
+								{...attrs}
+								value={date_of_birth}
+								onValueChange={handleDobChange}
+								locale="bs-BA"
 							/>
-						</div>
-					</div>
-				</Card.Content>
-			</Card.Root>
-		</div>
+							<Form.FieldErrors />
+							<Form.Description class="text-xs">Optional</Form.Description>
+						</Form.Control>
+					</Form.Field>
 
-		<Card.Root class="w-1/2 mx-auto">
-			<Card.Content>
-				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Form.Button>
-					<Form.Button type="submit" class="w-full">Save</Form.Button>
+					<Form.Field {form} name="card_id">
+						<Form.Control let:attrs>
+							<Form.Label class="font-semibold">Card Number</Form.Label>
+							<Input {...attrs} type="text" bind:value={$formData.card_id} />
+							<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
+							<Form.FieldErrors />
+						</Form.Control>
+					</Form.Field>
+
+					<div class="flex gap-20 justify-around">
+						<Form.Button variant="outline" on:click={handleCancel} class="w-full"
+							>Cancel</Form.Button
+						>
+						<Form.Button type="submit" class="w-full">Save</Form.Button>
+					</div>
 				</div>
-			</Card.Content>
-		</Card.Root>
-	</form>
+			</form>
+		</Card.Content>
+	</Card.Root>
 </div>

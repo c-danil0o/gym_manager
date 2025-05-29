@@ -46,6 +46,23 @@ export function getSubtleStatusClasses(status: string): string {
 	}
 }
 
+export function getMembershipStatusBadgeVariant(
+		status: string | null
+	): 'default' | 'secondary' | 'destructive' | 'outline' {
+		switch (status?.toLowerCase()) {
+			case 'active':
+				return 'default'; // Or a success color if you have one
+			case 'expired':
+				return 'destructive';
+			case 'pending':
+				return 'secondary';
+			case 'cancelled':
+				return 'outline';
+			default:
+				return 'secondary';
+		}
+	}
+
 export const flyAndScale = (
 	node: Element,
 	params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }

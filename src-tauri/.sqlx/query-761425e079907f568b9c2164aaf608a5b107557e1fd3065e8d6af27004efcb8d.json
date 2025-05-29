@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE members SET\n            card_id = ?, short_card_id = ?, first_name = ?, last_name = ?,\n            email = ?, phone = ?, date_of_birth = ?, updated_at = ?\n        WHERE id = ? AND is_deleted = FALSE\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "761425e079907f568b9c2164aaf608a5b107557e1fd3065e8d6af27004efcb8d"
+}

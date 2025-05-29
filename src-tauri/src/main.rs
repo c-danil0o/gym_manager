@@ -95,9 +95,15 @@ fn main() {
             commands::membership_commands::get_all_membership_types,
             commands::membership_commands::delete_membership_type,
             commands::member_commands::add_member,
+            commands::member_commands::get_member_by_id,
+            commands::member_commands::delete_member,
+            commands::member_commands::update_member,
             commands::member_commands::get_members_with_memberships_paginated,
             commands::member_commands::get_member_by_id_with_membership,
             commands::member_commands::save_member_with_membership,
+            commands::member_commands::get_all_memberships_for_member,
+            commands::member_commands::save_membership,
+            commands::member_commands::get_membership_by_id,
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example

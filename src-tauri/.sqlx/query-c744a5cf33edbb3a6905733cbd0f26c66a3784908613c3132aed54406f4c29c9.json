@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE members SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c744a5cf33edbb3a6905733cbd0f26c66a3784908613c3132aed54406f4c29c9"
+}

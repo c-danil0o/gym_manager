@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            m.id as member_id,\n            m.first_name as member_first_name,\n            m.last_name as member_last_name,\n            mt.id as membership_type_id,\n            mt.name as membership_type_name,\n            ms.id as membership_id,\n            ms.start_date as membership_start_date,\n            ms.end_date as membership_end_date,\n            ms.status as membership_status,\n            ms.remaining_visits as membership_remaining_visits,\n            ms.purchase_date as membership_purchase_date\n        FROM\n            memberships ms\n        JOIN members m ON ms.member_id = m.id AND m.is_deleted = FALSE\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n        WHERE\n            ms.is_deleted = FALSE AND ms.id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "member_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "member_first_name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "member_last_name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "membership_type_id",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_type_name",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "membership_id",
+        "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_start_date",
+        "ordinal": 6,
+        "type_info": "Date"
+      },
+      {
+        "name": "membership_end_date",
+        "ordinal": 7,
+        "type_info": "Date"
+      },
+      {
+        "name": "membership_status",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "membership_remaining_visits",
+        "ordinal": 9,
+        "type_info": "Int64"
+      },
+      {
+        "name": "membership_purchase_date",
+        "ordinal": 10,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "dde58f7e960aac95cdfeb7749fc5cf017732a2daaddf006d3afc675fe9eed33a"
+}

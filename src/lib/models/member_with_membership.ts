@@ -45,3 +45,19 @@ export interface MemberWithMembership {
   membership_type_visit_limit: number | null;
   membership_type_enter_by: number | null;
 }
+
+export interface MembershipInfo {
+  member_id: number;
+  member_first_name: string | null;
+  member_last_name: string | null;
+
+	membership_id: number | null;
+	membership_status: string | null;
+	membership_start_date: string | null;
+	membership_end_date: string | null;
+	membership_remaining_visits: number | null;
+	membership_purchase_date: string | null;
+
+	membership_type_id: number | null;
+	membership_type_name: string | null;
+}

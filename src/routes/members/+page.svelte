@@ -18,6 +18,7 @@
 	import Search from 'lucide-svelte/icons/search';
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import type { MemberInfo, PaginatedMembersResponse } from '$lib/models/member_with_membership';
+	import { getMembershipStatusBadgeVariant } from '$lib/utils';
 
 	let membersData = $state<MemberInfo[]>([]);
 	let totalItems = $state(0);
@@ -94,22 +95,6 @@
 	//     // ... fetchMembers(currentPage, debouncedSearchQuery); ...
 	// }
 
-	function getMembershipStatusBadgeVariant(
-		status: string | null
-	): 'default' | 'secondary' | 'destructive' | 'outline' {
-		switch (status?.toLowerCase()) {
-			case 'active':
-				return 'default'; // Or a success color if you have one
-			case 'expired':
-				return 'destructive';
-			case 'pending':
-				return 'secondary';
-			case 'cancelled':
-				return 'outline';
-			default:
-				return 'secondary';
-		}
-	}
 </script>
 
 <div class="space-y-6">
@@ -212,11 +197,6 @@
 							<Table.Cell>
 								{#if member.membership_type_name}
 									{member.membership_type_name}
-									{#if member.membership_end_date}
-										<span class="text-xs text-muted-foreground block">
-											Ends: {new Date(member.membership_end_date).toLocaleDateString()}
-										</span>
-									{/if}
 								{:else}
 									<span class="text-muted-foreground">None</span>
 								{/if}
