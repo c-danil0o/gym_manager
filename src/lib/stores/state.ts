@@ -7,7 +7,7 @@ export interface HeaderState {
 }
 
 const initialHeaderState: HeaderState = {
-    title: 'Dashboard',
+    title: 'Scanner',
     showBackButton: false,
     backPath: undefined,
 };
