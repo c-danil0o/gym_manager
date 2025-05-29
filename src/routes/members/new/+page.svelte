@@ -16,6 +16,7 @@
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { setHeader } from '$lib/stores/state';
 	import { onMount } from 'svelte';
+	import type ErrorResponse from '$lib/models/error';
 
 	let submitting = false;
 	let newMember: null | Member = null;
@@ -65,7 +66,8 @@
 			}
 		} catch (error) {
 			showMembershipPrompt = false;
-			toast.error('Failed to add new member!');
+			const errorMessage = (error as ErrorResponse)?.message || 'Failed to add new member!';
+			toast.error(errorMessage);
 			submitting = false;
 			return;
 		} finally {
@@ -78,16 +80,16 @@
 
 	async function assignMembership() {
 		if (newMember) {
-			await goto(`/members/${newMember.id}/edit`);
+			await goto(`/members/${newMember.id}/new-membership`);
 		}
 		showMembershipPrompt = false;
 	}
 	onMount(() => {
-    setHeader({
-      title: 'New Member',
-      showBackButton: true
-    });
-  });
+		setHeader({
+			title: 'New Member',
+			showBackButton: true
+		});
+	});
 </script>
 
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">

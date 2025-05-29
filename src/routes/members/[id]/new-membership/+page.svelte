@@ -32,6 +32,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { setHeader } from '$lib/stores/state';
 	import { preventDefault } from '$lib';
+	import type { ErrorResponse } from '$lib/models/error';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -122,8 +123,8 @@
 			}
 		} catch (error) {
 			console.log(error);
-
-			toast.error('Failed to save data!');
+			const errorMessage = (error as ErrorResponse)?.message || 'Failed to assign membership!';
+			toast.error(errorMessage);
 			return;
 		} finally {
 			isLoading = false;
@@ -247,7 +248,7 @@
 			<Card.Title class="text-2xl">Membership</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form method="post"  onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
+			<form method="post" onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
 						<Label class="font-semibold">Member</Label>

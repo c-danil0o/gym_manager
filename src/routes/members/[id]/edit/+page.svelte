@@ -16,6 +16,7 @@
 	import type { Member } from '$lib/models/member';
 	import { setHeader } from '$lib/stores/state';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import type { ErrorResponse } from '$lib/models/error';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -87,8 +88,9 @@
 			}
 		} catch (error) {
 			console.log(error);
+			const errorMessage = (error as ErrorResponse)?.message || 'Failed to edit member!';
+			toast.error(errorMessage);
 
-			toast.error('Failed to save data!');
 			return;
 		} finally {
 			isLoading = false;

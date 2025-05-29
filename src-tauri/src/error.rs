@@ -32,13 +32,21 @@ pub enum AppError {
     ApiError { status: u16, message: String },
 }
 
-impl Serialize for AppError {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.to_string())
+impl Serialize for AppError {fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    #[derive(Serialize)]
+    struct ErrorMessage {
+        message: String,
     }
+
+    let error_message = ErrorMessage {
+        message: self.to_string(),
+    };
+
+    error_message.serialize(serializer)
+}
 }
 
 // Custom Result type alias

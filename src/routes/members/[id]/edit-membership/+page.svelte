@@ -30,6 +30,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import { setHeader } from '$lib/stores/state';
+	import type { ErrorResponse } from '$lib/models/error';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -136,8 +137,9 @@
 			}
 		} catch (error) {
 			console.log(error);
+			const errorMessage = (error as ErrorResponse)?.message || 'Failed to edit membership!';
+			toast.error(errorMessage);
 
-			toast.error('Failed to save data!');
 			return;
 		} finally {
 			isLoading = false;

@@ -17,6 +17,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { setHeader } from '$lib/stores/state';
 	import { onMount } from 'svelte';
+	import type { ErrorResponse } from '$lib/models/error';
 
 	let submitting = false;
 
@@ -35,6 +36,7 @@
 		dataType: 'json',
 		SPA: true,
 		taintedMessage: null,
+		resetForm: false,
 		onUpdated({ form: currentForm }) {
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}
@@ -54,7 +56,9 @@
 				toast.error('Data is not valid!');
 			}
 		} catch (error) {
-			toast.error('Failed to add new membership type!');
+			console.log(error);
+			const errorMessage = (error as ErrorResponse)?.message || 'Failed to add new membership type!';
+			toast.error(errorMessage);
 			submitting = false;
 			return;
 		} finally {
@@ -65,11 +69,11 @@
 		await goto('/memberships');
 	}
 	onMount(() => {
-    setHeader({
-      title: 'New Membership Type',
-      showBackButton: true
-    });
-  });
+		setHeader({
+			title: 'New Membership Type',
+			showBackButton: true
+		});
+	});
 </script>
 
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
