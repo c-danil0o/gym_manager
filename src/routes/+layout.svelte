@@ -128,7 +128,7 @@
 							<Card.Description>Create new member and assign him a membership.</Card.Description>
 						</Card.Header>
 						<Card.Content class="p-2 pt-0 md:p-4 md:pt-0">
-							<Button size="sm" class="w-full">Add</Button>
+							<Button size="sm" class="w-full" on:click={() => {goto('/members/new')}}>Add</Button>
 						</Card.Content>
 					</Card.Root>
 				</div>
@@ -223,7 +223,7 @@
 					{:else}
 						<div class='w-5 h-5'></div>
 					{/if}
-					<h1 class="text-lg font-semibold text-muted-foreground md:text-xl">{$headerState.title}</h1>
+					<h1 class="text-lg font-semibold md:text-xl">{$headerState.title}</h1>
 					<div class='w-5 h-5'></div>
 				</div>
 				<LightSwitch />

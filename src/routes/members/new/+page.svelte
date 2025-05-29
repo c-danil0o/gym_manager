@@ -36,6 +36,7 @@
 		dataType: 'json',
 		SPA: true,
 		taintedMessage: null,
+		resetForm: false,
 		onUpdated({ form: currentForm }) {
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}
@@ -95,7 +96,7 @@
 			<Card.Title class="text-2xl">Add New Member</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="first_name">
 					<Form.Control let:attrs>
 						<Form.Label class="font-semibold">First Name</Form.Label>

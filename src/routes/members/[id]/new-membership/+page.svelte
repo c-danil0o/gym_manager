@@ -31,6 +31,7 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { setHeader } from '$lib/stores/state';
+	import { preventDefault } from '$lib';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -92,6 +93,7 @@
 		dataType: 'json',
 		SPA: true,
 		taintedMessage: null,
+		resetForm: false,
 		onUpdated({ form: currentForm }) {
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}
@@ -245,7 +247,7 @@
 			<Card.Title class="text-2xl">Membership</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10 w-full">
+			<form method="post"  onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
 						<Label class="font-semibold">Member</Label>

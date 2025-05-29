@@ -64,6 +64,7 @@
 		dataType: 'json',
 		SPA: true,
 		taintedMessage: null,
+		resetForm: false,
 		onUpdated({ form: currentForm }) {
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}

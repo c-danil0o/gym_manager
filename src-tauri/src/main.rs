@@ -96,6 +96,7 @@ fn main() {
             commands::member_commands::get_member_by_id_with_membership,
             commands::membership_commands::get_all_memberships_for_member,
             commands::membership_commands::save_membership,
+            commands::membership_commands::delete_membership,
             commands::membership_commands::get_membership_by_id,
         ])
         // --- Optional: Add Plugins ---

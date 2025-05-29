@@ -83,22 +83,18 @@
 		});
 		fetchMembers();
 	});
+	function handleViewMember(memberId: number) {
+    goto(`/members/${memberId}`);
+  }
 
 	function handleAddNewMember() {
 		goto('/members/new');
 	}
 
 	function handleEditMember(memberId: number) {
-		goto(`/members/${memberId}`);
+		goto(`/members/${memberId}/edit`);
 	}
 
-	// Placeholder for delete if you implement it
-	// async function handleDeleteMember(memberId: number, memberName: string) {
-	//     // ... confirmation dialog ...
-	//     // ... invoke tauri command ...
-	//     // ... toast message ...
-	//     // ... fetchMembers(currentPage, debouncedSearchQuery); ...
-	// }
 </script>
 
 <div class="space-y-6">
@@ -190,7 +186,7 @@
 				</Table.Header>
 				<Table.Body>
 					{#each membersData as member (member.id)}
-						<Table.Row on:click={() => handleEditMember(member.id)} class="cursor-pointer">
+						<Table.Row on:click={() => handleViewMember(member.id)} class="cursor-pointer">
 							<Table.Cell class="font-medium">{member.first_name} {member.last_name}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell text-muted-foreground"
 								>{member.card_id || 'N/A'}</Table.Cell
