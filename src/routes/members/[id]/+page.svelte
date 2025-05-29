@@ -70,6 +70,19 @@
 		if (memberId) await goto(`/members/${memberId}/edit`);
 	}
 
+	async function handleDeleteMember(id: number | null) {
+		if (!id) return;
+
+		try {
+			await invoke('delete_member', { id });
+			toast.success('Member deleted successfully.');
+			goto('/members');
+		} catch (e: any) {
+			console.error('Error deleting member:', e);
+			toast.error(e?.message || 'Failed to delete member!.');
+		}
+	}
+
 	async function handleEditMembership(membershipId: number | null) {
 		if (memberId && membershipId)
 			await goto(`/members/${memberId}/edit-membership?membershipId=${membershipId}`);
@@ -116,14 +129,38 @@
 					<Card.Title class="text-2xl flex justify-between"
 						>Member
 
-						<Button
-							on:click={() => handleEditMember(data?.id)}
-							variant="outline"
-							size="icon"
-							title="Edit Member"
-						>
-							<Pencil class="h-4 w-4" />
-						</Button>
+						<div class='space-x-2'>
+							<Button
+								on:click={() => handleEditMember(data?.id)}
+								variant="outline"
+								size="icon"
+								title="Edit Member"
+							>
+								<Pencil class="h-4 w-4" />
+							</Button>
+
+							<AlertDialog.Root>
+								<AlertDialog.Trigger>
+									<Button variant="destructive" size="icon" title="Delete">
+										<Trash2 class="h-4 w-4" />
+									</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+										<AlertDialog.Description>
+											This action cannot be undone. This will permanently delete member from system!</AlertDialog.Description
+										>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+										<AlertDialog.Action on:click={() => handleDeleteMember(data?.id)}
+											>Continue</AlertDialog.Action
+										>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						</div>
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
