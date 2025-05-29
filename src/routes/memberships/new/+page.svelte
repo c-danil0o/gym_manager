@@ -15,6 +15,8 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import { setHeader } from '$lib/stores/state';
+	import { onMount } from 'svelte';
 
 	let submitting = false;
 
@@ -62,6 +64,12 @@
 	async function handleCancel() {
 		await goto('/memberships');
 	}
+	onMount(() => {
+    setHeader({
+      title: 'New Membership Type',
+      showBackButton: true
+    });
+  });
 </script>
 
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">

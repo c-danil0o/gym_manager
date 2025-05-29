@@ -14,6 +14,8 @@
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import { setHeader } from '$lib/stores/state';
+	import { onMount } from 'svelte';
 
 	let submitting = false;
 	let newMember: null | Member = null;
@@ -79,6 +81,12 @@
 		}
 		showMembershipPrompt = false;
 	}
+	onMount(() => {
+    setHeader({
+      title: 'New Member',
+      showBackButton: true
+    });
+  });
 </script>
 
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">

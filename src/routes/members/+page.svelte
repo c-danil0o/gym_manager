@@ -19,6 +19,7 @@
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import type { MemberInfo, PaginatedMembersResponse } from '$lib/models/member_with_membership';
 	import { getMembershipStatusBadgeVariant } from '$lib/utils';
+	import { setHeader } from '$lib/stores/state';
 
 	let membersData = $state<MemberInfo[]>([]);
 	let totalItems = $state(0);
@@ -76,6 +77,10 @@
 	}
 
 	onMount(() => {
+		setHeader({
+			title: 'Members',
+			showBackButton: false
+		});
 		fetchMembers();
 	});
 
@@ -94,7 +99,6 @@
 	//     // ... toast message ...
 	//     // ... fetchMembers(currentPage, debouncedSearchQuery); ...
 	// }
-
 </script>
 
 <div class="space-y-6">

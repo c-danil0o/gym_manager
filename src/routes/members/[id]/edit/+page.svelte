@@ -10,13 +10,11 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import {
-		parseDate,
-		type DateValue
-	} from '@internationalized/date';
+	import { parseDate, type DateValue } from '@internationalized/date';
 	import { onMount } from 'svelte';
-	import {editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
+	import { editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
 	import type { Member } from '$lib/models/member';
+	import { setHeader } from '$lib/stores/state';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	let isLoading = $state(false);
@@ -57,7 +55,7 @@
 		last_name: '',
 		email: '',
 		phone: '',
-		date_of_birth: null,
+		date_of_birth: null
 	};
 
 	const form = superForm(initialValues, {
@@ -111,6 +109,10 @@
 	}
 
 	onMount(async () => {
+		setHeader({
+			title: 'Edit Member',
+			showBackButton: true
+		});
 		if (memberId) {
 			fetchMember();
 		}
@@ -183,9 +185,7 @@
 					</Form.Field>
 
 					<div class="flex gap-20 justify-around">
-						<Button variant="outline" on:click={handleCancel} class="w-full"
-							>Cancel</Button
-						>
+						<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
 						<Form.Button type="submit" class="w-full">Save</Form.Button>
 					</div>
 				</div>

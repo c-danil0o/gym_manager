@@ -11,6 +11,8 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import { headerState, resetHeader } from '$lib/stores/state';
+	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 
 	import '../app.css';
 	import { auth } from '$lib/stores/auth';
@@ -30,8 +32,16 @@
 	$effect(() => {
 		if (browser && !$auth.isAuthenticated && page.url.pathname !== '/') {
 			goto('/');
+			resetHeader();
 		}
 	});
+	function handleBack() {
+		if ($headerState.backPath) {
+			goto($headerState.backPath);
+		} else {
+			window.history.back();
+		}
+	}
 
 	let mounted = $state(false);
 	onMount(() => {
@@ -125,7 +135,7 @@
 			</div>
 		</div>
 		<div class="flex flex-col h-screen overflow-hidden">
-			<header class="bg-muted/40 flex h-14 items-center gap-4 border-b px-4 lg:h-[60px] lg:px-6">
+			<header class="bg-muted/20 flex h-14 items-center gap-4 border-b px-4 lg:h-[60px] lg:px-6">
 				<Sheet.Root>
 					<Sheet.Trigger asChild let:builder>
 						<Button variant="outline" size="icon" class="shrink-0 md:hidden" builders={[builder]}>
@@ -205,7 +215,17 @@
 						</div>
 					</Sheet.Content>
 				</Sheet.Root>
-				<div class="w-full flex-1"></div>
+				<div class="flex flex-1 justify-between items-center gap-2">
+					{#if $headerState.showBackButton}
+						<Button variant="ghost" size="icon" on:click={handleBack} aria-label="Go back">
+							<ArrowLeft class="h-5 w-5" />
+						</Button>
+					{:else}
+						<div class='w-5 h-5'></div>
+					{/if}
+					<h1 class="text-lg font-semibold text-muted-foreground md:text-xl">{$headerState.title}</h1>
+					<div class='w-5 h-5'></div>
+				</div>
 				<LightSwitch />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>

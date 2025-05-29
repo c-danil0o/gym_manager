@@ -30,6 +30,7 @@
 	import type { Member } from '$lib/models/member';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import { setHeader } from '$lib/stores/state';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -227,6 +228,10 @@
 	});
 
 	onMount(async () => {
+		setHeader({
+			title: 'Assign Membership',
+			showBackButton: true
+		});
 		await fetchMembershipTypes();
 		if (memberId) {
 			fetchMember();

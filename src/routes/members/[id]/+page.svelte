@@ -16,6 +16,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Pencil, Plus, Trash2 } from 'lucide-svelte';
+	import { setHeader } from '$lib/stores/state';
 
 	let isLoading = $state(false);
 	let isLoadingHistory = $state(true);
@@ -70,7 +71,8 @@
 	}
 
 	async function handleEditMembership(membershipId: number | null) {
-		if (memberId && membershipId) await goto(`/members/${memberId}/edit-membership?membershipId=${membershipId}`);
+		if (memberId && membershipId)
+			await goto(`/members/${memberId}/edit-membership?membershipId=${membershipId}`);
 	}
 	async function handleDeleteMembership(id: number | null) {
 		if (!id) return;
@@ -95,6 +97,10 @@
 	});
 
 	onMount(async () => {
+		setHeader({
+			title: 'Member Details',
+			showBackButton: true
+		});
 		if (memberId) {
 			fetchMemberWithMembership();
 			fetchMemberships();
@@ -167,13 +173,13 @@
 						>Membership
 
 						{#if data?.membership_id}
-						<Button
-							on:click={() => handleAddNewMembership(data?.id)}
-							size="icon"
-							title="Add Membership"
-						>
-							<Plus class="h-4 w-4" />
-						</Button>
+							<Button
+								on:click={() => handleAddNewMembership(data?.id)}
+								size="icon"
+								title="Add Membership"
+							>
+								<Plus class="h-4 w-4" />
+							</Button>
 						{/if}
 					</Card.Title>
 				</Card.Header>

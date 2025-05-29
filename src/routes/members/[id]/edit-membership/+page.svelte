@@ -29,6 +29,7 @@
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import { setHeader } from '$lib/stores/state';
 
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
@@ -242,6 +243,10 @@
 	});
 
 	onMount(async () => {
+		setHeader({
+			title: 'Edit Membership',
+			showBackButton: true
+		});
 		await fetchMembershipTypes();
 		if (membershipId) {
 			fetchMembership();
