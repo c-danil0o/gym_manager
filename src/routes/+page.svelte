@@ -78,15 +78,30 @@
 		}
 	}
 
-	onMount(async () => {
+	const handleGlobalKeyPress = (event: KeyboardEvent) => {
+		if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+			// Only allow numbers
+			if (!/^[0-9]$/.test(event.key)) {
+				return;
+			}
+
+			cardIdInput += event.key;
+			inputElement?.focus();
+			event.preventDefault();
+		}
+	};
+
+	onMount(() => {
 		setHeader({
 			title: 'Scanner',
 			showBackButton: false
 		});
 
-		await fetchRecentEntries();
-		await tick(); // Ensure the DOM is updated before focusing
+		fetchRecentEntries();
 		inputElement?.focus();
+
+		window.addEventListener('keypress', handleGlobalKeyPress);
+		return () => window.removeEventListener('keypress', handleGlobalKeyPress);
 	});
 
 	$effect(() => {
