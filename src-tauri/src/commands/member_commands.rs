@@ -106,17 +106,29 @@ FROM
 LEFT JOIN (
     SELECT
         ms_inner.*,
-        ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY
-            CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,
-            ms_inner.start_date DESC
-        ) as rn
-    FROM memberships ms_inner
-    WHERE ms_inner.is_deleted = FALSE
+        ROW_NUMBER() OVER (
+            PARTITION BY ms_inner.member_id
+            ORDER BY
+                -- 1. Prioritize 'active' status first
+                CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END ASC,
+                -- 2. If not active, prioritize 'pending' status next
+                CASE ms_inner.status WHEN 'pending' THEN 0 ELSE 1 END ASC,
+                -- 3. For 'pending' memberships, pick the one with the closest future start_date
+                CASE WHEN ms_inner.status = 'pending' THEN ms_inner.start_date ELSE NULL END ASC, -- NULLS LAST for pending means future dates come first
+                -- 4. For 'active' memberships, pick the most recent start_date
+                CASE WHEN ms_inner.status = 'active' THEN ms_inner.start_date ELSE NULL END DESC,
+                -- 5. For all other statuses (expired, inactive, suspended), pick the most recent start_date
+                ms_inner.start_date DESC
+        ) AS rn
+    FROM
+        memberships ms_inner
+    WHERE
+        (ms_inner.is_deleted IS NULL OR ms_inner.is_deleted = FALSE)
 ) ms ON m.id = ms.member_id AND ms.rn = 1
 LEFT JOIN
-    membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
+    membership_types mt ON ms.membership_type_id = mt.id AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
 WHERE
-    m.is_deleted = FALSE
+    (m.is_deleted IS NULL OR m.is_deleted = FALSE)
 "#;
 
 #[tauri::command]
@@ -226,11 +238,21 @@ pub async fn get_member_by_id_with_membership(
           members m
       LEFT JOIN (
           SELECT
-              ms_inner.*,
-              ROW_NUMBER() OVER(PARTITION BY ms_inner.member_id ORDER BY
-                  CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END,
-                  ms_inner.start_date DESC
-              ) as rn
+            ms_inner.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY ms_inner.member_id
+                ORDER BY
+                    -- 1. Prioritize 'active' status first
+                    CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END ASC,
+                    -- 2. If not active, prioritize 'pending' status next
+                    CASE ms_inner.status WHEN 'pending' THEN 0 ELSE 1 END ASC,
+                    -- 3. For 'pending' memberships, pick the one with the closest future start_date
+                    CASE WHEN ms_inner.status = 'pending' THEN ms_inner.start_date ELSE NULL END ASC, -- NULLS LAST for pending means future dates come first
+                    -- 4. For 'active' memberships, pick the most recent start_date
+                    CASE WHEN ms_inner.status = 'active' THEN ms_inner.start_date ELSE NULL END DESC,
+                    -- 5. For all other statuses (expired, inactive, suspended), pick the most recent start_date
+                    ms_inner.start_date DESC
+            ) AS rn
           FROM memberships ms_inner
           WHERE ms_inner.is_deleted = FALSE
       ) ms ON m.id = ms.member_id AND ms.rn = 1

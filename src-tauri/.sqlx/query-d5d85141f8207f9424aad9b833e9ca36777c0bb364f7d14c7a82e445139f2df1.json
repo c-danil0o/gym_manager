@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE memberships SET remaining_visits = ?, updated_at = ?, status = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "d5d85141f8207f9424aad9b833e9ca36777c0bb364f7d14c7a82e445139f2df1"
+}

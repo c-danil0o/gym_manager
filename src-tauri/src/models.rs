@@ -64,6 +64,7 @@ pub struct EntryLog {
     pub entry_time: NaiveDateTime,
     pub status: String,
     pub created_at: NaiveDateTime,
+    pub notes: Option<String>,
 }
 
 #[derive(sqlx::FromRow, Debug)]

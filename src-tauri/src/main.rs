@@ -98,6 +98,10 @@ fn main() {
             commands::membership_commands::save_membership,
             commands::membership_commands::delete_membership,
             commands::membership_commands::get_membership_by_id,
+            commands::entry_log_commands::process_scan,
+            commands::entry_log_commands::get_recent_entry_logs,
+            commands::entry_log_commands::get_entry_logs,
+            commands::entry_log_commands::get_member_entry_logs,
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example
