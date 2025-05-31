@@ -75,6 +75,9 @@
 			case 'DeniedMemberNotFound':
 			case 'DeniedCardNotAssigned':
 				return { icon: XCircle, colorClass: 'text-red-500', title: 'Entry Denied' };
+			case 'DeniedAfterHours':
+			case 'DeniedAlreadyCheckedIn':
+        return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Entry Denied' };
 			case 'Error':
 			default:
 				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Scan Issue' };

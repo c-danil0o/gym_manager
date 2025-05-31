@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            m.id as member_id,\n            m.first_name as member_first_name,\n            m.last_name as member_last_name,\n            mt.id as membership_type_id,\n            mt.name as membership_type_name,\n            ms.id as membership_id,\n            ms.start_date as membership_start_date,\n            ms.end_date as membership_end_date,\n            ms.status as membership_status,\n            ms.remaining_visits as membership_remaining_visits,\n            ms.purchase_date as membership_purchase_date\n        FROM\n            members m\n        JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n        WHERE\n            m.is_deleted = FALSE AND m.id = ?\n        ",
+  "query": "\n        SELECT\n            m.id as member_id,\n            m.first_name as member_first_name,\n            m.last_name as member_last_name,\n            mt.id as membership_type_id,\n            mt.name as membership_type_name,\n            mt.enter_by as membership_type_enter_by,\n            ms.id as membership_id,\n            ms.start_date as membership_start_date,\n            ms.end_date as membership_end_date,\n            ms.status as membership_status,\n            ms.remaining_visits as membership_remaining_visits,\n            ms.purchase_date as membership_purchase_date\n        FROM\n            members m\n        JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n        WHERE\n            m.is_deleted = FALSE AND m.id = ?\n        ",
   "describe": {
     "columns": [
       {
@@ -29,33 +29,38 @@
         "type_info": "Text"
       },
       {
-        "name": "membership_id",
+        "name": "membership_type_enter_by",
         "ordinal": 5,
         "type_info": "Int64"
       },
       {
-        "name": "membership_start_date",
+        "name": "membership_id",
         "ordinal": 6,
-        "type_info": "Date"
+        "type_info": "Int64"
       },
       {
-        "name": "membership_end_date",
+        "name": "membership_start_date",
         "ordinal": 7,
         "type_info": "Date"
       },
       {
-        "name": "membership_status",
+        "name": "membership_end_date",
         "ordinal": 8,
+        "type_info": "Date"
+      },
+      {
+        "name": "membership_status",
+        "ordinal": 9,
         "type_info": "Text"
       },
       {
         "name": "membership_remaining_visits",
-        "ordinal": 9,
+        "ordinal": 10,
         "type_info": "Int64"
       },
       {
         "name": "membership_purchase_date",
-        "ordinal": 10,
+        "ordinal": 11,
         "type_info": "Datetime"
       }
     ],
@@ -69,6 +74,7 @@
       false,
       true,
       true,
+      true,
       false,
       true,
       false,
@@ -76,5 +82,5 @@
       false
     ]
   },
-  "hash": "3ffc9dc7fcf71fcb33bec4c47bf27cd37421e98c56caea467c430072fda56ff7"
+  "hash": "a0a2e4cea19402d4ec69f28f859f5145587db0c42c1cc799d4936c13cf65f655"
 }

@@ -147,6 +147,7 @@ pub struct MembershipInfo {
 
     pub membership_type_id: Option<i64>,
     pub membership_type_name: Option<String>,
+    pub membership_type_enter_by: Option<i64>,
 
     pub membership_id: Option<i64>,
     pub membership_start_date: Option<NaiveDate>,
@@ -163,6 +164,8 @@ pub enum EntryStatus {
     DeniedNoMembership,
     DeniedMembershipExpired,
     DeniedNoVisitsLeft,
+    DeniedAlreadyCheckedIn,
+    DeniedAfterHours,
     DeniedMembershipNotActiveYet,
     DeniedMembershipSuspended,
     DeniedMemberNotFound,

@@ -3,6 +3,8 @@ export type EntryStatus =
 	| 'DeniedNoMembership'
 	| 'DeniedMembershipExpired'
 	| 'DeniedNoVisitsLeft'
+	| 'DeniedAlreadyCheckedIn'
+	| 'DeniedAfterHours'
 	| 'DeniedMembershipNotActiveYet'
 	| 'DeniedMembershipSuspended'
 	| 'DeniedMemberNotFound'

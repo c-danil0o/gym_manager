@@ -1,15 +1,19 @@
 use crate::{
     dto::{
-        EntryLogDisplay, EntryLogSearchParams, EntryLogSearchResult, EntryStatus,
-        MembershipInfo, ScanPayload, ScanProcessingResult,
+        EntryLogDisplay, EntryLogSearchParams, EntryLogSearchResult, EntryStatus, MembershipInfo,
+        ScanPayload, ScanProcessingResult,
     },
     error::Result as AppResult,
     models::Member,
     state::AppState,
+    AppError,
 };
-use chrono::{NaiveDate, Utc};
-use sqlx::{SqliteConnection, Row};
+use chrono::{NaiveDate, Timelike, Utc};
+use chrono_tz::Tz;
+use sqlx::{Row, SqliteConnection};
 use tauri::State;
+
+const GYM_TIMEZONE: &str = "Europe/Belgrade";
 
 async fn calculate_and_update_membership_status_if_needed(
     conn: &mut SqliteConnection,
@@ -152,6 +156,7 @@ pub async fn process_scan(
             ms.status as membership_status,
             ms.purchase_date as membership_purchase_date,
             mt.name AS membership_type_name,
+            mt.enter_by AS membership_type_enter_by,
             '' AS member_first_name,
             '' AS member_last_name
         FROM
@@ -319,6 +324,60 @@ pub async fn process_scan(
         }
     }
 
+    if let Some(enter_by_hours) = membership.membership_type_enter_by {
+        // Check if entry is allowed based on enter_by_hours
+        let gym_tz: Tz = GYM_TIMEZONE.parse().map_err(|e| {
+            tracing::error!("Failed to parse GYM_TIMEZONE_STR: {}", e);
+            AppError::Config("Invalid gym timezone configuration.".to_string())
+        })?;
+
+        let now = Utc::now().with_timezone(&gym_tz);
+
+        // Get the current hour
+        let current_hour = now.time().hour() as i64;
+
+        if current_hour >= enter_by_hours {
+            return deny_entry(
+                &mut conn,
+                Some(member.id),
+                Some(membership_id),
+                scanned_card_id,
+                EntryStatus::DeniedAfterHours,
+                "denied_after_hours",
+                &format!("Entry not allowed after {}:00.", enter_by_hours),
+                Some(member_full_name),
+                Some(&membership),
+            )
+            .await;
+        }
+    }
+    // Check if member is already checked in today
+    let today = Utc::now().date_naive();
+    let already_checked_in = sqlx::query!(
+        "SELECT COUNT(*) as count FROM entry_logs WHERE member_id = ? AND DATE(entry_time) = ? AND status = 'allowed'",
+        member.id,
+        today
+    )
+    .fetch_one(&mut *conn)
+    .await?
+    .count
+        > 0;
+
+    if already_checked_in {
+        return deny_entry(
+            &mut conn,
+            Some(member.id),
+            Some(membership_id),
+            scanned_card_id,
+            EntryStatus::DeniedAlreadyCheckedIn,
+            "denied_already_checked_in",
+            "Member has already checked in today.",
+            Some(member_full_name),
+            Some(&membership),
+        )
+        .await;
+    }
+
     // Handle active membership - update visits and allow entry
     let current_visits = membership.membership_remaining_visits.unwrap_or(0);
     let new_visits = current_visits - 1;
@@ -388,7 +447,6 @@ async fn log_entry_attempt(
     .await?;
     Ok(())
 }
-
 
 fn build_where_clause_and_params(params: &EntryLogSearchParams) -> (String, Vec<String>) {
     let mut where_conditions = Vec::new();
