@@ -14,6 +14,7 @@
 	import type { ScanProcessingResult, EntryLogDisplay } from '$lib/models/entry';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { setHeader } from '$lib/stores/state';
+	import { DateFormatter, parseDateTime } from '@internationalized/date';
 
 	let cardIdInput = $state('');
 	let inputElement: any | null = $state(null); // For focusing
@@ -112,7 +113,8 @@
 
 	function formatDate(dateStr: string | null | undefined): string {
 		if (!dateStr) return 'N/A';
-		return new Date(dateStr).toLocaleString('bs-BA', {
+		const date = parseDateTime(dateStr).toDate('UTC');
+		return date.toLocaleString('bs-BA', {
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit',
