@@ -87,6 +87,8 @@ fn main() {
             commands::admin_commands::login_admin,
             commands::membership_type_commands::add_membership_type,
             commands::membership_type_commands::get_all_membership_types,
+            commands::membership_type_commands::get_membership_type_by_id,
+            commands::membership_type_commands::update_membership_type,
             commands::membership_type_commands::delete_membership_type,
             commands::member_commands::add_member,
             commands::member_commands::get_member_by_id,

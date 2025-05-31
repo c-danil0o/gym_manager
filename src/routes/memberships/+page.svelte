@@ -59,7 +59,7 @@
 	}
 
 	function handleEdit(typeId: number) {
-		goto(`/memberships/${typeId}`);
+		goto(`/memberships/${typeId}/edit`);
 	}
 </script>
 

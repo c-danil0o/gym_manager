@@ -140,7 +140,7 @@
 					disabled={isProcessingScan}
 					aria-label="Card ID Input"
 				/>
-				<Button type="submit" size="lg" class="h-14 w-1/2 m-4" disabled={isProcessingScan}>
+				<Button type="submit" size="lg" class="w-1/2 m-4" disabled={isProcessingScan}>
 					{#if isProcessingScan}
 						Processing... <!-- Or a spinner -->
 					{:else}
