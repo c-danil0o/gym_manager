@@ -66,7 +66,7 @@
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<h1 class="text-2xl font-semibold">Membership Types</h1>
-		<Button on:click={handleAddNew}>
+		<Button onclick={handleAddNew}>
 			<PlusCircle class="mr-2 h-4 w-4" />
 			Add New Type
 		</Button>
@@ -83,7 +83,7 @@
 			</Card.Header>
 			<Card.Content>
 				<p>{error}</p>
-				<Button on:click={fetchMembershipTypes} variant="outline" class="mt-4">Try Again</Button>
+				<Button onclick={fetchMembershipTypes} variant="outline" class="mt-4">Try Again</Button>
 			</Card.Content>
 		</Card.Root>
 	{:else if membershipTypes.length === 0}
@@ -91,7 +91,7 @@
 			<Card.Content class="pt-6">
 				<p class="text-center text-muted-foreground">No membership types found.</p>
 				<p class="text-center mt-2">
-					<Button on:click={handleAddNew} variant="link">Add the first one!</Button>
+					<Button onclick={handleAddNew} variant="link">Add the first one!</Button>
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -122,7 +122,7 @@
 							<Table.Cell class="text-right">${type.price.toFixed(2)}</Table.Cell>
 							<Table.Cell class="text-center space-x-2">
 								<Button
-									on:click={() => handleEdit(type.id)}
+									onclick={() => handleEdit(type.id)}
 									variant="outline"
 									size="icon"
 									title="Edit"
@@ -145,7 +145,7 @@
 										</AlertDialog.Header>
 										<AlertDialog.Footer>
 											<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-											<AlertDialog.Action on:click={() => handleDelete(type.id, type.name)}
+											<AlertDialog.Action onclick={() => handleDelete(type.id, type.name)}
 												>Continue</AlertDialog.Action
 											>
 										</AlertDialog.Footer>

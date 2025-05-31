@@ -16,7 +16,7 @@
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { setHeader } from '$lib/stores/state';
 	import { onMount } from 'svelte';
-	import type ErrorResponse from '$lib/models/error';
+	import type { ErrorResponse } from '$lib/models/error';
 
 	let submitting = false;
 	let newMember: null | Member = null;
@@ -100,59 +100,71 @@
 		<Card.Content>
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="first_name">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">First Name</Form.Label>
-						<Input {...attrs} type="text" bind:value={$formData.first_name} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">First Name</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.first_name} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="last_name">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Last Name</Form.Label>
-						<Input {...attrs} type="text" bind:value={$formData.last_name} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Last Name</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.last_name} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="email">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Email</Form.Label>
-						<Input {...attrs} type="email" bind:value={$formData.email} />
-						<Form.Description class="text-xs">Optional</Form.Description>
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Email</Form.Label>
+							<Input {...props} type="email" bind:value={$formData.email} />
+							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="phone">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Phone</Form.Label>
-						<Input {...attrs} type="text" bind:value={$formData.phone} />
-						<Form.Description class="text-xs">Optional</Form.Description>
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Phone</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.phone} />
+							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="date_of_birth">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Date of birth</Form.Label>
-						<DateField {...attrs} {placeholder} onValueChange={handleDateChange} locale="bs-BA" />
-						<Form.FieldErrors />
-						<Form.Description class="text-xs">Optional</Form.Description>
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Date of birth</Form.Label>
+							<DateField {...props} {placeholder} onValueChange={handleDateChange} locale="bs-BA" />
+							<Form.FieldErrors />
+							<Form.Description class="text-xs">Optional</Form.Description>
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="card_id">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Card Number</Form.Label>
-						<Input {...attrs} type="text" bind:value={$formData.card_id} />
-						<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Card Number</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.card_id} />
+							<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Form.Button>
+					<Form.Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Form.Button>
 					<Form.Button type="submit" class="w-full">Confirm</Form.Button>
 				</div>
 			</form>
@@ -171,8 +183,8 @@
 					</AlertDialog.Description>
 				</AlertDialog.Header>
 				<AlertDialog.Footer>
-					<AlertDialog.Cancel on:click={handleCancel}>No, Later</AlertDialog.Cancel>
-					<AlertDialog.Action on:click={assignMembership}>Yes, Add Membership</AlertDialog.Action>
+					<AlertDialog.Cancel onclick={handleCancel}>No, Later</AlertDialog.Cancel>
+					<AlertDialog.Action onclick={assignMembership}>Yes, Add Membership</AlertDialog.Action>
 				</AlertDialog.Footer>
 			</AlertDialog.Content>
 		</AlertDialog.Root>

@@ -119,7 +119,7 @@
 					on:input={handleSearchInput}
 				/>
 			</div>
-			<Button on:click={handleAddNewMember} class="w-full md:w-auto">
+			<Button onclick={handleAddNewMember} class="w-full md:w-auto">
 				<PlusCircle class="mr-2 h-4 w-4" />
 				Add Member
 			</Button>
@@ -150,7 +150,7 @@
 			<Card.Content>
 				<p>{error}</p>
 				<Button
-					on:click={() => fetchMembers(currentPage, debouncedSearchQuery)}
+					onclick={() => fetchMembers(currentPage, debouncedSearchQuery)}
 					variant="outline"
 					class="mt-4">Try Again</Button
 				>
@@ -167,7 +167,7 @@
 					{/if}
 				</p>
 				{#if !debouncedSearchQuery}
-					<Button on:click={handleAddNewMember} variant="link" class="mt-2"
+					<Button onclick={handleAddNewMember} variant="link" class="mt-2"
 						>Add the first member!</Button
 					>
 				{/if}
@@ -194,7 +194,7 @@
 				</Table.Header>
 				<Table.Body>
 					{#each membersData as member (member.id)}
-						<Table.Row on:click={() => handleViewMember(member.id)} class="cursor-pointer">
+						<Table.Row onclick={() => handleViewMember(member.id)} class="cursor-pointer">
 							<Table.Cell class="font-medium">{member.first_name} {member.last_name}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell text-muted-foreground"
 								>{member.card_id || 'N/A'}</Table.Cell
@@ -220,7 +220,7 @@
 							</Table.Cell>
 							<Table.Cell class="text-center">
 								<Button
-									on:click={(e) => {
+									onclick={(e) => {
 										e.stopPropagation();
 										handleRenewMembership(member?.id, member?.membership_id);
 									}}
@@ -234,7 +234,7 @@
 									<RefreshCcw class="h-4 w-4" />
 								</Button>
 								<Button
-									on:click={() => handleEditMember(member.id)}
+									onclick={() => handleEditMember(member.id)}
 									variant="outline"
 									size="icon"
 									title="Edit Member"
@@ -243,7 +243,7 @@
 								</Button>
 								<!-- Optional Delete Button -->
 								<!--
-                                <Button on:click={() => handleDeleteMember(member.id, `${member.first_name} ${member.last_name}`)} variant="ghost" size="icon" title="Delete Member" class="text-destructive hover:text-destructive-foreground hover:bg-destructive/80 ml-2">
+                                <Button onclick={() => handleDeleteMember(member.id, `${member.first_name} ${member.last_name}`)} variant="ghost" size="icon" title="Delete Member" class="text-destructive hover:text-destructive-foreground hover:bg-destructive/80 ml-2">
                                     <Trash2 class="h-4 w-4" />
                                 </Button>
                                 -->
@@ -261,30 +261,30 @@
 					page={currentPage}
 					perPage={pageSize}
 					onPageChange={(e) => fetchMembers(e)}
-					let:pages
-					let:currentPage
 				>
-					<Pagination.Content>
-						<Pagination.Item>
-							<Pagination.PrevButton />
-						</Pagination.Item>
-						{#each pages as page (page.key)}
-							{#if page.type === 'ellipsis'}
-								<Pagination.Item>
-									<Pagination.Ellipsis />
-								</Pagination.Item>
-							{:else}
-								<Pagination.Item>
-									<Pagination.Link {page} isActive={currentPage === page.value}>
-										{page.value}
-									</Pagination.Link>
-								</Pagination.Item>
-							{/if}
-						{/each}
-						<Pagination.Item>
-							<Pagination.NextButton />
-						</Pagination.Item>
-					</Pagination.Content>
+					{#snippet children({ pages, currentPage })}
+						<Pagination.Content>
+							<Pagination.Item>
+								<Pagination.PrevButton />
+							</Pagination.Item>
+							{#each pages as page (page.key)}
+								{#if page.type === 'ellipsis'}
+									<Pagination.Item>
+										<Pagination.Ellipsis />
+									</Pagination.Item>
+								{:else}
+									<Pagination.Item>
+										<Pagination.Link {page} isActive={currentPage === page.value}>
+											{page.value}
+										</Pagination.Link>
+									</Pagination.Item>
+								{/if}
+							{/each}
+							<Pagination.Item>
+								<Pagination.NextButton />
+							</Pagination.Item>
+						</Pagination.Content>
+					{/snippet}
 				</Pagination.Root>
 			</div>
 		{/if}

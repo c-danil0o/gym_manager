@@ -132,7 +132,7 @@
 			<form on:submit|preventDefault={handleSubmitScan} class="flex flex-col items-center gap-4">
 				<p class="text-muted-foreground p-4">Scan a member's card or enter ID and press ENTER .</p>
 				<Input
-					bind:this={inputElement}
+					bind:ref={inputElement}
 					bind:value={cardIdInput}
 					type="text"
 					placeholder="Card ID"

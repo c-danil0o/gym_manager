@@ -286,45 +286,43 @@
 					<Card.Title class="text-xl">New Membership</Card.Title>
 
 					<Form.Field {form} name="membership_type_id">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Membership Type</Form.Label>
-							<Select.Root
-								selected={membershipTypes.find((t) => t.id === $formData.membership_type_id)
-									? {
-											value: String($formData.membership_type_id),
-											label:
-												membershipTypes.find((t) => t.id === $formData.membership_type_id)?.name ??
-												''
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Membership Type</Form.Label>
+								<Select.Root
+									type="single"
+									value={String($formData.membership_type_id || '')}
+									onValueChange={(v: any) => {
+										if (v) {
+											const numValue = Number(v);
+											onMembershipTypeChange(numValue);
+										} else {
+											$formData.membership_type_id = null;
 										}
-									: undefined}
-								onSelectedChange={(v) => {
-									if (v) {
-										const numValue = Number(v.value);
-										onMembershipTypeChange(numValue);
-									} else {
-										$formData.membership_type_id = null;
-									}
-								}}
-							>
-								<Select.Trigger {...attrs}>
-									<Select.Value placeholder="Select membership type" />
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Group>
-										{#each membershipTypes as type (type.id)}
-											<Select.Item value={String(type.id)} label={type.name}
-												>{type.name}</Select.Item
-											>
-										{/each}
-										{#if membershipTypes.length === 0 && !isLoading}
-											<div class="px-2 py-1.5 text-sm text-muted-foreground">
-												No types available.
-											</div>
-										{/if}
-									</Select.Group>
-								</Select.Content>
-							</Select.Root>
-							<Form.FieldErrors />
+									}}
+								>
+									<Select.Trigger {...props}>
+										{selectedMembershipType
+											? selectedMembershipType.name
+											: 'Select membership type'}
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Group>
+											{#each membershipTypes as type (type.id)}
+												<Select.Item value={String(type.id)} label={type.name}
+													>{type.name}</Select.Item
+												>
+											{/each}
+											{#if membershipTypes.length === 0 && !isLoading}
+												<div class="px-2 py-1.5 text-sm text-muted-foreground">
+													No types available.
+												</div>
+											{/if}
+										</Select.Group>
+									</Select.Content>
+								</Select.Root>
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
@@ -349,36 +347,40 @@
 					</div>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
 						<Form.Field {form} name="membership_start_date" class="w-1/2">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Start Date</Form.Label>
-								<Input
-									type="text"
-									readonly
-									value={df.format(new Date($formData?.membership_start_date || new Date()))}
-								/>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">Start Date</Form.Label>
+									<Input
+										type="text"
+										readonly
+										value={df.format(new Date($formData?.membership_start_date || new Date()))}
+									/>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 
 						<Form.Field {form} name="membership_end_date" class="w-1/2">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">End Date</Form.Label>
-								<Popover.Root>
-									<Popover.Trigger
-										class={cn(
-											buttonVariants({ variant: 'outline' }),
-											'w-full justify-start pl-4 text-left font-normal',
-											!end_date && 'text-muted-foreground'
-										)}
-									>
-										{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
-										<CalendarIcon class="ml-auto size-4 opacity-50" />
-									</Popover.Trigger>
-									<Popover.Content class="w-auto p-0" side="top">
-										<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
-									</Popover.Content>
-								</Popover.Root>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">End Date</Form.Label>
+									<Popover.Root>
+										<Popover.Trigger
+											class={cn(
+												buttonVariants({ variant: 'outline' }),
+												'w-full justify-start pl-4 text-left font-normal',
+												!end_date && 'text-muted-foreground'
+											)}
+										>
+											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
+											<CalendarIcon class="ml-auto size-4 opacity-50" />
+										</Popover.Trigger>
+										<Popover.Content class="w-auto p-0" side="top">
+											<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
+										</Popover.Content>
+									</Popover.Root>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 					</div>
@@ -395,16 +397,18 @@
 						</div>
 
 						<Form.Field {form} name="membership_remaining_visits" class="w-1/3">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Remaining Visits</Form.Label>
-								<Input
-									{...attrs}
-									type="number"
-									min={0}
-									max={selectedMembershipType?.duration_days}
-									bind:value={$formData.membership_remaining_visits}
-								/>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">Remaining Visits</Form.Label>
+									<Input
+										{...props}
+										type="number"
+										min={0}
+										max={selectedMembershipType?.duration_days}
+										bind:value={$formData.membership_remaining_visits}
+									/>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 					</div>
@@ -416,7 +420,7 @@
 				</div>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
 					<Form.Button type="submit" class="w-full">Save</Form.Button>
 				</div>
 			</form>

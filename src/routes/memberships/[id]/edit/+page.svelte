@@ -127,64 +127,82 @@
 			<Card.Title class="text-2xl">Update Membership Type</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="name">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Name</Form.Label>
-						<Input {...attrs} type="text" bind:value={$formData.name} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Name</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.name} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="duration_days">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Duration</Form.Label>
-						<Input {...attrs} type="number" min="1" bind:value={$formData.duration_days} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Duration</Form.Label>
+							<Input {...props} type="number" min="1" bind:value={$formData.duration_days} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="visit_limit">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Visit limit</Form.Label>
-						<Input {...attrs} type="number" min="0" max={$formData.duration_days} bind:value={$formData.visit_limit} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Visit limit</Form.Label>
+							<Input
+								{...props}
+								type="number"
+								min="0"
+								max={$formData.duration_days}
+								bind:value={$formData.visit_limit}
+							/>
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="enter_by">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Enter by (hour of the day)</Form.Label>
-						<Input
-							{...attrs}
-							type="number"
-							min="0"
-							max="23"
-							placeholder="optional"
-							bind:value={$formData.enter_by}
-						/>
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Enter by (hour of the day)</Form.Label>
+							<Input
+								{...props}
+								type="number"
+								min="0"
+								max="23"
+								placeholder="optional"
+								bind:value={$formData.enter_by}
+							/>
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="price">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Price</Form.Label>
-						<Input {...attrs} type="number" bind:value={$formData.price} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Price</Form.Label>
+							<Input {...props} type="number" bind:value={$formData.price} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<Form.Field {form} name="description">
-					<Form.Control let:attrs>
-						<Form.Label class="font-semibold">Description</Form.Label>
-						<Textarea {...attrs} bind:value={$formData.description} />
-						<Form.FieldErrors />
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">Description</Form.Label>
+							<Textarea {...props} bind:value={$formData.description} />
+							<Form.FieldErrors />
+						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
 					<Form.Button type="submit" class="w-full">Save</Form.Button>
 				</div>
 			</form>

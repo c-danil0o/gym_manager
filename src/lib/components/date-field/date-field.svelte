@@ -29,28 +29,30 @@
 	{locale}
 	{hideTimeZone}
 	{hourCycle}
-	onValueChange={onValueChange}
+	{onValueChange}
 	{...attrs}
 >
 	<div class="relative">
 		<DateFieldPrimitive.Input
 			class={cn(
-				"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-				"pr-10" // Add padding for the icon
+				'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+				'pr-10' // Add padding for the icon
 			)}
-			let:segments
 		>
-			{#each segments as { part, value }}
-				<DateFieldPrimitive.Segment
-					{part}
-					class={cn(
-						"inline-block select-none rounded-sm px-1 py-0.5 focus:bg-accent hover:bg-accent focus:text-accent-foreground focus:outline-none",
-						part === 'literal' ? 'text-muted-foreground' : 'text-foreground'
-					)}
-				>
-					{value}
-				</DateFieldPrimitive.Segment>
-			{/each}
+			<!-- Use a snippet to get segments -->
+			{#snippet children({ segments })}
+				{#each segments as { part, value }}
+					<DateFieldPrimitive.Segment
+						{part}
+						class={cn(
+							'inline-block select-none rounded-sm px-1 py-0.5 focus:bg-accent hover:bg-accent focus:text-accent-foreground focus:outline-none',
+							part === 'literal' ? 'text-muted-foreground' : 'text-foreground'
+						)}
+					>
+						{value}
+					</DateFieldPrimitive.Segment>
+				{/each}
+			{/snippet}
 		</DateFieldPrimitive.Input>
 
 		<!-- Calendar Icon -->

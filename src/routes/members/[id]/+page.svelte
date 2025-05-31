@@ -135,7 +135,7 @@
 
 						<div class="space-x-2">
 							<Button
-								on:click={() => handleEditMember(data?.id)}
+								onclick={() => handleEditMember(data?.id)}
 								variant="outline"
 								size="icon"
 								title="Edit Member"
@@ -158,7 +158,7 @@
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
 										<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-										<AlertDialog.Action on:click={() => handleDeleteMember(data?.id)}
+										<AlertDialog.Action onclick={() => handleDeleteMember(data?.id)}
 											>Continue</AlertDialog.Action
 										>
 									</AlertDialog.Footer>
@@ -216,7 +216,7 @@
 						{#if data?.membership_id}
 							<div class="space-x-2">
 								<Button
-									on:click={() => handleRenewMembership(data?.membership_id)}
+									onclick={() => handleRenewMembership(data?.membership_id)}
 									variant="outline"
 									size="icon"
 									class="bg-blue-100"
@@ -227,7 +227,7 @@
 									<RefreshCcw class="h-4 w-4" />
 								</Button>
 								<Button
-									on:click={() => handleAddNewMembership(data?.id)}
+									onclick={() => handleAddNewMembership(data?.id)}
 									size="icon"
 									title="Add Membership"
 								>
@@ -321,7 +321,7 @@
 						</div>
 					{:else}
 						<div class="flex flex-col h-full items-center justify-center space-y-4">
-							<Button on:click={() => handleAddNewMembership(data?.id)} title="Edit Member"
+							<Button onclick={() => handleAddNewMembership(data?.id)} title="Edit Member"
 								>Assign Membership</Button
 							>
 							<p class="text-muted-foreground">No membership assigned yet.</p>
@@ -384,7 +384,7 @@
 
 									<Table.Cell class="text-center space-x-2">
 										<Button
-											on:click={() => handleEditMembership(item.membership_id)}
+											onclick={() => handleEditMembership(item.membership_id)}
 											variant="outline"
 											size="icon"
 											disabled={item.membership_status !== 'active' &&
@@ -411,7 +411,7 @@
 												<AlertDialog.Footer>
 													<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 													<AlertDialog.Action
-														on:click={() => handleDeleteMembership(item.membership_id)}
+														onclick={() => handleDeleteMembership(item.membership_id)}
 														>Continue</AlertDialog.Action
 													>
 												</AlertDialog.Footer>

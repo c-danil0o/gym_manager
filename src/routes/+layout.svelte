@@ -128,7 +128,7 @@
 							<Card.Description>Create new member and assign him a membership.</Card.Description>
 						</Card.Header>
 						<Card.Content class="p-2 pt-0 md:p-4 md:pt-0">
-							<Button size="sm" class="w-full" on:click={() => {goto('/members/new')}}>Add</Button>
+							<Button size="sm" class="w-full" onclick={() => {goto('/members/new')}}>Add</Button>
 						</Card.Content>
 					</Card.Root>
 				</div>
@@ -136,7 +136,7 @@
 		</div>
 		<div class="flex flex-col h-screen overflow-hidden">
 			<header class="bg-muted/20 flex h-14 items-center gap-4 border-b px-4 lg:h-[60px] lg:px-6">
-				<Sheet.Root>
+				<!-- <Sheet.Root>
 					<Sheet.Trigger asChild let:builder>
 						<Button variant="outline" size="icon" class="shrink-0 md:hidden" builders={[builder]}>
 							<Menu class="h-5 w-5" />
@@ -206,7 +206,7 @@
 									<Button
 										size="sm"
 										class="w-full"
-										on:click={() => {
+										onclick={() => {
 											goto('/members/new');
 										}}>Add</Button
 									>
@@ -214,10 +214,10 @@
 							</Card.Root>
 						</div>
 					</Sheet.Content>
-				</Sheet.Root>
+				</Sheet.Root> -->
 				<div class="flex flex-1 justify-between items-center gap-2">
 					{#if $headerState.showBackButton}
-						<Button variant="ghost" size="icon" on:click={handleBack} aria-label="Go back">
+						<Button variant="ghost" size="icon" onclick={handleBack} aria-label="Go back">
 							<ArrowLeft class="h-5 w-5" />
 						</Button>
 					{:else}
@@ -228,8 +228,8 @@
 				</div>
 				<LightSwitch />
 				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button builders={[builder]} variant="secondary" size="icon" class="rounded-full">
+					<DropdownMenu.Trigger>
+						<Button variant="secondary" size="icon" class="rounded-full">
 							<CircleUser class="h-5 w-5" />
 							<span class="sr-only">Toggle user menu</span>
 						</Button>
@@ -240,7 +240,7 @@
 						<DropdownMenu.Item>Settings</DropdownMenu.Item>
 						<DropdownMenu.Item>Update</DropdownMenu.Item>
 						<DropdownMenu.Separator />
-						<DropdownMenu.Item on:click={handleLogout}>Logout</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={handleLogout}>Logout</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</header>

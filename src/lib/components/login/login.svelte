@@ -70,18 +70,22 @@
 			<form use:enhance method="post" on:submit|preventDefault={handleSubmit}>
 				<Card.Content class="grid gap-4">
 					<Form.Field {form} name="username">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Username</Form.Label>
-							<Input {...attrs} type="text" bind:value={$formData.username} />
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Username</Form.Label>
+								<Input {...props} type="text" bind:value={$formData.username} />
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="password">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Password</Form.Label>
-							<Input {...attrs} type="password" bind:value={$formData.password} />
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Password</Form.Label>
+								<Input {...props} type="password" bind:value={$formData.password} />
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 

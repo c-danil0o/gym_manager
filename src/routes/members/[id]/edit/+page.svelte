@@ -131,64 +131,76 @@
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10">
 				<div class="space-y-6">
 					<Form.Field {form} name="first_name">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">First Name</Form.Label>
-							<Input {...attrs} type="text" bind:value={$formData.first_name} />
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">First Name</Form.Label>
+								<Input {...props} type="text" bind:value={$formData.first_name} />
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="last_name">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Last Name</Form.Label>
-							<Input {...attrs} type="text" bind:value={$formData.last_name} />
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Last Name</Form.Label>
+								<Input {...props} type="text" bind:value={$formData.last_name} />
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="email">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Email</Form.Label>
-							<Input {...attrs} type="email" bind:value={$formData.email} />
-							<Form.Description class="text-xs">Optional</Form.Description>
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Email</Form.Label>
+								<Input {...props} type="email" bind:value={$formData.email} />
+								<Form.Description class="text-xs">Optional</Form.Description>
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="phone">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Phone</Form.Label>
-							<Input {...attrs} type="text" bind:value={$formData.phone} />
-							<Form.Description class="text-xs">Optional</Form.Description>
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Phone</Form.Label>
+								<Input {...props} type="text" bind:value={$formData.phone} />
+								<Form.Description class="text-xs">Optional</Form.Description>
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="date_of_birth">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Date of birth</Form.Label>
-							<DateField
-								{...attrs}
-								value={date_of_birth}
-								onValueChange={handleDobChange}
-								locale="bs-BA"
-							/>
-							<Form.FieldErrors />
-							<Form.Description class="text-xs">Optional</Form.Description>
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Date of birth</Form.Label>
+								<DateField
+									{...props}
+									value={date_of_birth}
+									onValueChange={handleDobChange}
+									locale="bs-BA"
+								/>
+								<Form.FieldErrors />
+								<Form.Description class="text-xs">Optional</Form.Description>
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<Form.Field {form} name="card_id">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Card Number</Form.Label>
-							<Input {...attrs} type="text" bind:value={$formData.card_id} />
-							<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
-							<Form.FieldErrors />
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Card Number</Form.Label>
+								<Input {...props} type="text" bind:value={$formData.card_id} />
+								<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
 					<div class="flex gap-20 justify-around">
-						<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
+						<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
 						<Form.Button type="submit" class="w-full">Save</Form.Button>
 					</div>
 				</div>

@@ -99,7 +99,9 @@
 		membership_type_id: null,
 		membership_start_date: null,
 		membership_end_date: null,
-		membership_remaining_visits: 0
+		membership_remaining_visits: 0,
+		membership_suspended: false
+
 	};
 
 	const form = superForm(initialValues, {
@@ -276,45 +278,43 @@
 						/>
 					</div>
 					<Form.Field {form} name="membership_type_id">
-						<Form.Control let:attrs>
-							<Form.Label class="font-semibold">Membership Type</Form.Label>
-							<Select.Root
-								selected={membershipTypes.find((t) => t.id === $formData.membership_type_id)
-									? {
-											value: String($formData.membership_type_id),
-											label:
-												membershipTypes.find((t) => t.id === $formData.membership_type_id)?.name ??
-												''
+						<Form.Control>
+							{#snippet children({ props })}
+								<Form.Label class="font-semibold">Membership Type</Form.Label>
+								<Select.Root
+									type="single"
+									value={$formData.membership_type_id ? String($formData.membership_type_id) : ''}
+									onValueChange={(v: any) => {
+										if (v) {
+											const numValue = Number(v);
+											onMembershipTypeChange(numValue);
+										} else {
+											$formData.membership_type_id = null;
 										}
-									: undefined}
-								onSelectedChange={(v) => {
-									if (v) {
-										const numValue = Number(v.value);
-										onMembershipTypeChange(numValue);
-									} else {
-										$formData.membership_type_id = null;
-									}
-								}}
-							>
-								<Select.Trigger {...attrs}>
-									<Select.Value placeholder="Select membership type" />
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Group>
-										{#each membershipTypes as type (type.id)}
-											<Select.Item value={String(type.id)} label={type.name}
-												>{type.name}</Select.Item
-											>
-										{/each}
-										{#if membershipTypes.length === 0 && !isLoading}
-											<div class="px-2 py-1.5 text-sm text-muted-foreground">
-												No types available.
-											</div>
-										{/if}
-									</Select.Group>
-								</Select.Content>
-							</Select.Root>
-							<Form.FieldErrors />
+									}}
+								>
+									<Select.Trigger {...props}>
+										{selectedMembershipType
+											? selectedMembershipType.name
+											: 'Select membership type'}
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Group>
+											{#each membershipTypes as type (type.id)}
+												<Select.Item value={String(type.id)} label={type.name}
+													>{type.name}</Select.Item
+												>
+											{/each}
+											{#if membershipTypes.length === 0 && !isLoading}
+												<div class="px-2 py-1.5 text-sm text-muted-foreground">
+													No types available.
+												</div>
+											{/if}
+										</Select.Group>
+									</Select.Content>
+								</Select.Root>
+								<Form.FieldErrors />
+							{/snippet}
 						</Form.Control>
 					</Form.Field>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
@@ -342,46 +342,56 @@
 
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
 						<Form.Field {form} name="membership_start_date" class="w-1/2">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">Start Date</Form.Label>
-								<Popover.Root>
-									<Popover.Trigger
-										class={cn(
-											buttonVariants({ variant: 'outline' }),
-											'w-full justify-start pl-4 text-left font-normal',
-											!start_date && 'text-muted-foreground'
-										)}
-									>
-										{start_date ? df.format(start_date.toDate(getLocalTimeZone())) : 'Pick a date'}
-										<CalendarIcon class="ml-auto size-4 opacity-50" />
-									</Popover.Trigger>
-									<Popover.Content class="w-auto p-0" side="top">
-										<Calendar type="single" value={start_date} onValueChange={onChangeStartDate} />
-									</Popover.Content>
-								</Popover.Root>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">Start Date</Form.Label>
+									<Popover.Root>
+										<Popover.Trigger
+											class={cn(
+												buttonVariants({ variant: 'outline' }),
+												'w-full justify-start pl-4 text-left font-normal',
+												!start_date && 'text-muted-foreground'
+											)}
+										>
+											{start_date
+												? df.format(start_date.toDate(getLocalTimeZone()))
+												: 'Pick a date'}
+											<CalendarIcon class="ml-auto size-4 opacity-50" />
+										</Popover.Trigger>
+										<Popover.Content class="w-auto p-0" side="top">
+											<Calendar
+												type="single"
+												value={start_date}
+												onValueChange={onChangeStartDate}
+											/>
+										</Popover.Content>
+									</Popover.Root>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 
 						<Form.Field {form} name="membership_end_date" class="w-1/2">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold">End Date</Form.Label>
-								<Popover.Root>
-									<Popover.Trigger
-										class={cn(
-											buttonVariants({ variant: 'outline' }),
-											'w-full justify-start pl-4 text-left font-normal',
-											!end_date && 'text-muted-foreground'
-										)}
-									>
-										{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
-										<CalendarIcon class="ml-auto size-4 opacity-50" />
-									</Popover.Trigger>
-									<Popover.Content class="w-auto p-0" side="top">
-										<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
-									</Popover.Content>
-								</Popover.Root>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">End Date</Form.Label>
+									<Popover.Root>
+										<Popover.Trigger
+											class={cn(
+												buttonVariants({ variant: 'outline' }),
+												'w-full justify-start pl-4 text-left font-normal',
+												!end_date && 'text-muted-foreground'
+											)}
+										>
+											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
+											<CalendarIcon class="ml-auto size-4 opacity-50" />
+										</Popover.Trigger>
+										<Popover.Content class="w-auto p-0" side="top">
+											<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
+										</Popover.Content>
+									</Popover.Root>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 					</div>
@@ -398,26 +408,30 @@
 						</div>
 
 						<Form.Field {form} name="membership_remaining_visits" class="w-1/4">
-							<Form.Control let:attrs>
+							<Form.Control>
+							{#snippet children({ props })}
 								<Form.Label class="font-semibold">Remaining Visits</Form.Label>
 								<Input
-									{...attrs}
+									{...props}
 									type="number"
 									min={0}
 									max={selectedMembershipType?.duration_days}
 									bind:value={$formData.membership_remaining_visits}
 								/>
 								<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 
 						<Form.Field {form} name="membership_suspended" class="w-1/4">
-							<Form.Control let:attrs>
-								<Form.Label class="font-semibold w-full text-center">Suspended</Form.Label>
-								<div class="flex items-center h-[30px] w-full justify-center">
-									<Checkbox {...attrs} bind:checked={$formData.membership_suspended} />
-								</div>
-								<Form.FieldErrors />
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold w-full text-center">Suspended</Form.Label>
+									<div class="flex items-center h-[30px] w-full justify-center">
+										<Checkbox {...props}  bind:checked={$formData.membership_suspended} />
+									</div>
+									<Form.FieldErrors />
+								{/snippet}
 							</Form.Control>
 						</Form.Field>
 					</div>
@@ -429,7 +443,7 @@
 				</div>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" on:click={handleCancel} class="w-full">Cancel</Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
 					<Form.Button type="submit" class="w-full">Save</Form.Button>
 				</div>
 			</form>
