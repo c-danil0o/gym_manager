@@ -17,7 +17,7 @@
 		autoCloseDelay = 5000,
 		result = null
 	}: {
-		open: boolean | null;
+		open: boolean;
 		autoCloseDelay: number;
 		result?: ScanProcessingResult | null;
 	} = $props();
@@ -77,8 +77,7 @@
 				return { icon: XCircle, colorClass: 'text-red-500', title: 'Entry Denied' };
 			case 'DeniedAfterHours':
 			case 'DeniedAlreadyCheckedIn':
-        return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Entry Denied' };
-			case 'Error':
+				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Entry Denied' };
 			default:
 				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Scan Issue' };
 		}

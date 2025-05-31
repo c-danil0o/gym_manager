@@ -129,7 +129,7 @@
 	<!-- Scanner Input Card -->
 	<Card.Root class="mx-auto w-1/3 backdrop-blur shadow-md hover:shadow-lg">
 		<Card.Content>
-			<form on:submit|preventDefault={handleSubmitScan} class="flex flex-col items-center gap-4">
+			<form onsubmit={handleSubmitScan} class="flex flex-col items-center gap-4">
 				<p class="text-muted-foreground p-4">Scan a member's card or enter ID and press ENTER .</p>
 				<Input
 					bind:ref={inputElement}

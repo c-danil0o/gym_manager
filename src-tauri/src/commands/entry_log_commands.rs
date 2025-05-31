@@ -96,7 +96,7 @@ pub async fn process_scan(
     payload: ScanPayload,
     state: State<'_, AppState>,
 ) -> AppResult<ScanProcessingResult> {
-    let scanned_card_id = payload.card_id.trim();
+    let mut scanned_card_id = payload.card_id.trim();
 
     if scanned_card_id.is_empty() {
         return Ok(ScanProcessingResult {
@@ -141,6 +141,11 @@ pub async fn process_scan(
     };
 
     let member_full_name = format!("{} {}", member.first_name, member.last_name);
+    if let Some(card_id) = &member.card_id {
+        scanned_card_id = card_id;
+    } else {
+        tracing::warn!("Member {} has no card ID assigned.", member_full_name);
+    }
 
     // Get membership information
     let membership = match sqlx::query_as!(

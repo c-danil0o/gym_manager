@@ -116,7 +116,7 @@
 					placeholder="Search by name..."
 					class="pl-8 w-full"
 					bind:value={searchQuery}
-					on:input={handleSearchInput}
+					oninput={handleSearchInput}
 				/>
 			</div>
 			<Button onclick={handleAddNewMember} class="w-full md:w-auto">
