@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            m.id as member_id,\n            m.first_name as member_first_name,\n            m.last_name as member_last_name,\n            mt.id as membership_type_id,\n            mt.name as membership_type_name,\n            mt.enter_by as membership_type_enter_by,\n            ms.id as membership_id,\n            ms.start_date as membership_start_date,\n            ms.end_date as membership_end_date,\n            ms.status as membership_status,\n            ms.remaining_visits as membership_remaining_visits,\n            ms.purchase_date as membership_purchase_date\n        FROM\n            members m\n        JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n        WHERE\n            m.is_deleted = FALSE AND m.id = ?\n        ",
+  "query": "\n        SELECT\n            m.id as member_id,\n            m.first_name as member_first_name,\n            m.last_name as member_last_name,\n            mt.id as membership_type_id,\n            mt.name as membership_type_name,\n            mt.enter_by as membership_type_enter_by,\n            ms.id as membership_id,\n            ms.start_date as membership_start_date,\n            ms.end_date as membership_end_date,\n            ms.status as membership_status,\n            ms.remaining_visits as membership_remaining_visits,\n            ms.purchase_date as membership_purchase_date\n        FROM\n            members m\n        JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE\n        WHERE\n            m.is_deleted = FALSE AND m.id = ?\n        LIMIT ? OFFSET ?\n        ",
   "describe": {
     "columns": [
       {
@@ -65,7 +65,7 @@
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 3
     },
     "nullable": [
       false,
@@ -82,5 +82,5 @@
       false
     ]
   },
-  "hash": "a0a2e4cea19402d4ec69f28f859f5145587db0c42c1cc799d4936c13cf65f655"
+  "hash": "0781e2ac8a88223bf9305f92f372f2796cebe0f1eea4c1dd71fc42f9fea2e281"
 }

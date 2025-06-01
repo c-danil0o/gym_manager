@@ -15,6 +15,8 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import { setHeader } from '$lib/stores/state';
 	import { parseDateTime } from '@internationalized/date';
+	import Separator from '$lib/components/ui/separator/separator.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 
 	let cardIdInput = $state('');
 	let inputElement: any | null = $state(null); // For focusing
@@ -127,26 +129,29 @@
 
 <div class="space-y-20 w-full">
 	<!-- Scanner Input Card -->
-	<Card.Root class="mx-auto w-1/3 backdrop-blur shadow-md hover:shadow-lg">
+	<Card.Root class="mx-auto w-fit backdrop-blur shadow-md hover:shadow-lg">
 		<Card.Content>
 			<form onsubmit={handleSubmitScan} class="flex flex-col items-center gap-4">
-				<p class="text-muted-foreground p-4">Scan a member's card or enter ID and press ENTER .</p>
 				<Input
 					bind:ref={inputElement}
 					bind:value={cardIdInput}
 					type="text"
-					placeholder="Card ID"
-					class="h-14 text-xl flex-grow"
+					class="h-14 !text-2xl flex-grow text-center"
 					disabled={isProcessingScan}
 					aria-label="Card ID Input"
 				/>
-				<Button type="submit" size="lg" class="w-1/2 m-4" disabled={isProcessingScan}>
+				<Separator/>
+				<div class="flex items-center gap-2">
+
+				<p class="text-muted-foreground text-sm p-3">Scan a member's card or enter ID and press ENTER</p>
+				<Button type="submit"  disabled={isProcessingScan}>
 					{#if isProcessingScan}
 						Processing... <!-- Or a spinner -->
 					{:else}
 						Submit
 					{/if}
 				</Button>
+				</div>
 			</form>
 		</Card.Content>
 	</Card.Root>

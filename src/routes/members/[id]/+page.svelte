@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import * as Pagination from '$lib/components/ui/pagination';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { DateFormatter } from '@internationalized/date';
@@ -17,14 +18,22 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Pencil, Plus, Trash2, RefreshCcw } from 'lucide-svelte';
 	import { setHeader } from '$lib/stores/state';
+	import type { QueryResponse } from '$lib/models/table-state';
 
 	let isLoading = $state(false);
 	let isLoadingHistory = $state(true);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 
+
 	let data: MemberWithMembership | null = $state(null);
-	let membershipHistory: MembershipInfo[] = $state([]);
+
+	let membershipParams = $state({
+    page: 1,
+    perPage: 10,
+    totalPages: 1,
+    totalItems: 0
+  });
 
 	async function fetchMemberWithMembership() {
 		isLoading = true;
@@ -47,15 +56,29 @@
 		}
 	}
 
+	let membershipHistory = $state<QueryResponse<MembershipInfo>>({
+		data: [],
+		total: 0,
+		page: 1,
+		per_page: 10,
+		total_pages: 0
+	});
+
 	async function fetchMemberships() {
 		isLoadingHistory = true;
 		error = null;
 		try {
-			const result = await invoke<MembershipInfo[]>('get_all_memberships_for_member', {
-				id: Number(memberId)
+			const result = await invoke<QueryResponse<MembershipInfo>>('get_all_memberships_for_member', {
+				id: Number(memberId),
+				payload: {
+          page: membershipParams.page,
+          per_page: membershipParams.perPage
+        }
 			});
 			if (result) {
 				membershipHistory = result;
+				membershipParams.totalItems = result.total;
+				membershipParams.totalPages = Math.ceil(result.total / membershipParams.perPage);
 			}
 		} catch (e: any) {
 			console.error('Error fetching membership history:', e);
@@ -66,12 +89,19 @@
 		}
 	}
 
+	$effect(() => {
+	    const currentPage = membershipParams.page;
+	    const perPage = membershipParams.perPage;
+      fetchMemberships();
+  });
+
 	async function handleEditMember(memberId: number | undefined) {
 		if (memberId) await goto(`/members/${memberId}/edit`);
 	}
 
 	async function handleRenewMembership(membershipId: number | null | undefined) {
-		if (membershipId) await goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
+		if (membershipId)
+			await goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
 	}
 
 	async function handleDeleteMember(id: number | null) {
@@ -158,7 +188,7 @@
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
 										<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-										<AlertDialog.Action onclick={() => handleDeleteMember(data?.id)}
+										<AlertDialog.Action onclick={() => handleDeleteMember(data?.id || null)}
 											>Continue</AlertDialog.Action
 										>
 									</AlertDialog.Footer>
@@ -221,7 +251,7 @@
 									size="icon"
 									class="bg-blue-100"
 									disabled={data?.membership_status !== 'active' &&
-                    data?.membership_status !== 'expired'}
+										data?.membership_status !== 'expired'}
 									title="Renew Membership"
 								>
 									<RefreshCcw class="h-4 w-4" />
@@ -339,7 +369,7 @@
 				{#if isLoadingHistory}
 					<p>Loading history...</p>
 					<!-- Skeleton loaders -->
-				{:else if membershipHistory.length === 0}
+				{:else if membershipHistory.data.length === 0}
 					<p class="text-muted-foreground">No past or future memberships recorded.</p>
 				{:else}
 					<Table.Root>
@@ -354,7 +384,7 @@
 							</Table.Row>
 						</Table.Header>
 						<Table.Body>
-							{#each membershipHistory as item (item.membership_id)}
+							{#each membershipHistory.data as item (item.membership_id)}
 								<Table.Row
 									class={item.membership_status === 'active'
 										? 'bg-green-50 dark:bg-green-900/30'
@@ -422,6 +452,31 @@
 							{/each}
 						</Table.Body>
 					</Table.Root>
+					<Pagination.Root class="mt-6" count={membershipParams.totalItems} perPage={membershipParams.perPage} bind:page={membershipParams.page}>
+						{#snippet children({ pages, currentPage })}
+							<Pagination.Content>
+								<Pagination.Item>
+									<Pagination.PrevButton />
+								</Pagination.Item>
+								{#each pages as page (page.key)}
+									{#if page.type === 'ellipsis'}
+										<Pagination.Item>
+											<Pagination.Ellipsis />
+										</Pagination.Item>
+									{:else}
+										<Pagination.Item>
+											<Pagination.Link {page} isActive={currentPage === page.value}>
+												{page.value}
+											</Pagination.Link>
+										</Pagination.Item>
+									{/if}
+								{/each}
+								<Pagination.Item>
+									<Pagination.NextButton />
+								</Pagination.Item>
+							</Pagination.Content>
+						{/snippet}
+					</Pagination.Root>
 				{/if}
 			</Card.Content>
 		</Card.Root>

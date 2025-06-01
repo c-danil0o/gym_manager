@@ -73,12 +73,18 @@ pub struct MemberWithMembershipUpdate {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PaginatedMembersResponse {
-    pub data: Vec<MemberInfo>,
+pub struct PaginatedResponse<T> {
+    pub data: Vec<T>,
     pub total: i64,
     pub total_pages: i64,
     pub page: i32,
     pub per_page: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PaginationPayload {
+    pub page: Option<i32>,
+    pub per_page: Option<i32>,
 }
 
 #[derive(Deserialize)]
@@ -209,16 +215,6 @@ pub struct EntryLogQueryParams {
     pub order_direction: Option<String>,
     pub search_string: Option<String>,
     pub filter_fields: Option<Vec<FilterField>>,
-}
-
-// DTO for search results
-#[derive(Debug, serde::Serialize)]
-pub struct EntryLogSearchResult {
-    pub data: Vec<EntryLogDisplay>,
-    pub total: i64,
-    pub total_pages: i64,
-    pub page: i32,
-    pub per_page: i32,
 }
 
 // DTO for entry log display

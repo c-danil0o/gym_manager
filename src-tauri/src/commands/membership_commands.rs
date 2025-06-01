@@ -1,4 +1,4 @@
-use crate::dto::{MembershipInfo, MembershipPayload};
+use crate::dto::{MembershipInfo, MembershipPayload, PaginatedResponse, PaginationPayload};
 use crate::{
     error::{AppError, Result as AppResult},
     state::AppState,
@@ -37,9 +37,16 @@ async fn determine_membership_status(
 #[tauri::command]
 pub async fn get_all_memberships_for_member(
     id: i64,
+    payload: PaginationPayload,
     state: State<'_, AppState>,
-) -> AppResult<Vec<MembershipInfo>> {
+) -> AppResult<PaginatedResponse<MembershipInfo>> {
     tracing::info!("Fetching all memberships for member with ID: {}", id);
+
+    let current_page = payload.page.unwrap_or(1).max(1);
+    let page_size = payload.per_page.unwrap_or(10).max(1);
+    let offset = (current_page - 1) * page_size;
+    let page_size_i64 = page_size as i64;
+    let offset_i64 = offset as i64;
 
     let memberships = sqlx::query_as!(
         MembershipInfo,
@@ -63,8 +70,11 @@ pub async fn get_all_memberships_for_member(
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
         WHERE
             m.is_deleted = FALSE AND m.id = ?
+        LIMIT ? OFFSET ?
         "#,
-        id
+        id,
+        page_size_i64,
+        offset_i64
     )
     .fetch_all(&state.db_pool)
     .await?;
@@ -78,8 +88,25 @@ pub async fn get_all_memberships_for_member(
             id
         );
     }
+    let total_items = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM memberships WHERE member_id = ? AND is_deleted = FALSE",
+        id
+    )
+    .fetch_one(&state.db_pool)
+    .await? as i64;
 
-    Ok(memberships)
+    let total_pages = if page_size > 0 {
+        (total_items as f64 / page_size as f64).ceil() as i64
+    } else {
+        0
+    };
+    Ok(PaginatedResponse {
+        total: total_items,
+        data: memberships,
+        total_pages: total_pages,
+        page: current_page,
+        per_page: page_size,
+    })
 }
 
 #[tauri::command]

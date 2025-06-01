@@ -1,7 +1,6 @@
 use crate::{
     dto::{
-        EntryLogDisplay, EntryLogQueryParams, EntryLogSearchResult, EntryStatus, MembershipInfo,
-        ScanPayload, ScanProcessingResult,
+        EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse, ScanPayload, ScanProcessingResult
     },
     error::Result as AppResult,
     models::Member,
@@ -589,7 +588,7 @@ async fn get_total_count(
 pub async fn get_entry_logs(
     search_params: EntryLogQueryParams,
     state: State<'_, AppState>,
-) -> AppResult<EntryLogSearchResult> {
+) -> AppResult<PaginatedResponse<EntryLogDisplay>> {
     let mut conn = state.db_pool.acquire().await?;
 
     // Validate and set defaults for pagination
@@ -641,7 +640,7 @@ pub async fn get_entry_logs(
 
     let entries = query.fetch_all(&mut *conn).await?;
 
-    Ok(EntryLogSearchResult {
+    Ok(PaginatedResponse {
         data: entries,
         total: total_count,
         page,

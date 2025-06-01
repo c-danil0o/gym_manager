@@ -1,6 +1,6 @@
 use crate::dto::{
     GetMemberByIdPayload, GetMembersPaginatedPayload, MemberInfo, MemberPayload,
-    MemberWithMembership, PaginatedMembersResponse,
+    MemberWithMembership, PaginatedResponse,
 };
 use crate::{
     error::{AppError, Result as AppResult},
@@ -146,7 +146,7 @@ WHERE (m.is_deleted IS NULL OR m.is_deleted = FALSE)
 pub async fn get_members_with_memberships_paginated(
     payload: GetMembersPaginatedPayload,
     state: State<'_, AppState>,
-) -> AppResult<PaginatedMembersResponse> {
+) -> AppResult<PaginatedResponse<MemberInfo>> {
     let current_page = payload.page.unwrap_or(DEFAULT_PAGE).max(1);
     let page_size = payload.per_page.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
     let offset = (current_page - 1) * page_size;
@@ -277,7 +277,7 @@ pub async fn get_members_with_memberships_paginated(
         0
     };
 
-    Ok(PaginatedMembersResponse {
+    Ok(PaginatedResponse {
         data: members_data,
         total: total_items,
         total_pages: total_pages,
