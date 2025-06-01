@@ -45,8 +45,8 @@ pub struct GetMembersPaginatedPayload {
 
 #[derive(Deserialize, Debug)]
 pub struct FilterField {
-  pub field: String, // Field name to filter by
-  pub value: String, // Value to filter the field by
+    pub field: String, // Field name to filter by
+    pub value: String, // Value to filter the field by
 }
 
 #[derive(Deserialize, Debug)]
@@ -74,7 +74,7 @@ pub struct MemberWithMembershipUpdate {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PaginatedMembersResponse {
-    pub data : Vec<MemberInfo>,
+    pub data: Vec<MemberInfo>,
     pub total: i64,
     pub total_pages: i64,
     pub page: i32,
@@ -167,7 +167,6 @@ pub struct MembershipInfo {
     pub membership_purchase_date: Option<NaiveDateTime>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum EntryStatus {
     Allowed,
@@ -180,7 +179,7 @@ pub enum EntryStatus {
     DeniedMembershipSuspended,
     DeniedMemberNotFound,
     DeniedCardNotAssigned,
-    Error
+    Error,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -194,41 +193,32 @@ pub struct ScanProcessingResult {
     pub remaining_visits: Option<i64>,
 }
 
-
 #[derive(Deserialize)]
 pub struct ScanPayload {
     pub card_id: String,
 }
 
-
 #[derive(Debug, serde::Deserialize)]
-pub struct EntryLogSearchParams {
-    // Search filters
-    pub member_name: Option<String>, // Searches both first_name and last_name
-    pub card_id: Option<String>,
-    pub status: Option<String>,
+pub struct EntryLogQueryParams {
     pub date_from: Option<NaiveDate>, // Start date (inclusive)
     pub date_to: Option<NaiveDate>,   // End date (inclusive)
 
-    // Pagination
-    pub page: Option<u32>,     // Page number (1-based), defaults to 1
-    pub per_page: Option<u32>, // Items per page, defaults to 50, max 500
-
-    // Ordering
-    pub order_by: Option<String>, // Field to order by: "entry_time", "member_name", "status", "card_id"
-    pub order_direction: Option<String>, // "asc" or "desc", defaults to "desc"
+    pub page: Option<i32>,
+    pub per_page: Option<i32>,
+    pub order_by: Option<String>,
+    pub order_direction: Option<String>,
+    pub search_string: Option<String>,
+    pub filter_fields: Option<Vec<FilterField>>,
 }
 
 // DTO for search results
 #[derive(Debug, serde::Serialize)]
 pub struct EntryLogSearchResult {
-    pub entries: Vec<EntryLogDisplay>,
-    pub total_count: i64,
-    pub page: u32,
-    pub per_page: u32,
-    pub total_pages: u32,
-    pub has_next: bool,
-    pub has_prev: bool,
+    pub data: Vec<EntryLogDisplay>,
+    pub total: i64,
+    pub total_pages: i64,
+    pub page: i32,
+    pub per_page: i32,
 }
 
 // DTO for entry log display
@@ -245,12 +235,11 @@ pub struct EntryLogDisplay {
     pub notes: Option<String>,
 }
 
-impl Default for EntryLogSearchParams {
+impl Default for EntryLogQueryParams {
     fn default() -> Self {
         Self {
-            member_name: None,
-            card_id: None,
-            status: None,
+            search_string: None,
+            filter_fields: None,
             date_from: None,
             date_to: None,
             page: Some(1),

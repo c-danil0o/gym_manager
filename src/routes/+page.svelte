@@ -11,10 +11,10 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import EntryStatusDialog from '$lib/components/entry-status-dialog/entry-status-dialog.svelte';
 
-	import type { ScanProcessingResult, EntryLogDisplay } from '$lib/models/entry';
+	import type { ScanProcessingResult, EntryLog } from '$lib/models/entry';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { setHeader } from '$lib/stores/state';
-	import { DateFormatter, parseDateTime } from '@internationalized/date';
+	import { parseDateTime } from '@internationalized/date';
 
 	let cardIdInput = $state('');
 	let inputElement: any | null = $state(null); // For focusing
@@ -23,13 +23,13 @@
 	let scanResult = $state<ScanProcessingResult | null>(null);
 	let showStatusDialog = $state(false);
 
-	let recentEntries = $state<EntryLogDisplay[]>([]);
+	let recentEntries = $state<EntryLog[]>([]);
 	let isLoadingEntries = $state(true);
 
 	async function fetchRecentEntries() {
 		isLoadingEntries = true;
 		try {
-			recentEntries = await invoke<EntryLogDisplay[]>('get_recent_entry_logs', { limit: 7 });
+			recentEntries = await invoke<EntryLog[]>('get_recent_entry_logs', { limit: 7 });
 		} catch (e: any) {
 			console.log(e);
 			const errorMessage = (e as ErrorResponse)?.message || 'Failed to load recent entries!';

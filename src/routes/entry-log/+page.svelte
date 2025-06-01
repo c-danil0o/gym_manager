@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { MemberDataTable } from '$lib/components/member-table';
-	import type { MemberInfo } from '$lib/models/member_with_membership';
+	import { EntryLogDataTable } from '$lib/components/entry-table';
+	import type { EntryLog } from '$lib/models/entry';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
 	import { setHeader } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
@@ -11,7 +11,7 @@
 			showBackButton: false
 		});
 	});
-	let tableData = $state<QueryResponse<MemberInfo>>({
+	let tableData = $state<QueryResponse<EntryLog>>({
 		data: [],
 		total: 0,
 		page: 1,
@@ -36,10 +36,10 @@
 	async function fetchTableData(params: QueryRequest) {
 		loading = true;
 		try {
-			const response = await invoke<QueryResponse<MemberInfo>>(
-				'get_members_with_memberships_paginated',
+			const response = await invoke<QueryResponse<EntryLog>>(
+				'get_entry_logs',
 				{
-					payload: {
+					searchParams: {
 						page: params.page,
 						per_page: params.per_page,
 						order_by: params.order_by,
@@ -52,7 +52,7 @@
 
 			tableData = response;
 		} catch (error) {
-			console.error('Failed to fetch table data:', error);
+			console.error('Failed to fetch entry log data:', error);
 			// Handle error appropriately
 		} finally {
 			loading = false;
@@ -108,7 +108,7 @@
 </script>
 
 <div>
-	<MemberDataTable
+	<EntryLogDataTable
 		bind:this={tableRef}
 		serverData={tableData}
 		{loading}

@@ -1,6 +1,6 @@
 use crate::{
     dto::{
-        EntryLogDisplay, EntryLogSearchParams, EntryLogSearchResult, EntryStatus, MembershipInfo,
+        EntryLogDisplay, EntryLogQueryParams, EntryLogSearchResult, EntryStatus, MembershipInfo,
         ScanPayload, ScanProcessingResult,
     },
     error::Result as AppResult,
@@ -389,7 +389,7 @@ pub async fn process_scan(
     let new_status = if new_visits > 0 { "active" } else { "expired" };
     let now = Utc::now().naive_utc();
 
-    sqlx::query!(
+    let update_result = sqlx::query!(
         "UPDATE memberships SET remaining_visits = ?, updated_at = ?, status = ? WHERE id = ?",
         new_visits,
         now,
@@ -397,12 +397,30 @@ pub async fn process_scan(
         membership_id
     )
     .execute(&mut *conn)
-    .await
-    .map_err(|e| {
-        // Log the error but don't fail silently
-        tracing::error!("Failed to update membership visits: {}", e);
-        e
-    })?;
+    .await;
+
+    match update_result {
+        Ok(_) => tracing::info!(
+            "Updated membership {} visits to {}",
+            membership_id,
+            new_visits
+        ),
+        Err(e) => {
+            tracing::error!("Failed to update membership {}: {}", membership_id, e);
+            return deny_entry(
+                &mut conn,
+                Some(member.id),
+                Some(membership_id),
+                scanned_card_id,
+                EntryStatus::Error,
+                "error",
+                "Failed to update membership visits.",
+                Some(member_full_name),
+                Some(&membership),
+            )
+            .await;
+        }
+    }
 
     // Log successful entry
     log_entry_attempt(
@@ -453,47 +471,56 @@ async fn log_entry_attempt(
     Ok(())
 }
 
-fn build_where_clause_and_params(params: &EntryLogSearchParams) -> (String, Vec<String>) {
+fn build_where_clause_and_params(params: &EntryLogQueryParams) -> (String, Vec<String>) {
     let mut where_conditions = Vec::new();
     let mut sql_params = Vec::new();
 
-    // Member name search (searches both first_name and last_name)
-    if let Some(name) = &params.member_name {
-        if !name.trim().is_empty() {
-            where_conditions.push(
-                "(m.first_name LIKE ? OR m.last_name LIKE ? OR (m.first_name || ' ' || m.last_name) LIKE ?)"
-            );
-            let search_pattern = format!("%{}%", name.trim());
-            sql_params.push(search_pattern.clone());
-            sql_params.push(search_pattern.clone());
-            sql_params.push(search_pattern);
-        }
+    let search_term = params
+        .search_string
+        .as_ref()
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty());
+
+    if let Some(term) = &search_term {
+        let like_pattern = format!("'%{}%'", term);
+        let search_query = format!("(LOWER(m.first_name) LIKE {val} OR LOWER(m.last_name) LIKE {val} OR LOWER(m.first_name || ' ' || m.last_name) LIKE {val}) OR m.card_id LIKE {val}", val = like_pattern);
+        where_conditions.push(search_query);
     }
 
-    // Card ID search
-    if let Some(card_id) = &params.card_id {
-        if !card_id.trim().is_empty() {
-            where_conditions.push("el.card_id LIKE ?");
-            sql_params.push(format!("%{}%", card_id.trim()));
+    if let Some(filter_fields) = &params.filter_fields {
+        let mut filter_conditions = Vec::new();
+        let filter_query;
+        for field in filter_fields {
+            match field.field.as_str() {
+                "status" => {
+                    filter_conditions.push(format!(
+                        "COALESCE(el.status, '') IN ('{}')",
+                        field
+                            .value
+                            .split(',')
+                            .map(|s| s.trim())
+                            .collect::<Vec<_>>()
+                            .join("', '")
+                    ));
+                }
+                _ => {}
+            }
         }
-    }
 
-    // Status search
-    if let Some(status) = &params.status {
-        if !status.trim().is_empty() {
-            where_conditions.push("el.status = ?");
-            sql_params.push(status.trim().to_string());
+        if !filter_conditions.is_empty() {
+            filter_query = filter_conditions.join(" AND ");
+            where_conditions.push(filter_query);
         }
     }
 
     // Date range search
     if let Some(date_from) = params.date_from {
-        where_conditions.push("DATE(el.entry_time) >= ?");
+        where_conditions.push("DATE(el.entry_time) >= ?".to_string());
         sql_params.push(date_from.to_string());
     }
 
     if let Some(date_to) = params.date_to {
-        where_conditions.push("DATE(el.entry_time) <= ?");
+        where_conditions.push("DATE(el.entry_time) <= ?".to_string());
         sql_params.push(date_to.to_string());
     }
 
@@ -506,7 +533,7 @@ fn build_where_clause_and_params(params: &EntryLogSearchParams) -> (String, Vec<
     (where_clause, sql_params)
 }
 
-fn build_order_clause(params: &EntryLogSearchParams) -> String {
+fn build_order_clause(params: &EntryLogQueryParams) -> String {
     let order_by = params.order_by.as_deref().unwrap_or("entry_time");
     let direction = params.order_direction.as_deref().unwrap_or("desc");
 
@@ -560,28 +587,22 @@ async fn get_total_count(
 
 #[tauri::command]
 pub async fn get_entry_logs(
-    search_params: EntryLogSearchParams,
+    search_params: EntryLogQueryParams,
     state: State<'_, AppState>,
 ) -> AppResult<EntryLogSearchResult> {
     let mut conn = state.db_pool.acquire().await?;
 
     // Validate and set defaults for pagination
     let page = search_params.page.unwrap_or(1).max(1);
-    let per_page = search_params.per_page.unwrap_or(50).min(500).max(1);
+    let per_page = search_params.per_page.unwrap_or(50).min(100).max(1);
     let offset = (page - 1) * per_page;
 
-    // Build WHERE clause and parameters
     let (where_clause, params) = build_where_clause_and_params(&search_params);
 
-    // Get total count for pagination
     let total_count = get_total_count(&mut conn, &where_clause, &params).await?;
 
-    // Calculate pagination info
-    let total_pages = ((total_count as f64) / (per_page as f64)).ceil() as u32;
-    let has_next = page < total_pages;
-    let has_prev = page > 1;
+    let total_pages = ((total_count as f64) / (per_page as f64)).ceil() as i32;
 
-    // Build the main query
     let order_clause = build_order_clause(&search_params);
 
     let main_query = format!(
@@ -610,27 +631,22 @@ pub async fn get_entry_logs(
         where_clause, order_clause
     );
 
-    // Execute the main query
     let mut query = sqlx::query_as::<_, EntryLogDisplay>(&main_query);
 
-    // Bind search parameters
     for param in &params {
         query = query.bind(param);
     }
 
-    // Bind pagination parameters
     query = query.bind(per_page as i64).bind(offset as i64);
 
     let entries = query.fetch_all(&mut *conn).await?;
 
     Ok(EntryLogSearchResult {
-        entries,
-        total_count,
+        data: entries,
+        total: total_count,
         page,
         per_page,
-        total_pages,
-        has_next,
-        has_prev,
+        total_pages: total_pages as i64,
     })
 }
 

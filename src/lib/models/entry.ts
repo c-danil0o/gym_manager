@@ -21,7 +21,7 @@ export interface ScanProcessingResult {
 	remaining_visits: number | null;
 }
 
-export interface EntryLogDisplay {
+export interface EntryLog {
 	id: number;
 	member_id: number | null;
 	membership_id: number | null;
