@@ -35,9 +35,18 @@ pub struct MemberResponse {
 
 #[derive(Deserialize, Debug)]
 pub struct GetMembersPaginatedPayload {
-    pub page: Option<i32>,            // 1-indexed page number
-    pub page_size: Option<i32>,       // Number of items per page
-    pub search_query: Option<String>, // Optional search query
+    pub page: Option<i32>,
+    pub per_page: Option<i32>,
+    pub order_by: Option<String>,
+    pub order_direction: Option<String>,
+    pub search_string: Option<String>,
+    pub filter_fields: Option<Vec<FilterField>>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FilterField {
+  pub field: String, // Field name to filter by
+  pub value: String, // Value to filter the field by
 }
 
 #[derive(Deserialize, Debug)]
@@ -65,11 +74,11 @@ pub struct MemberWithMembershipUpdate {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PaginatedMembersResponse {
-    pub members: Vec<MemberInfo>,
-    pub total_items: i64,
+    pub data : Vec<MemberInfo>,
+    pub total: i64,
     pub total_pages: i64,
-    pub current_page: i32,
-    pub page_size: i32,
+    pub page: i32,
+    pub per_page: i32,
 }
 
 #[derive(Deserialize)]
@@ -102,6 +111,7 @@ pub struct MemberInfo {
     pub card_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
+    pub name: String, // Full name for convenience
     pub email: Option<String>,
     pub phone: Option<String>,
     pub member_created_at: NaiveDateTime,

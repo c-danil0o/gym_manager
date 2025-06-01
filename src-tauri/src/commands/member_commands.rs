@@ -94,10 +94,10 @@ pub async fn add_member(payload: MemberPayload, state: State<'_, AppState>) -> A
         }
     }
 }
-
 const MEMBER_DATA_SELECT_SQL: &str = r#"
 SELECT
     m.id, m.card_id, m.first_name, m.last_name, m.email, m.phone, m.created_at as member_created_at,
+    m.first_name || ' ' || m.last_name as name,
     ms.id as membership_id,
     mt.name as membership_type_name,
     ms.status as membership_status
@@ -137,59 +137,100 @@ pub async fn get_members_with_memberships_paginated(
     state: State<'_, AppState>,
 ) -> AppResult<PaginatedMembersResponse> {
     let current_page = payload.page.unwrap_or(DEFAULT_PAGE).max(1);
-    let page_size = payload.page_size.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
+    let page_size = payload.per_page.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
     let offset = (current_page - 1) * page_size;
 
     let search_term = payload
-        .search_query
+        .search_string
         .map(|s| s.trim().to_lowercase())
         .filter(|s| !s.is_empty());
 
+    if let Some(order_by) = &payload.order_by {
+        if !["name", "card_id", "membership_status"].contains(&order_by.as_str()) {
+            return Err(AppError::Validation(format!(
+                "Invalid order_by field: {}. Allowed values are: name, card_id, membership_status.",
+                order_by
+            )));
+        }
+    }
+    let order_direction = match &payload.order_direction {
+        Some(dir) => {
+            if !["asc", "desc"].contains(&dir.as_str()) {
+                return Err(AppError::Validation(format!(
+                    "Invalid order_direction: {}. Allowed values are: asc, desc.",
+                    dir
+                )));
+            }
+            dir.to_uppercase()
+        }
+        None => "ASC".to_string(),
+    };
+
     let members_data: Vec<MemberInfo>;
     let total_items: i64;
+    let order_by_query = match (payload.order_by.as_deref()) {
+        Some("name") => format!(
+            "ORDER BY m.first_name {}, m.last_name {}",
+            order_direction, order_direction
+        ),
+        Some("card_id") => format!("ORDER BY m.card_id {}", order_direction),
+        Some("membership_status") => format!("ORDER BY ms.status {}", order_direction),
+        _ => "ORDER BY m.last_name ASC, m.first_name ASC".to_string(),
+    };
+    let mut filter_query = "TRUE".to_string();
 
-    if let Some(term) = search_term {
+    if let Some(filter_fields) = &payload.filter_fields {
+        let mut filter_conditions = Vec::new();
+        for field in filter_fields {
+            match field.field.as_str() {
+                "membership_type" => {
+                    filter_conditions.push(format!("mt.name = {}", field.value));
+                }
+                "membership_status" => {
+                    filter_conditions.push(format!("ms.status = {}", field.value));
+                }
+                _ => {
+                    return Err(AppError::Validation(format!(
+                        "Invalid filter field: {}. Allowed values are: membership_type, membership_status.",
+                        field.field
+                    )));
+                }
+            }
+        }
+
+        if !filter_conditions.is_empty() {
+            filter_query = filter_conditions.join(" AND ");
+        }
+    }
+    let search_query;
+
+    if let Some(term) = &search_term {
         let like_pattern = format!("%{}%", term); // Prepare for LIKE
 
-        // --- Fetch Data with Search ---
-        let query_string = format!(
-            "{} AND (LOWER(m.first_name) LIKE $1 OR LOWER(m.last_name) LIKE $1 OR LOWER(m.first_name || ' ' || m.last_name) LIKE $1) OR m.card_id LIKE $1 ORDER BY m.last_name ASC, m.first_name ASC LIMIT $2 OFFSET $3",
-            MEMBER_DATA_SELECT_SQL
-        );
-        members_data = sqlx::query_as(&query_string) // Using query_as with runtime string
-            .bind(&like_pattern)
-            .bind(page_size as i64) // SQLx expects i64 for LIMIT/OFFSET
-            .bind(offset as i64)
-            .fetch_all(&state.db_pool)
-            .await?;
-
-        // --- Count Data with Search ---
-        let count_query_string = format!(
-            "SELECT COUNT(DISTINCT m.id) FROM members m WHERE m.is_deleted = FALSE AND (LOWER(m.first_name) LIKE $1 OR LOWER(m.last_name) LIKE $1 OR LOWER(m.first_name || ' ' || m.last_name) LIKE $1)"
-        );
-        total_items = sqlx::query_scalar(&count_query_string)
-            .bind(&like_pattern)
-            .fetch_one(&state.db_pool)
-            .await?;
+        search_query = format!("(LOWER(m.first_name) LIKE {val} OR LOWER(m.last_name) LIKE {val} OR LOWER(m.first_name || ' ' || m.last_name) LIKE {val}) OR m.card_id LIKE {val}", val = like_pattern);
     } else {
-        // --- Fetch Data without Search ---
-        let query_string = format!(
-            "{} ORDER BY m.last_name ASC, m.first_name ASC LIMIT $1 OFFSET $2",
-            MEMBER_DATA_SELECT_SQL
-        );
-        members_data = sqlx::query_as(&query_string)
-            .bind(page_size as i64)
-            .bind(offset as i64)
-            .fetch_all(&state.db_pool)
-            .await?;
+        search_query = "TRUE".to_string();
+    }
+    let pagination_query = "LIMIT $1 OFFSET $2".to_string();
 
-        // --- Count Data without Search ---
-        total_items = sqlx::query_scalar(
-            "SELECT COUNT(DISTINCT m.id) FROM members m WHERE m.is_deleted = FALSE",
-        )
+    let query_string = format!(
+        "{} AND {} AND {} {} {}",
+        MEMBER_DATA_SELECT_SQL, filter_query, search_query, order_by_query, pagination_query
+    );
+
+    members_data = sqlx::query_as(&query_string) // Using query_as with runtime string
+        .bind(page_size as i64) // SQLx expects i64 for LIMIT/OFFSET
+        .bind(offset as i64)
+        .fetch_all(&state.db_pool)
+        .await?;
+
+    let count_query_string = format!(
+        "SELECT COUNT(DISTINCT m.id) FROM members m WHERE m.is_deleted = FALSE AND {} AND {}",
+        filter_query, search_query
+    );
+    total_items = sqlx::query_scalar(&count_query_string)
         .fetch_one(&state.db_pool)
         .await?;
-    }
 
     let total_pages = if page_size > 0 {
         (total_items as f64 / page_size as f64).ceil() as i64
@@ -198,11 +239,11 @@ pub async fn get_members_with_memberships_paginated(
     };
 
     Ok(PaginatedMembersResponse {
-        members: members_data,
-        total_items,
-        total_pages,
-        current_page,
-        page_size,
+        data: members_data,
+        total: total_items,
+        total_pages: total_pages,
+        page: current_page,
+        per_page: page_size,
     })
 }
 
