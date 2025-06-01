@@ -249,7 +249,7 @@
 									onclick={() => handleRenewMembership(data?.membership_id)}
 									variant="outline"
 									size="icon"
-									class="bg-blue-100"
+									class="bg-blue-100 dark:bg-blue-900"
 									disabled={data?.membership_status !== 'active' &&
 										data?.membership_status !== 'expired'}
 									title="Renew Membership"

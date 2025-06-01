@@ -32,7 +32,6 @@
 	import { cn, getMembershipStatusBadgeVariant } from '$lib/utils.js';
 	import type { MemberInfo } from '$lib/models/member_with_membership';
 	import { Pencil, RefreshCcw } from 'lucide-svelte';
-	import { preventDefault } from '$lib/commands.svelte';
 
 	// Server-side data structure
 	interface TableData<T> {
@@ -371,7 +370,7 @@
 				handleRenewMembership(row.original.id, row.original.membership_id);
 			}}
 			variant="outline"
-			class="bg-blue-100"
+			class="bg-blue-100 dark:bg-blue-900"
 			size="icon"
 			disabled={row.getValue('membership_status') !== 'active' &&
 				row.getValue('membership_status') !== 'expired'}
