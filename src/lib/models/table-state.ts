@@ -10,6 +10,8 @@ export interface QueryRequest {
 	order_direction?: 'asc' | 'desc';
 	search_string?: string;
 	filter_fields?: FilterField[];
+	date_from?: string;
+	date_to?: string;
 }
 
 export interface QueryResponse<T> {

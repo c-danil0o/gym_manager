@@ -3,6 +3,7 @@
 	import type { EntryLog } from '$lib/models/entry';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
 	import { setHeader } from '$lib/stores/state';
+	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
 	onMount(() => {
@@ -19,6 +20,9 @@
 		total_pages: 0
 	});
 
+	let todayDate: DateValue = today(getLocalTimeZone());
+	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 6 });
+
 	let loading = $state(false);
 	let currentParams = $state<QueryRequest>({
 		page: 1,
@@ -26,7 +30,9 @@
 		order_by: undefined,
 		order_direction: undefined,
 		search_string: '',
-		filter_fields: []
+		filter_fields: [],
+		date_from: startDate ? startDate.toString() : undefined,
+		date_to: todayDate ? todayDate.toString() : undefined
 	});
 
 	// Reference to the table component for accessing methods
@@ -36,19 +42,18 @@
 	async function fetchTableData(params: QueryRequest) {
 		loading = true;
 		try {
-			const response = await invoke<QueryResponse<EntryLog>>(
-				'get_entry_logs',
-				{
-					searchParams: {
-						page: params.page,
-						per_page: params.per_page,
-						order_by: params.order_by,
-						order_direction: params.order_direction,
-						search_string: params.search_string || '',
-						filter_fields: params.filter_fields || []
-					}
+			const response = await invoke<QueryResponse<EntryLog>>('get_entry_logs', {
+				searchParams: {
+					page: params.page,
+					per_page: params.per_page,
+					order_by: params.order_by,
+					order_direction: params.order_direction,
+					search_string: params.search_string || '',
+					filter_fields: params.filter_fields || [],
+					date_from: params.date_from,
+					date_to: params.date_to
 				}
-			);
+			});
 
 			tableData = response;
 		} catch (error) {
@@ -84,6 +89,30 @@
 			page: 1 // Reset to first page when search changes
 		};
 	}
+	function handleStartDateChange(startDate: DateValue | undefined) {
+		if (startDate) {
+			currentParams = {
+				...currentParams,
+				date_from: startDate.toString(),
+				page: 1
+			};
+		} else {
+			currentParams = { ...currentParams, date_from: undefined };
+		}
+	}
+
+	function handleEndDateChange(endDate: DateValue | undefined) {
+	console.log(endDate)
+		if (endDate) {
+			currentParams = {
+				...currentParams,
+				date_to: endDate.toString(),
+				page: 1
+			};
+		} else {
+			currentParams = { ...currentParams, date_to: undefined };
+		}
+	}
 
 	function handleFilterChange(filterFields: FilterField[]) {
 		currentParams = {
@@ -117,5 +146,7 @@
 		onSortChange={handleSortChange}
 		onSearchChange={debouncedSearchChange}
 		onFilterChange={handleFilterChange}
+		onStartDateChange={handleStartDateChange}
+		onEndDateChange={handleEndDateChange}
 	/>
 </div>

@@ -32,7 +32,7 @@
 	import { cn } from '$lib/utils.js';
 	import { Trash2 } from 'lucide-svelte';
 	import type { EntryLog } from '$lib/models/entry';
-	import { parseDateTime } from '@internationalized/date';
+	import { parseDateTime, type DateValue } from '@internationalized/date';
 
 	// Server-side data structure
 	interface TableData<T> {
@@ -59,6 +59,8 @@
 		onSearchChange: (searchString: string) => void;
 		onFilterChange: (filterFields: FilterField[]) => void;
 		handleDelete?: (logId: string) => void;
+		onStartDateChange?: (value: DateValue | undefined) => void;
+		onEndDateChange?: (value: DateValue | undefined) => void;
 	}
 
 	let {
@@ -69,7 +71,9 @@
 		onSortChange,
 		onSearchChange,
 		onFilterChange,
-		handleDelete = () => {}
+		handleDelete = () => {},
+		onStartDateChange = () => {},
+		onEndDateChange = () => {}
 	}: Props = $props();
 
 	// Local state for UI only
@@ -238,7 +242,8 @@
 				const snippet = createRawSnippet<[string]>((getNotes) => {
 					const value = getNotes();
 					return {
-						render: () => `<div class='text-wrap max-w-[300px] hidden xl:table-cell'>${value || ''}</div>`
+						render: () =>
+							`<div class='text-wrap max-w-[300px] hidden xl:table-cell'>${value || ''}</div>`
 					};
 				});
 
@@ -525,7 +530,7 @@
 {/snippet}
 
 <div class="space-y-4">
-	<DataTableToolbar {table} {onSearchChange} />
+	<DataTableToolbar {table} {onSearchChange} {onStartDateChange} {onEndDateChange} />
 	<div class="rounded-md border">
 		<Table.Root>
 			<Table.Header>

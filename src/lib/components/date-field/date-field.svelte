@@ -12,6 +12,7 @@
 	export let locale = 'en-US';
 	export let hideTimeZone = false;
 	export let hourCycle: 12 | 24 = 24;
+	export let height = 'h-10'; // Default height, can be overridden by parent
 
 	// Form integration props
 	export let attrs: Record<string, any> = {};
@@ -36,7 +37,7 @@
 		<DateFieldPrimitive.Input
 			class={cn(
 				'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-				'pr-10' // Add padding for the icon
+				'pr-10', height,
 			)}
 		>
 			<!-- Use a snippet to get segments -->
@@ -45,7 +46,7 @@
 					<DateFieldPrimitive.Segment
 						{part}
 						class={cn(
-							'inline-block select-none rounded-sm px-1 py-0.5 focus:bg-accent hover:bg-accent focus:text-accent-foreground focus:outline-none',
+							'inline-block select-none rounded-sm px-0.5 py-0.5 focus:bg-accent hover:bg-accent focus:text-accent-foreground focus:outline-none',
 							part === 'literal' ? 'text-muted-foreground' : 'text-foreground'
 						)}
 					>
