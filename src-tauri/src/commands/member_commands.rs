@@ -7,6 +7,7 @@ use crate::{
     models::Member,
     state::AppState,
 };
+use sqlx::Sqlite;
 use tauri::State;
 
 const DEFAULT_PAGE: i32 = 1;
@@ -94,6 +95,27 @@ pub async fn add_member(payload: MemberPayload, state: State<'_, AppState>) -> A
         }
     }
 }
+const RELEVANT_MEMBERSHIP_CTE: &str = r#"
+WITH latest_memberships AS (
+    SELECT
+        ms_inner.id,
+        ms_inner.member_id,
+        ms_inner.membership_type_id,
+        ms_inner.status,
+        ms_inner.start_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY ms_inner.member_id
+            ORDER BY
+                CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END ASC,
+                CASE ms_inner.status WHEN 'pending' THEN 0 ELSE 1 END ASC,
+                CASE WHEN ms_inner.status = 'pending' THEN ms_inner.start_date ELSE NULL END ASC,
+                CASE WHEN ms_inner.status = 'active' THEN ms_inner.start_date ELSE NULL END DESC,
+                ms_inner.start_date DESC
+        ) AS rn
+    FROM memberships ms_inner
+    WHERE (ms_inner.is_deleted IS NULL OR ms_inner.is_deleted = FALSE)
+)"#;
+
 const MEMBER_DATA_SELECT_SQL: &str = r#"
 SELECT
     m.id, m.card_id, m.first_name, m.last_name, m.email, m.phone, m.created_at as member_created_at,
@@ -103,32 +125,21 @@ SELECT
     ms.status as membership_status
 FROM
     members m
-LEFT JOIN (
-    SELECT
-        ms_inner.*,
-        ROW_NUMBER() OVER (
-            PARTITION BY ms_inner.member_id
-            ORDER BY
-                -- 1. Prioritize 'active' status first
-                CASE ms_inner.status WHEN 'active' THEN 0 ELSE 1 END ASC,
-                -- 2. If not active, prioritize 'pending' status next
-                CASE ms_inner.status WHEN 'pending' THEN 0 ELSE 1 END ASC,
-                -- 3. For 'pending' memberships, pick the one with the closest future start_date
-                CASE WHEN ms_inner.status = 'pending' THEN ms_inner.start_date ELSE NULL END ASC, -- NULLS LAST for pending means future dates come first
-                -- 4. For 'active' memberships, pick the most recent start_date
-                CASE WHEN ms_inner.status = 'active' THEN ms_inner.start_date ELSE NULL END DESC,
-                -- 5. For all other statuses (expired, inactive, suspended), pick the most recent start_date
-                ms_inner.start_date DESC
-        ) AS rn
-    FROM
-        memberships ms_inner
-    WHERE
-        (ms_inner.is_deleted IS NULL OR ms_inner.is_deleted = FALSE)
-) ms ON m.id = ms.member_id AND ms.rn = 1
+LEFT JOIN latest_memberships ms
+    ON m.id = ms.member_id AND ms.rn = 1
 LEFT JOIN
     membership_types mt ON ms.membership_type_id = mt.id AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
 WHERE
     (m.is_deleted IS NULL OR m.is_deleted = FALSE)
+"#;
+
+const COUNT_MEMBERS_QUERY: &str = r#"
+SELECT COUNT(DISTINCT m.id)
+FROM members m
+LEFT JOIN latest_memberships ms ON m.id = ms.member_id AND ms.rn = 1
+LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
+    AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
+WHERE (m.is_deleted IS NULL OR m.is_deleted = FALSE)
 "#;
 
 #[tauri::command]
@@ -168,7 +179,7 @@ pub async fn get_members_with_memberships_paginated(
 
     let members_data: Vec<MemberInfo>;
     let total_items: i64;
-    let order_by_query = match (payload.order_by.as_deref()) {
+    let order_by_query = match payload.order_by.as_deref() {
         Some("name") => format!(
             "ORDER BY m.first_name {}, m.last_name {}",
             order_direction, order_direction
@@ -183,15 +194,31 @@ pub async fn get_members_with_memberships_paginated(
         let mut filter_conditions = Vec::new();
         for field in filter_fields {
             match field.field.as_str() {
-                "membership_type" => {
-                    filter_conditions.push(format!("mt.name = {}", field.value));
+                "membership_type_name" => {
+                    filter_conditions.push(format!(
+                        "COALESCE(mt.id, 0) IN ({})",
+                        field
+                            .value
+                            .split(',')
+                            .map(|s| s.trim())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ));
                 }
                 "membership_status" => {
-                    filter_conditions.push(format!("ms.status = {}", field.value));
+                    filter_conditions.push(format!(
+                        "COALESCE(ms.status, '') IN ('{}')",
+                        field
+                            .value
+                            .split(',')
+                            .map(|s| s.trim())
+                            .collect::<Vec<_>>()
+                            .join("', '")
+                    ));
                 }
                 _ => {
                     return Err(AppError::Validation(format!(
-                        "Invalid filter field: {}. Allowed values are: membership_type, membership_status.",
+                        "Invalid filter field: {}. Allowed values are: membership_type_name, membership_status.",
                         field.field
                     )));
                 }
@@ -205,7 +232,7 @@ pub async fn get_members_with_memberships_paginated(
     let search_query;
 
     if let Some(term) = &search_term {
-        let like_pattern = format!("%{}%", term); // Prepare for LIKE
+        let like_pattern = format!("'%{}%'", term); // Prepare for LIKE
 
         search_query = format!("(LOWER(m.first_name) LIKE {val} OR LOWER(m.last_name) LIKE {val} OR LOWER(m.first_name || ' ' || m.last_name) LIKE {val}) OR m.card_id LIKE {val}", val = like_pattern);
     } else {
@@ -214,8 +241,20 @@ pub async fn get_members_with_memberships_paginated(
     let pagination_query = "LIMIT $1 OFFSET $2".to_string();
 
     let query_string = format!(
-        "{} AND {} AND {} {} {}",
-        MEMBER_DATA_SELECT_SQL, filter_query, search_query, order_by_query, pagination_query
+        "{} {} AND {} AND {} {} {}",
+        RELEVANT_MEMBERSHIP_CTE,
+        MEMBER_DATA_SELECT_SQL,
+        filter_query,
+        search_query,
+        order_by_query,
+        pagination_query
+    );
+
+    tracing::info!(
+        "Executing query: {} with page_size: {}, offset: {}",
+        query_string,
+        page_size,
+        offset
     );
 
     members_data = sqlx::query_as(&query_string) // Using query_as with runtime string
@@ -225,8 +264,8 @@ pub async fn get_members_with_memberships_paginated(
         .await?;
 
     let count_query_string = format!(
-        "SELECT COUNT(DISTINCT m.id) FROM members m WHERE m.is_deleted = FALSE AND {} AND {}",
-        filter_query, search_query
+        "{} {} AND {} AND {}",
+        RELEVANT_MEMBERSHIP_CTE, COUNT_MEMBERS_QUERY, filter_query, search_query
     );
     total_items = sqlx::query_scalar(&count_query_string)
         .fetch_one(&state.db_pool)

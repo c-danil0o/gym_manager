@@ -1,6 +1,7 @@
 export interface MemberInfo {
 	id: number; // Member ID
 	card_id: string | null;
+	name: string; // Full name, e.g., "John Doe"
 	first_name: string;
 	last_name: string;
 	email: string | null;
