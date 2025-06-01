@@ -1,292 +1,121 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { invoke } from '@tauri-apps/api/core';
-	import { goto } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
-
-	// Shadcn UI Imports
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Card from '$lib/components/ui/card';
-	import * as Table from '$lib/components/ui/table';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import * as Pagination from '$lib/components/ui/pagination'; // Requires `npx shadcn-svelte@latest add pagination`
-	import { Badge } from '$lib/components/ui/badge'; // Requires `npx shadcn-svelte@latest add badge`
-	import { Skeleton } from '$lib/components/ui/skeleton'; // Requires `npx shadcn-svelte@latest add skeleton`
-
-	// Icons
-	import PlusCircle from 'lucide-svelte/icons/plus-circle';
-	import Search from 'lucide-svelte/icons/search';
-	import Pencil from 'lucide-svelte/icons/pencil';
-	import type { MemberInfo, PaginatedMembersResponse } from '$lib/models/member_with_membership';
-	import { getMembershipStatusBadgeVariant } from '$lib/utils';
+	import { MemberDataTable } from '$lib/components/member-table';
+	import type { MemberInfo } from '$lib/models/member_with_membership';
+	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
 	import { setHeader } from '$lib/stores/state';
-	import { RefreshCcw } from 'lucide-svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { onMount } from 'svelte';
+	onMount(() => {
+		setHeader({
+			title: 'Entry Log',
+			showBackButton: false
+		});
+	});
+	let tableData = $state<QueryResponse<MemberInfo>>({
+		data: [],
+		total: 0,
+		page: 1,
+		per_page: 10,
+		total_pages: 0
+	});
 
-	let membersData = $state<MemberInfo[]>([]);
-	let totalItems = $state(0);
-	let totalPages = $state(1);
-	let currentPage = $state(1);
-	let pageSize = $state(20);
+	let loading = $state(false);
+	let currentParams = $state<QueryRequest>({
+		page: 1,
+		per_page: 10,
+		order_by: undefined,
+		order_direction: undefined,
+		search_string: '',
+		filter_fields: []
+	});
 
-	let isLoading = $state(true);
-	let error = $state<string | null>(null);
+	// Reference to the table component for accessing methods
+	let tableRef: any;
 
-	let searchQuery = $state('');
-	let debouncedSearchQuery = $state(''); // For debouncing search input
-
-	// --- Data Fetching ---
-	async function fetchMembers(pageToFetch = currentPage, query = debouncedSearchQuery) {
-		isLoading = true;
-		error = null;
+	// Fetch data from backend
+	async function fetchTableData(params: QueryRequest) {
+		loading = true;
 		try {
-			const payload = {
-				page: pageToFetch,
-				page_size: pageSize,
-				search_query: query || null // Send null if empty
-			};
-			console.log('Fetching members with payload:', payload);
-			const result = await invoke<PaginatedMembersResponse>(
+			const response = await invoke<QueryResponse<MemberInfo>>(
 				'get_members_with_memberships_paginated',
-				{ payload }
+				{
+					payload: {
+						page: params.page,
+						per_page: params.per_page,
+						order_by: params.order_by,
+						order_direction: params.order_direction,
+						search_string: params.search_string || '',
+						filter_fields: params.filter_fields || []
+					}
+				}
 			);
-			membersData = result.members;
-			totalItems = result.total_items;
-			totalPages = result.total_pages;
-			currentPage = result.current_page;
-			pageSize = result.page_size;
-			console.log('Fetched data:', result);
-		} catch (e: unknown) {
-			console.error('Error fetching members:', e);
-			error = e instanceof Error ? e.message : 'An unknown error occurred';
-			toast.error(error || 'Failed to load members.');
-			membersData = []; // Clear data on error
-			totalItems = 0;
-			totalPages = 1;
+
+			tableData = response;
+		} catch (error) {
+			console.error('Failed to fetch table data:', error);
+			// Handle error appropriately
 		} finally {
-			isLoading = false;
+			loading = false;
 		}
 	}
 
-	// --- Search Debouncing ---
-	let searchTimeout: number;
-	function handleSearchInput() {
+	// Event handlers
+	function handlePageChange(page: number) {
+		currentParams = { ...currentParams, page };
+	}
+
+	function handlePageSizeChange(pageSize: number) {
+		currentParams = { ...currentParams, per_page: pageSize, page: 1 };
+	}
+
+	function handleSortChange(orderBy: string | null, orderDirection: 'asc' | 'desc' | null) {
+		currentParams = {
+			...currentParams,
+			order_by: orderBy || undefined,
+			order_direction: orderDirection || undefined,
+			page: 1 // Reset to first page when sorting changes
+		};
+	}
+
+	function handleSearchChange(searchString: string) {
+		currentParams = {
+			...currentParams,
+			search_string: searchString,
+			page: 1 // Reset to first page when search changes
+		};
+	}
+
+	function handleFilterChange(filterFields: FilterField[]) {
+		currentParams = {
+			...currentParams,
+			filter_fields: filterFields,
+			page: 1 // Reset to first page when filters change
+		};
+	}
+
+	let searchTimeout: any;
+	function debouncedSearchChange(searchString: string) {
 		clearTimeout(searchTimeout);
-		searchTimeout = window.setTimeout(() => {
-			debouncedSearchQuery = searchQuery.trim();
-			fetchMembers(1, debouncedSearchQuery);
-		}, 500);
+		searchTimeout = setTimeout(() => {
+			handleSearchChange(searchString);
+		}, 300);
 	}
 
-	onMount(() => {
-		setHeader({
-			title: 'Members',
-			showBackButton: false
-		});
-		fetchMembers();
+	// Load initial data
+	$effect(() => {
+		fetchTableData(currentParams);
 	});
-	function handleViewMember(memberId: number) {
-		goto(`/members/${memberId}`);
-	}
-
-	function handleAddNewMember() {
-		goto('/members/new');
-	}
-
-	function handleEditMember(memberId: number) {
-		goto(`/members/${memberId}/edit`);
-	}
-
-	async function handleRenewMembership(
-		memberId: number | null | undefined,
-		membershipId: number | null | undefined
-	) {
-		if (membershipId && memberId)
-			await goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
-	}
 </script>
 
-<div class="space-y-6">
-	<div class="flex flex-col md:flex-row items-center justify-between gap-4">
-		<h1 class="text-2xl font-semibold">Members Overview</h1>
-		<div class="flex w-full md:w-auto items-center gap-2">
-			<div class="relative w-full md:w-64">
-				<Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-				<Input
-					type="search"
-					placeholder="Search by name..."
-					class="pl-8 w-full"
-					bind:value={searchQuery}
-					oninput={handleSearchInput}
-				/>
-			</div>
-			<Button onclick={handleAddNewMember} class="w-full md:w-auto">
-				<PlusCircle class="mr-2 h-4 w-4" />
-				Add Member
-			</Button>
-		</div>
-	</div>
-
-	{#if isLoading && membersData.length === 0}
-		<!-- Show skeletons only on initial load -->
-		<Card.Root>
-			<Card.Content class="pt-6">
-				{#each Array(5) as _}
-					<div class="flex items-center space-x-4 py-3 border-b last:border-b-0">
-						<Skeleton class="h-10 w-10 rounded-full" />
-						<div class="space-y-2 flex-grow">
-							<Skeleton class="h-4 w-3/4" />
-							<Skeleton class="h-4 w-1/2" />
-						</div>
-						<Skeleton class="h-8 w-20" />
-					</div>
-				{/each}
-			</Card.Content>
-		</Card.Root>
-	{:else if error}
-		<Card.Root class="border-destructive">
-			<Card.Header
-				><Card.Title class="text-destructive">Error Loading Members</Card.Title></Card.Header
-			>
-			<Card.Content>
-				<p>{error}</p>
-				<Button
-					onclick={() => fetchMembers(currentPage, debouncedSearchQuery)}
-					variant="outline"
-					class="mt-4">Try Again</Button
-				>
-			</Card.Content>
-		</Card.Root>
-	{:else if membersData.length === 0 && !isLoading}
-		<Card.Root>
-			<Card.Content class="pt-6 text-center">
-				<p class="text-muted-foreground">
-					{#if debouncedSearchQuery}
-						No members found matching "{debouncedSearchQuery}".
-					{:else}
-						No members found.
-					{/if}
-				</p>
-				{#if !debouncedSearchQuery}
-					<Button onclick={handleAddNewMember} variant="link" class="mt-2"
-						>Add the first member!</Button
-					>
-				{/if}
-			</Card.Content>
-		</Card.Root>
-	{:else}
-		<Card.Root>
-			{#if isLoading && membersData.length > 0}
-				<div class="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
-					<p>Loading...</p>
-					<!-- Replace with a spinner -->
-				</div>
-			{/if}
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head>Name</Table.Head>
-						<Table.Head class="hidden md:table-cell">Card ID</Table.Head>
-						<Table.Head class="hidden lg:table-cell">Email</Table.Head>
-						<Table.Head>Membership</Table.Head>
-						<Table.Head class="hidden md:table-cell">Status</Table.Head>
-						<Table.Head class="text-center">Actions</Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each membersData as member (member.id)}
-						<Table.Row onclick={() => handleViewMember(member.id)} class="cursor-pointer">
-							<Table.Cell class="font-medium">{member.first_name} {member.last_name}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell text-muted-foreground"
-								>{member.card_id || 'N/A'}</Table.Cell
-							>
-							<Table.Cell class="hidden lg:table-cell text-muted-foreground"
-								>{member.email || 'N/A'}</Table.Cell
-							>
-							<Table.Cell>
-								{#if member.membership_type_name}
-									{member.membership_type_name}
-								{:else}
-									<span class="text-muted-foreground">None</span>
-								{/if}
-							</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">
-								{#if member.membership_status}
-									<Badge variant={getMembershipStatusBadgeVariant(member.membership_status)}>
-										{member.membership_status}
-									</Badge>
-								{:else}
-									<span class="text-muted-foreground">-</span>
-								{/if}
-							</Table.Cell>
-							<Table.Cell class="text-center">
-								<Button
-									onclick={(e) => {
-										e.stopPropagation();
-										handleRenewMembership(member?.id, member?.membership_id);
-									}}
-									variant="outline"
-									class="bg-blue-100"
-									size="icon"
-									disabled={member?.membership_status !== 'active' &&
-										member?.membership_status !== 'expired'}
-									title="Renew Membership"
-								>
-									<RefreshCcw class="h-4 w-4" />
-								</Button>
-								<Button
-									onclick={() => handleEditMember(member.id)}
-									variant="outline"
-									size="icon"
-									title="Edit Member"
-								>
-									<Pencil class="h-4 w-4" />
-								</Button>
-								<!-- Optional Delete Button -->
-								<!--
-                                <Button onclick={() => handleDeleteMember(member.id, `${member.first_name} ${member.last_name}`)} variant="ghost" size="icon" title="Delete Member" class="text-destructive hover:text-destructive-foreground hover:bg-destructive/80 ml-2">
-                                    <Trash2 class="h-4 w-4" />
-                                </Button>
-                                -->
-							</Table.Cell>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-			</Table.Root>
-		</Card.Root>
-
-		{#if totalPages}
-			<div class="mt-6 flex justify-center">
-				<Pagination.Root
-					count={totalItems}
-					page={currentPage}
-					perPage={pageSize}
-					onPageChange={(e) => fetchMembers(e)}
-				>
-					{#snippet children({ pages, currentPage })}
-						<Pagination.Content>
-							<Pagination.Item>
-								<Pagination.PrevButton />
-							</Pagination.Item>
-							{#each pages as page (page.key)}
-								{#if page.type === 'ellipsis'}
-									<Pagination.Item>
-										<Pagination.Ellipsis />
-									</Pagination.Item>
-								{:else}
-									<Pagination.Item>
-										<Pagination.Link {page} isActive={currentPage === page.value}>
-											{page.value}
-										</Pagination.Link>
-									</Pagination.Item>
-								{/if}
-							{/each}
-							<Pagination.Item>
-								<Pagination.NextButton />
-							</Pagination.Item>
-						</Pagination.Content>
-					{/snippet}
-				</Pagination.Root>
-			</div>
-		{/if}
-	{/if}
+<div>
+	<MemberDataTable
+		bind:this={tableRef}
+		serverData={tableData}
+		{loading}
+		onPageChange={handlePageChange}
+		onPageSizeChange={handlePageSizeChange}
+		onSortChange={handleSortChange}
+		onSearchChange={debouncedSearchChange}
+		onFilterChange={handleFilterChange}
+	/>
 </div>
