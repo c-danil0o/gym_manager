@@ -103,7 +103,14 @@ fn main() {
             commands::entry_log_commands::process_scan,
             commands::entry_log_commands::get_recent_entry_logs,
             commands::entry_log_commands::get_entry_logs,
+            commands::entry_log_commands::delete_entry_log,
             commands::entry_log_commands::get_member_entry_logs,
+            commands::analytics_commands::get_membership_type_distribution,
+            commands::analytics_commands::get_revenue_by_membership_type,
+            commands::analytics_commands::get_daily_hourly_visit_count,
+            commands::analytics_commands::get_active_memberships_over_time,
+
+
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example

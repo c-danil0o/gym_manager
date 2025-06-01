@@ -6,6 +6,7 @@
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	onMount(() => {
 		setHeader({
 			title: 'Entry Log',
@@ -129,6 +130,18 @@
 			handleSearchChange(searchString);
 		}, 300);
 	}
+	async function handleDelete(id: number | null) {
+		if (!id) return;
+
+		try {
+			await invoke('delete_entry_log', { entryLogId: id });
+			fetchTableData(currentParams); // Refresh data after deletion
+			toast.success('Entry log deleted successfully.');
+		} catch (e: any) {
+			console.error('Error deleting entry log:', e);
+			toast.error(e?.message || 'Failed to entry log.');
+		}
+	}
 
 	// Load initial data
 	$effect(() => {
@@ -148,5 +161,6 @@
 		onFilterChange={handleFilterChange}
 		onStartDateChange={handleStartDateChange}
 		onEndDateChange={handleEndDateChange}
+		{handleDelete}
 	/>
 </div>

@@ -32,6 +32,7 @@
 	import { cn, getMembershipStatusBadgeVariant } from '$lib/utils.js';
 	import type { MemberInfo } from '$lib/models/member_with_membership';
 	import { Pencil, RefreshCcw } from 'lucide-svelte';
+	import { preventDefault } from '$lib/commands.svelte';
 
 	// Server-side data structure
 	interface TableData<T> {
@@ -57,8 +58,9 @@
 		onSortChange: (orderBy: string | null, orderDirection: 'asc' | 'desc' | null) => void;
 		onSearchChange: (searchString: string) => void;
 		onFilterChange: (filterFields: FilterField[]) => void;
-		handleEditMember?: (memberId: string) => void;
-		handleRenewMembership?: (memberId: string, membershipId: string) => void;
+		handleEditMember?: (memberId: number) => void;
+		handleRenewMembership?: (memberId: number, membershipId: number | null) => void;
+		handleViewMember?: (memberId: number) => void;
 	}
 
 	let {
@@ -70,6 +72,7 @@
 		onSearchChange,
 		onFilterChange,
 		handleEditMember = () => {},
+		handleViewMember = () => {},
 		handleRenewMembership = () => {}
 	}: Props = $props();
 
@@ -365,7 +368,7 @@
 		<Button
 			onclick={(e) => {
 				e.stopPropagation();
-				handleRenewMembership(row.getValue('id'), row.getValue('membership_id'));
+				handleRenewMembership(row.original.id, row.original.membership_id);
 			}}
 			variant="outline"
 			class="bg-blue-100"
@@ -377,7 +380,10 @@
 			<RefreshCcw class="h-4 w-4" />
 		</Button>
 		<Button
-			onclick={() => handleEditMember(row.getValue('id'))}
+			onclick={(e) => {
+				e.stopPropagation();
+				handleEditMember(row.original.id);
+			}}
 			variant="outline"
 			size="icon"
 			title="Edit Member"
@@ -482,8 +488,8 @@
 			class={cn('flex items-center text-xs space-x-2', className)}
 			{...restProps}
 			onclick={() => {
-        onSort(column.id, column.getIsSorted() === 'desc' ? false : true);
-      }}
+				onSort(column.id, column.getIsSorted() === 'desc' ? false : true);
+			}}
 		>
 			<span>
 				{title}
@@ -535,7 +541,10 @@
 					</Table.Row>
 				{:else}
 					{#each table.getRowModel().rows as row (row.id)}
-						<Table.Row data-state={row.getIsSelected() && 'selected'}>
+						<Table.Row
+							data-state={row.getIsSelected() && 'selected'}
+							onclick={() => handleViewMember(row.original.id)}
+						>
 							{#each row.getVisibleCells() as cell (cell.id)}
 								<Table.Cell>
 									<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />

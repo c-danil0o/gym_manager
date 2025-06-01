@@ -789,3 +789,20 @@ pub async fn get_entry_logs_stats(
 
     Ok(stats)
 }
+
+#[tauri::command]
+pub async fn delete_entry_log(
+    entry_log_id: i64,
+    state: State<'_, AppState>,
+) -> AppResult<()> {
+    let mut conn = state.db_pool.acquire().await?;
+
+    sqlx::query!(
+        "DELETE FROM entry_logs WHERE id = ?",
+        entry_log_id
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    Ok(())
+}

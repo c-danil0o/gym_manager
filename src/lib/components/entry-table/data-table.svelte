@@ -28,6 +28,7 @@
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import * as Select from '$lib/components/ui/select/index.js';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils.js';
 	import { Trash2 } from 'lucide-svelte';
@@ -58,7 +59,7 @@
 		onSortChange: (orderBy: string | null, orderDirection: 'asc' | 'desc' | null) => void;
 		onSearchChange: (searchString: string) => void;
 		onFilterChange: (filterFields: FilterField[]) => void;
-		handleDelete?: (logId: string) => void;
+		handleDelete?: (logId: number) => void;
 		onStartDateChange?: (value: DateValue | undefined) => void;
 		onEndDateChange?: (value: DateValue | undefined) => void;
 	}
@@ -406,14 +407,29 @@
 
 {#snippet RowActions({ row }: { row: Row<EntryLog> })}
 	<div class="space-x-2 flex justify-end mr-5">
-		<Button
-			onclick={() => handleDelete(row.getValue('id'))}
-			variant="destructive"
-			size="icon"
-			title="Delete Entry"
-		>
-			<Trash2 class="h-4 w-4" />
-		</Button>
+		<AlertDialog.Root>
+			<AlertDialog.Trigger>
+				<Button variant="destructive" size="icon" title="Delete">
+					<Trash2 class="h-4 w-4" />
+				</Button>
+			</AlertDialog.Trigger>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>Are you sure?</AlertDialog.Title>
+					<AlertDialog.Description>
+						This action will delete selected entry log!</AlertDialog.Description
+					>
+				</AlertDialog.Header>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+					<AlertDialog.Action
+						onclick={() => {
+							handleDelete(row.original.id);
+						}}>Continue</AlertDialog.Action
+					>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
 	</div>
 {/snippet}
 

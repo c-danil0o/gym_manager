@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { MemberDataTable } from '$lib/components/member-table';
 	import type { MemberInfo } from '$lib/models/member_with_membership';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
@@ -100,6 +101,15 @@
 			handleSearchChange(searchString);
 		}, 300);
 	}
+	function handleEditMember(memberId: number) {
+		goto(`/members/${memberId}/edit`);
+	}
+	function handleRenewMembership(memberId: number, membershipId: number | null) {
+		if (membershipId) goto(`/members/${memberId}/renew-membership?membershipId=${membershipId}`);
+	}
+	function handleViewMember(memberId: number) {
+		goto(`/members/${memberId}`);
+	}
 
 	// Load initial data
 	$effect(() => {
@@ -117,5 +127,8 @@
 		onSortChange={handleSortChange}
 		onSearchChange={debouncedSearchChange}
 		onFilterChange={handleFilterChange}
+		{handleEditMember}
+		{handleRenewMembership}
+		{handleViewMember}
 	/>
 </div>
