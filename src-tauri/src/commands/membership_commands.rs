@@ -4,14 +4,22 @@ use crate::{
     state::AppState,
 };
 use chrono::{NaiveDate, Utc};
+use chrono_tz::Tz;
 use tauri::State;
+
+const GYM_TIMEZONE: &str = "Europe/Belgrade";
 
 async fn determine_membership_status(
     start_date: &Option<NaiveDate>,
     end_date: &Option<NaiveDate>,
     remaining_visits: Option<i64>,
 ) -> AppResult<String> {
-    let now_date = Utc::now().date_naive();
+    let gym_tz: Tz = GYM_TIMEZONE.parse().map_err(|e| {
+        tracing::error!("Failed to parse GYM_TIMEZONE_STR: {}", e);
+        AppError::Config("Invalid gym timezone configuration.".to_string())
+    })?;
+
+    let now_date = Utc::now().with_timezone(&gym_tz).date_naive();
     if remaining_visits.is_some() && remaining_visits.unwrap_or(0) <= 0 {
         return Ok("expired".to_string());
     }

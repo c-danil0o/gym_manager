@@ -32,6 +32,16 @@
 		--sidebar-accent-foreground: 240 5.9% 10%;
 		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
+		--chart-1: oklch(0.58 0.12 41.116);
+		--chart-2: oklch(0.55 0.08 184.704);
+		--chart-3: oklch(0.45 0.05 227.392);
+		--chart-4: oklch(0.72 0.11 84.429);
+		--chart-5: oklch(0.68 0.1 70.08);
+		--chart-6: oklch(0.52 0.09 320.5);
+		--chart-7: oklch(0.62 0.08 155.2);
+		--chart-8: oklch(0.48 0.07 280.1);
+		--chart-9: oklch(0.65 0.09 25.8);
+		--chart-10: oklch(0.56 0.08 200.3);
 	}
 
 	.dark {
@@ -62,6 +72,24 @@
 		--sidebar-accent-foreground: 240 4.8% 95.9%;
 		--sidebar-border: 240 3.7% 15.9%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
+		--chart-1: oklch(0.68 0.15 41.116);
+		--chart-2: oklch(0.65 0.11 184.704);
+		--chart-3: oklch(0.55 0.08 227.392);
+		--chart-4: oklch(0.78 0.14 84.429);
+		--chart-5: oklch(0.74 0.13 70.08);
+		--chart-6: oklch(0.62 0.12 320.5);
+		--chart-7: oklch(0.72 0.11 155.2);
+		--chart-8: oklch(0.58 0.1 280.1);
+		--chart-9: oklch(0.75 0.12 25.8);
+		--chart-10: oklch(0.66 0.11 200.3);
+	}
+
+	@theme inline {
+		--color-chart-1: var(--chart-1);
+		--color-chart-2: var(--chart-2);
+		--color-chart-3: var(--chart-3);
+		--color-chart-4: var(--chart-4);
+		--color-chart-5: var(--chart-5);
 	}
 }
 

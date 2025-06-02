@@ -1,0 +1,55 @@
+<script lang="ts">
+	import * as Chart from '$lib/components/ui/chart/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { PieChart, Text } from 'layerchart';
+
+	let {
+		chartData = [],
+		chartConfig = {}
+	}: {
+		chartData: { type: string; value: number; color: string }[];
+		chartConfig: Chart.ChartConfig;
+	} = $props();
+
+
+	const total = chartData.reduce((acc, curr) => acc + curr.value, 0);
+</script>
+
+<Card.Root class="flex flex-col w-[500px] flex-shrink-0">
+	<Card.Header class="items-center">
+		<Card.Title>Membership Type Distribution</Card.Title>
+	</Card.Header>
+	<Card.Content class="flex-1">
+		<Chart.Container config={chartConfig} class="mx-auto aspect-square max-h-[250px]">
+			<PieChart
+				data={chartData}
+				key="type"
+				value="value"
+				c="color"
+				innerRadius={60}
+				padding={28}
+				props={{ pie: { motion: 'tween' } }}
+			>
+				{#snippet aboveMarks()}
+					<Text
+						value={String(total)}
+						textAnchor="middle"
+						verticalAnchor="middle"
+						class="fill-foreground text-4xl! font-bold"
+						dy={3}
+					/>
+					<Text
+						value="Memberships"
+						textAnchor="middle"
+						verticalAnchor="middle"
+						class="fill-foreground text-muted-foreground"
+						dy={22}
+					/>
+				{/snippet}
+				{#snippet tooltip()}
+					<Chart.Tooltip hideLabel hideIndicator={false} />
+				{/snippet}
+			</PieChart>
+		</Chart.Container>
+	</Card.Content>
+</Card.Root>
