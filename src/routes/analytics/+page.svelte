@@ -14,10 +14,12 @@
 		MembershipRevenueMap
 	} from '$lib/models/analytics';
 	import { onMount } from 'svelte';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import Label from '$lib/components/ui/label/label.svelte';
 	let loading = $state(false);
 
-	const chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
+	let chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
 	const chartConfigDist = $state<{
 		[key: string]: { label: string; color: string };
 	}>({});
@@ -34,11 +36,48 @@
 		[key: string]: { label: string; color: string };
 	}>({});
 
-	let endDate: DateValue = today(getLocalTimeZone()).add({ days: 1 });
-	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 12 });
+	let endDate: string = '';
+	let startDate: string = '';
+
+	let currentYear = today(getLocalTimeZone()).year;
+	const years: string[] = [];
+	for (let i = currentYear; i >= currentYear - 5; i--) {
+		years.push(String(i));
+	}
+
+	let selectedYear = $state(String(currentYear));
+	let componentMounted = false;
+
+	$effect(() => {
+	  let year = selectedYear;
+		if (componentMounted && year) {
+			loadAnalyticsData();
+		}
+	});
+
+	async function loadAnalyticsData() {
+		if (!selectedYear) return;
+		startDate = `${selectedYear}-01-01`;
+		if (String(currentYear) === selectedYear) {
+			endDate = today(getLocalTimeZone()).toString();
+		} else {
+			endDate = `${selectedYear}-12-31`;
+		}
+
+		loading = true;
+		try {
+			await Promise.all([
+				fetchMembershipTypeData(),
+				fetchWeeklyDist(),
+				fetchActiveOT(),
+				fetchRevenueData()
+			]);
+		} finally {
+			loading = false;
+		}
+	}
 
 	async function fetchMembershipTypeData() {
-		loading = true;
 		try {
 			const response = await invoke<MembershipTypeDistribution[]>(
 				'get_membership_type_distribution',
@@ -46,34 +85,37 @@
 			);
 			if (response) {
 				let i = 1;
+				const newChartDataDist = [];
+				const newChartConfigDist: { [key: string]: { label: string; color: string } } = {};
 				for (const item of response) {
-					chartDataDist.push({
+					newChartDataDist.push({
 						type: item.membership_type_name,
 						value: item.active_member_count,
 						color: `var(--color-${item.membership_type_name})`
 					});
-					chartConfigDist[item.membership_type_name] = {
+					newChartConfigDist[item.membership_type_name] = {
 						label: item.membership_type_name,
 						color: `var(--chart-${i})`
 					};
 					i++;
 				}
+				chartDataDist = newChartDataDist;
+				for (const key in chartConfigDist) delete chartConfigDist[key];
+				Object.assign(chartConfigDist, newChartConfigDist);
 			} else {
 				console.warn('No data received for membership type distribution');
+				chartDataDist = [];
 			}
 		} catch (error) {
 			console.error('Failed to fetch analytics data:', error);
-		} finally {
-			loading = false;
 		}
 	}
 
 	async function fetchWeeklyDist() {
-		loading = true;
 		try {
 			const response = await invoke<WeeklyHourlyDistribution[]>('get_daily_hourly_visit_count', {
-				startDate: startDate.toString(),
-				endDate: endDate.toString()
+				startDate: startDate,
+				endDate: endDate
 			});
 			if (response) {
 				chartDataHeatmap = response.map((item) => {
@@ -88,19 +130,16 @@
 			}
 		} catch (error) {
 			console.error('Failed to fetch analytics data:', error);
-		} finally {
-			loading = false;
 		}
 	}
 
 	async function fetchActiveOT() {
-		loading = true;
 		try {
 			const response = await invoke<ActiveMembershipOverTime[]>(
 				'get_active_memberships_over_time',
 				{
-					startDate: startDate.toString(),
-					endDate: endDate.toString()
+					startDate: startDate,
+					endDate: endDate
 				}
 			);
 			if (response) {
@@ -110,41 +149,42 @@
 			}
 		} catch (error) {
 			console.error('Failed to fetch analytics data:', error);
-		} finally {
-			loading = false;
 		}
 	}
 
 	async function fetchRevenueData() {
-		loading = true;
 		try {
 			const response = await invoke<MembershipRevenueMap[]>('get_revenue_by_membership_type', {
-				startDate: startDate.toString(),
-				endDate: endDate.toString()
+				startDate: startDate,
+				endDate: endDate
 			});
 			if (response) {
 				let i = 1;
+				const newChartDataRevenue = [];
+				const newChartConfigRevenue: typeof chartConfigRevenue = {};
 				for (const item of response) {
-					chartDataRevenue.push({
+					newChartDataRevenue.push({
 						membership_type_name: item.membership_type_name,
 						total_revenue: item.total_revenue,
 						count: item.count,
 						color: `var(--color-${item.membership_type_name})`
 					});
 
-					chartConfigRevenue[item.membership_type_name] = {
+					newChartConfigRevenue[item.membership_type_name] = {
 						label: item.membership_type_name,
 						color: `var(--chart-${i})`
 					};
 					i++;
 				}
+				chartDataRevenue = newChartDataRevenue;
+				for (const key in chartConfigRevenue) delete chartConfigRevenue[key];
+				Object.assign(chartConfigRevenue, newChartConfigRevenue);
 			} else {
 				console.warn('No data received for membership revenue');
+				chartDataRevenue = [];
 			}
 		} catch (error) {
 			console.error('Failed to fetch analytics data:', error);
-		} finally {
-			loading = false;
 		}
 	}
 
@@ -153,24 +193,34 @@
 			title: 'Analytics',
 			showBackButton: false
 		});
-		await Promise.all([
-			fetchMembershipTypeData(),
-			fetchWeeklyDist(),
-			fetchActiveOT(),
-			fetchRevenueData()
-		]);
-		console.log('Analytics data loaded');
+		await loadAnalyticsData();
+		componentMounted = true;
 	});
 </script>
 
 <div class="flex flex-col gap-10">
+	<div class="flex items-center justify-center w-full">
+		<Label class="mr-4">Select Year:</Label>
+		<Select.Root type="single" bind:value={selectedYear}>
+			<Select.Trigger class="w-fit">
+				{selectedYear ? selectedYear : 'Select year'}
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Group>
+					{#each years as year}
+						<Select.Item value={year} label={year}>{year}</Select.Item>
+					{/each}
+				</Select.Group>
+			</Select.Content>
+		</Select.Root>
+	</div>
 	<div class="flex xl:flex-row flex-col gap-10 w-full">
 		<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist} />
-		<EntryHeatmap data={chartDataHeatmap}/>
+		<EntryHeatmap data={chartDataHeatmap} />
 	</div>
 
 	<div class="flex xl:flex-row flex-col gap-10 w-full">
-		<ActiveMembershipOT data={chartDataActiveOT}/>
+		<ActiveMembershipOT data={chartDataActiveOT} />
 		<MembershipRevenue chartData={chartDataRevenue} chartConfig={chartConfigRevenue} />
 	</div>
 </div>

@@ -79,21 +79,20 @@ SELECT
     mt.name AS membership_type_name,
     SUM(mt.price) AS total_revenue, -- Summing the price of the type for each membership instance created
     COUNT(ms.id) AS count
-
 FROM
     membership_types mt
 JOIN
     memberships ms ON mt.id = ms.membership_type_id
 WHERE
-    ms.purchase_date >= ?1
-    AND ms.purchase_date <= ?2
+    DATE(ms.purchase_date, 'localtime') >= DATE(?1)
+    AND DATE(ms.purchase_date, 'localtime') <= DATE(?2)
     AND (ms.is_deleted IS NULL OR ms.is_deleted = FALSE)
     AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
 GROUP BY
     mt.name
 ORDER BY
     total_revenue DESC;
-    "#;
+"#;
 
 const ACTIVE_MEMBERSHIPS_OVER_TIME_QUERY: &str = r#"
 WITH RECURSIVE MonthSeries(month_start, month_end) AS (
