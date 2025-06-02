@@ -137,15 +137,13 @@
 								{#if nestLabel}
 									{@render TooltipLabel()}
 								{/if}
-								<span class="text-muted-foreground">
+								<span class="text-muted-foreground mr-2">
 									{itemConfig?.label || item.name}
 								</span>
 							</div>
-							{#if item.value}
 								<span class="text-foreground font-mono font-medium tabular-nums">
-									{item.value.toLocaleString()}
+									{item?.value ? item.value.toLocaleString() : '0'}
 								</span>
-							{/if}
 						</div>
 					{/if}
 				</div>

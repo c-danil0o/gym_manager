@@ -1,11 +1,17 @@
 <script lang="ts">
-	import { ActiveMembershipOT, EntryHeatmap, MembershipTypeCount } from '$lib/components/charts';
+	import {
+		ActiveMembershipOT,
+		EntryHeatmap,
+		MembershipTypeCount,
+		MembershipRevenue
+	} from '$lib/components/charts';
 	import { setHeader } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
 	import type {
 		MembershipTypeDistribution,
 		WeeklyHourlyDistribution,
-		ActiveMembershipOverTime
+		ActiveMembershipOverTime,
+		MembershipRevenueMap
 	} from '$lib/models/analytics';
 	import { onMount } from 'svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
@@ -20,7 +26,15 @@
 
 	let chartDataActiveOT = $state<{ year_month: string; active_member_count: number }[]>([]);
 
-	let endDate: DateValue = today(getLocalTimeZone());
+	let chartDataRevenue = $state<
+		{ membership_type_name: string; total_revenue: number; count: number; color: string }[]
+	>([]);
+
+	const chartConfigRevenue = $state<{
+		[key: string]: { label: string; color: string };
+	}>({});
+
+	let endDate: DateValue = today(getLocalTimeZone()).add({days: 1});
 	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 12 });
 
 	async function fetchMembershipTypeData() {
@@ -101,14 +115,52 @@
 		}
 	}
 
+	async function fetchRevenueData() {
+		loading = true;
+		try {
+			const response = await invoke<MembershipRevenueMap[]>('get_revenue_by_membership_type', {
+				startDate: startDate.toString(),
+				endDate: endDate.toString()
+			});
+			if (response) {
+				let i = 1;
+				for (const item of response) {
+					chartDataRevenue.push({
+						membership_type_name: item.membership_type_name,
+						total_revenue: item.total_revenue,
+						count: item.count,
+						color: `var(--color-${item.membership_type_name})`
+					});
+
+					chartConfigRevenue[item.membership_type_name] = {
+						label: item.membership_type_name,
+						color: `var(--chart-${i})`
+					};
+					i++;
+				}
+
+			} else {
+				console.warn('No data received for membership revenue');
+			}
+		} catch (error) {
+			console.error('Failed to fetch analytics data:', error);
+		} finally {
+			loading = false;
+		}
+	}
+
 	onMount(async () => {
 		setHeader({
 			title: 'Analytics',
 			showBackButton: false
 		});
-		fetchMembershipTypeData();
-		fetchWeeklyDist();
-		fetchActiveOT();
+		await Promise.all([
+			fetchMembershipTypeData(),
+			fetchWeeklyDist(),
+			fetchActiveOT(),
+			fetchRevenueData()
+		]);
+		console.log('Analytics data loaded');
 	});
 </script>
 
@@ -121,5 +173,7 @@
 
 	<div class="flex gap-10 w-full h-[500px]">
 		<ActiveMembershipOT data={chartDataActiveOT}></ActiveMembershipOT>
+		<MembershipRevenue chartData={chartDataRevenue} chartConfig={chartConfigRevenue}
+		></MembershipRevenue>
 	</div>
 </div>
