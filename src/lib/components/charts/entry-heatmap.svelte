@@ -134,7 +134,7 @@
 					No data available
 				</div>
 			{:else}
-				<Chart.Container config={chartConfig} class="mx-auto w-full aspect-square h-[350px]">
+				<Chart.Container config={chartConfig} class="mx-auto w-full h-[350px]">
 					<AreaChart
 						data={transformedData}
 						x="hour"

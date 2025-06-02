@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { EntryHeatmap, MembershipTypeCount } from '$lib/components/charts';
+	import { ActiveMembershipOT, EntryHeatmap, MembershipTypeCount } from '$lib/components/charts';
 	import { setHeader } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
-	import type { MembershipTypeDistribution, WeeklyHourlyDistribution } from '$lib/models/analytics';
+	import type {
+		MembershipTypeDistribution,
+		WeeklyHourlyDistribution,
+		ActiveMembershipOverTime
+	} from '$lib/models/analytics';
 	import { onMount } from 'svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	let loading = $state(false);
@@ -13,6 +17,8 @@
 	}>({});
 
 	let chartDataHeatmap = $state<{ day: number; hour: number; entries: number }[]>([]);
+
+	let chartDataActiveOT = $state<{ year_month: string; active_member_count: number }[]>([]);
 
 	let endDate: DateValue = today(getLocalTimeZone());
 	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 12 });
@@ -51,7 +57,10 @@
 	async function fetchWeeklyDist() {
 		loading = true;
 		try {
-			const response = await invoke<WeeklyHourlyDistribution[]>('get_daily_hourly_visit_count', {startDate: startDate.toString(), endDate: endDate.toString()});
+			const response = await invoke<WeeklyHourlyDistribution[]>('get_daily_hourly_visit_count', {
+				startDate: startDate.toString(),
+				endDate: endDate.toString()
+			});
 			if (response) {
 				chartDataHeatmap = response.map((item) => {
 					return {
@@ -70,6 +79,28 @@
 		}
 	}
 
+	async function fetchActiveOT() {
+		loading = true;
+		try {
+			const response = await invoke<ActiveMembershipOverTime[]>(
+				'get_active_memberships_over_time',
+				{
+					startDate: startDate.toString(),
+					endDate: endDate.toString()
+				}
+			);
+			if (response) {
+				chartDataActiveOT = response;
+			} else {
+				console.warn('No data received for active memberships over time');
+			}
+		} catch (error) {
+			console.error('Failed to fetch analytics data:', error);
+		} finally {
+			loading = false;
+		}
+	}
+
 	onMount(async () => {
 		setHeader({
 			title: 'Analytics',
@@ -77,16 +108,18 @@
 		});
 		fetchMembershipTypeData();
 		fetchWeeklyDist();
+		fetchActiveOT();
 	});
 </script>
 
-<div class='flex flex-col gap-10'>
+<div class="flex flex-col gap-10">
+	<div class="flex xl:flex-row flex-col gap-10 w-full xl:h-[500px]">
+		<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist}
+		></MembershipTypeCount>
+		<EntryHeatmap data={chartDataHeatmap}></EntryHeatmap>
+	</div>
 
-
-<div class="flex gap-10 w-full h-[500px]">
-	<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist}
-	></MembershipTypeCount>
-	<EntryHeatmap data={chartDataHeatmap}></EntryHeatmap>
-</div>
-
+	<div class="flex gap-10 w-full h-[500px]">
+		<ActiveMembershipOT data={chartDataActiveOT}></ActiveMembershipOT>
+	</div>
 </div>

@@ -8,3 +8,7 @@ export interface WeeklyHourlyDistribution {
 	hour_of_day: number;
 	visit_count: number;
 }
+export interface ActiveMembershipOverTime{
+  year_month: string;
+  active_member_count: number;
+}

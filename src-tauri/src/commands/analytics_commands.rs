@@ -31,6 +31,7 @@ pub struct DailyHourlyVisitCount {
 pub struct RevenueByMembershipTypeItem {
     membership_type_name: String,
     total_revenue: f64,
+    count: i64, // Number of memberships of this type
 }
 
 const MEMBERSHIP_TYPE_DISTRIBUTION_QUERY: &str = r#"
@@ -76,7 +77,9 @@ ORDER BY
 const REVENUE_BY_MEMBERSHIP_TYPE_QUERY: &str = r#"
 SELECT
     mt.name AS membership_type_name,
-    SUM(mt.price) AS total_revenue -- Summing the price of the type for each membership instance created
+    SUM(mt.price) AS total_revenue, -- Summing the price of the type for each membership instance created
+    COUNT(ms.id) AS count
+
 FROM
     membership_types mt
 JOIN
@@ -93,7 +96,6 @@ ORDER BY
     "#;
 
 const ACTIVE_MEMBERSHIPS_OVER_TIME_QUERY: &str = r#"
-const QUERY_POSITIONAL: &str = r#"
 WITH RECURSIVE MonthSeries(month_start, month_end) AS (
     SELECT
         DATE(?1, 'start of month') as month_start,
@@ -107,7 +109,7 @@ WITH RECURSIVE MonthSeries(month_start, month_end) AS (
 )
 SELECT
     strftime('%Y-%m', ms.month_end) AS year_month,
-    COUNT(DISTINCT mship.member_id) AS member_count
+    COUNT(DISTINCT mship.member_id) AS active_member_count
 FROM
     MonthSeries ms
 LEFT JOIN
@@ -118,7 +120,8 @@ LEFT JOIN
 GROUP BY
     year_month, ms.month_end
 ORDER BY
-    year_month ASC"#;
+    year_month ASC
+    "#;
 
 #[tauri::command]
 pub async fn get_membership_type_distribution(
