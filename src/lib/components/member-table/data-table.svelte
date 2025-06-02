@@ -58,6 +58,7 @@
 		onSearchChange: (searchString: string) => void;
 		onFilterChange: (filterFields: FilterField[]) => void;
 		handleEditMember?: (memberId: number) => void;
+		handleAddMember?: () => void;
 		handleRenewMembership?: (memberId: number, membershipId: number | null) => void;
 		handleViewMember?: (memberId: number) => void;
 	}
@@ -71,6 +72,7 @@
 		onSearchChange,
 		onFilterChange,
 		handleEditMember = () => {},
+		handleAddMember = () => {},
 		handleViewMember = () => {},
 		handleRenewMembership = () => {}
 	}: Props = $props();
@@ -505,7 +507,7 @@
 {/snippet}
 
 <div class="space-y-4">
-	<DataTableToolbar {table} {onSearchChange} />
+	<DataTableToolbar {table} {onSearchChange} onAddMember={handleAddMember} />
 	<div class="rounded-md border">
 		<Table.Root>
 			<Table.Header>

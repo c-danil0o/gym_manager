@@ -111,6 +111,10 @@
 		goto(`/members/${memberId}`);
 	}
 
+	function handleAddMember() {
+		goto('/members/new');
+	}
+
 	// Load initial data
 	$effect(() => {
 		fetchTableData(currentParams);
@@ -130,5 +134,6 @@
 		{handleEditMember}
 		{handleRenewMembership}
 		{handleViewMember}
+		{handleAddMember}
 	/>
 </div>

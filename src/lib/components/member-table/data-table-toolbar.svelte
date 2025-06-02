@@ -9,7 +9,7 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import type { MembershipType } from '$lib/models/membership_type.js';
 
-	let { table, onSearchChange }: { table: Table<TData>; onSearchChange?: (value: string) => void } =
+	let { table, onSearchChange, onAddMember }: { table: Table<TData>; onSearchChange?: (value: string) => void; onAddMember?: () => void } =
 		$props();
 
 	const isFiltered = $derived(table.getState().columnFilters.length > 0);
@@ -32,9 +32,8 @@
 		}
 	}
 	onMount(() => {
-    fetchMembershipTypes();
-  });
-
+		fetchMembershipTypes();
+	});
 </script>
 
 <div class="flex items-center justify-between">
@@ -65,4 +64,5 @@
 		{/if}
 	</div>
 	<DataTableViewOptions {table} />
+	<Button onclick={onAddMember} class="h-8 px-2 ml-3 text-xs lg:px-3">Add Member</Button>
 </div>
