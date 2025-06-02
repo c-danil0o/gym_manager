@@ -11,16 +11,18 @@
 		chartConfig: Chart.ChartConfig;
 	} = $props();
 
-
-	const total = chartData.reduce((acc, curr) => acc + curr.value, 0);
+	const total = $derived.by(() => {
+		return chartData.reduce((acc, curr) => acc + curr.value, 0);
+	});
 </script>
 
-<Card.Root class="flex flex-col w-[500px] flex-shrink-0">
+<Card.Root class="flex flex-col w-[500px] h-full flex-shrink-0">
 	<Card.Header class="items-center">
 		<Card.Title>Membership Type Distribution</Card.Title>
+		<Card.Description>Showing number of active memberships for each type</Card.Description>
 	</Card.Header>
-	<Card.Content class="flex-1">
-		<Chart.Container config={chartConfig} class="mx-auto aspect-square max-h-[250px]">
+	<Card.Content class="flex-1 flex items-center">
+		<Chart.Container config={chartConfig} class="mx-auto aspect-square h-[300px] ">
 			<PieChart
 				data={chartData}
 				key="type"
@@ -35,7 +37,8 @@
 						value={String(total)}
 						textAnchor="middle"
 						verticalAnchor="middle"
-						class="fill-foreground text-4xl! font-bold"
+						class="fill-foreground text-2xl! font-bold"
+						style="font-size: 2rem; font-weight: bold;"
 						dy={3}
 					/>
 					<Text

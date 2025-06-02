@@ -1,15 +1,21 @@
 <script lang="ts">
-	import { MembershipTypeCount } from '$lib/components/charts';
+	import { EntryHeatmap, MembershipTypeCount } from '$lib/components/charts';
 	import { setHeader } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
-	import type { MembershipTypeDistribution } from '$lib/models/analytics';
+	import type { MembershipTypeDistribution, WeeklyHourlyDistribution } from '$lib/models/analytics';
 	import { onMount } from 'svelte';
+	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	let loading = $state(false);
-	const chartData = $state<{ type: string; value: number; color: string }[]>([]);
-	const chartConfig = $state<{
+
+	const chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
+	const chartConfigDist = $state<{
 		[key: string]: { label: string; color: string };
 	}>({});
 
+	let chartDataHeatmap = $state<{ day: number; hour: number; entries: number }[]>([]);
+
+	let endDate: DateValue = today(getLocalTimeZone());
+	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 12 });
 
 	async function fetchMembershipTypeData() {
 		loading = true;
@@ -21,12 +27,12 @@
 			if (response) {
 				let i = 1;
 				for (const item of response) {
-					chartData.push({
+					chartDataDist.push({
 						type: item.membership_type_name,
 						value: item.active_member_count,
 						color: `var(--color-${item.membership_type_name})`
 					});
-					chartConfig[item.membership_type_name] = {
+					chartConfigDist[item.membership_type_name] = {
 						label: item.membership_type_name,
 						color: `var(--chart-${i})`
 					};
@@ -42,13 +48,45 @@
 		}
 	}
 
-	onMount(() => {
+	async function fetchWeeklyDist() {
+		loading = true;
+		try {
+			const response = await invoke<WeeklyHourlyDistribution[]>('get_daily_hourly_visit_count', {startDate: startDate.toString(), endDate: endDate.toString()});
+			if (response) {
+				chartDataHeatmap = response.map((item) => {
+					return {
+						day: item.day_of_week,
+						hour: item.hour_of_day,
+						entries: item.visit_count
+					};
+				});
+			} else {
+				console.warn('No data received for membership type distribution');
+			}
+		} catch (error) {
+			console.error('Failed to fetch analytics data:', error);
+		} finally {
+			loading = false;
+		}
+	}
+
+	onMount(async () => {
 		setHeader({
 			title: 'Analytics',
 			showBackButton: false
 		});
 		fetchMembershipTypeData();
+		fetchWeeklyDist();
 	});
 </script>
 
-<MembershipTypeCount {chartData} {chartConfig}></MembershipTypeCount>
+<div class='flex flex-col gap-10'>
+
+
+<div class="flex gap-10 w-full h-[500px]">
+	<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist}
+	></MembershipTypeCount>
+	<EntryHeatmap data={chartDataHeatmap}></EntryHeatmap>
+</div>
+
+</div>

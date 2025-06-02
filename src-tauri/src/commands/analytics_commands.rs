@@ -1,8 +1,5 @@
-use crate::{
-    error::Result as AppResult,
-    state::AppState,
-};
-use chrono::{NaiveDate};
+use crate::{error::Result as AppResult, state::AppState};
+use chrono::NaiveDate;
 use tauri::State;
 
 #[derive(sqlx::FromRow, serde::Serialize)]
@@ -59,18 +56,20 @@ ORDER BY
 
 const DAILY_HOURLY_VISIT_COUNT_QUERY: &str = r#"
 SELECT
+    CAST(strftime('%w', entry_time) AS INTEGER) AS day_of_week, -- 0 for Sunday, 1 for Monday, ..., 6 for Saturday
     CAST(strftime('%H', entry_time) AS INTEGER) AS hour_of_day,
     COUNT(*) AS visit_count
 FROM
     entry_logs
 WHERE
     status = 'allowed'
-    AND entry_time >= ?1
-    AND entry_time <= ?2
-    AND (is_deleted IS NULL OR is_deleted = FALSE) -- Assuming entry_logs might have is_deleted
+    AND entry_time >= ?1 -- Placeholder for start_date_time of range
+    AND entry_time <= ?2 -- Placeholder for end_date_time of range
 GROUP BY
+    day_of_week,
     hour_of_day
 ORDER BY
+    day_of_week ASC,
     hour_of_day ASC;
     "#;
 
@@ -125,9 +124,10 @@ ORDER BY
 pub async fn get_membership_type_distribution(
     state: State<'_, AppState>,
 ) -> AppResult<Vec<MembershipTypeDistributionItem>> {
-    let rows = sqlx::query_as::<_, MembershipTypeDistributionItem>(MEMBERSHIP_TYPE_DISTRIBUTION_QUERY)
-        .fetch_all(&state.db_pool)
-        .await?;
+    let rows =
+        sqlx::query_as::<_, MembershipTypeDistributionItem>(MEMBERSHIP_TYPE_DISTRIBUTION_QUERY)
+            .fetch_all(&state.db_pool)
+            .await?;
 
     Ok(rows)
 }
@@ -168,11 +168,12 @@ pub async fn get_active_memberships_over_time(
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> AppResult<Vec<ActiveMembershipsOverTimeItem>> {
-    let rows = sqlx::query_as::<_, ActiveMembershipsOverTimeItem>(ACTIVE_MEMBERSHIPS_OVER_TIME_QUERY)
-        .bind(start_date)
-        .bind(end_date)
-        .fetch_all(&state.db_pool)
-        .await?;
+    let rows =
+        sqlx::query_as::<_, ActiveMembershipsOverTimeItem>(ACTIVE_MEMBERSHIPS_OVER_TIME_QUERY)
+            .bind(start_date)
+            .bind(end_date)
+            .fetch_all(&state.db_pool)
+            .await?;
 
     Ok(rows)
 }
