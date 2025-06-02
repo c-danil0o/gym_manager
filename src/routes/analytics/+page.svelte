@@ -34,7 +34,7 @@
 		[key: string]: { label: string; color: string };
 	}>({});
 
-	let endDate: DateValue = today(getLocalTimeZone()).add({days: 1});
+	let endDate: DateValue = today(getLocalTimeZone()).add({ days: 1 });
 	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 12 });
 
 	async function fetchMembershipTypeData() {
@@ -138,7 +138,6 @@
 					};
 					i++;
 				}
-
 			} else {
 				console.warn('No data received for membership revenue');
 			}
@@ -165,15 +164,13 @@
 </script>
 
 <div class="flex flex-col gap-10">
-	<div class="flex xl:flex-row flex-col gap-10 w-full xl:h-[500px]">
-		<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist}
-		></MembershipTypeCount>
-		<EntryHeatmap data={chartDataHeatmap}></EntryHeatmap>
+	<div class="flex xl:flex-row flex-col gap-10 w-full">
+		<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist} />
+		<EntryHeatmap data={chartDataHeatmap}/>
 	</div>
 
-	<div class="flex gap-10 w-full h-[500px]">
-		<ActiveMembershipOT data={chartDataActiveOT}></ActiveMembershipOT>
-		<MembershipRevenue chartData={chartDataRevenue} chartConfig={chartConfigRevenue}
-		></MembershipRevenue>
+	<div class="flex xl:flex-row flex-col gap-10 w-full">
+		<ActiveMembershipOT data={chartDataActiveOT}/>
+		<MembershipRevenue chartData={chartDataRevenue} chartConfig={chartConfigRevenue} />
 	</div>
 </div>

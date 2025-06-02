@@ -57,22 +57,22 @@ ORDER BY
 
 const DAILY_HOURLY_VISIT_COUNT_QUERY: &str = r#"
 SELECT
-    CAST(strftime('%w', entry_time) AS INTEGER) AS day_of_week, -- 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-    CAST(strftime('%H', entry_time) AS INTEGER) AS hour_of_day,
+    CAST(strftime('%w', datetime(entry_time, 'localtime')) AS INTEGER) AS day_of_week,
+    CAST(strftime('%H', datetime(entry_time, 'localtime')) AS INTEGER) AS hour_of_day,
     COUNT(*) AS visit_count
 FROM
     entry_logs
 WHERE
     status = 'allowed'
-    AND entry_time >= ?1 -- Placeholder for start_date_time of range
-    AND entry_time <= ?2 -- Placeholder for end_date_time of range
+    AND entry_time >= ?1
+    AND entry_time <= ?2
 GROUP BY
     day_of_week,
     hour_of_day
 ORDER BY
     day_of_week ASC,
     hour_of_day ASC;
-    "#;
+"#;
 
 const REVENUE_BY_MEMBERSHIP_TYPE_QUERY: &str = r#"
 SELECT
@@ -108,21 +108,21 @@ WITH RECURSIVE MonthSeries(month_start, month_end) AS (
     WHERE DATE(month_start, '+1 month') <= DATE(?2, 'start of month')
 )
 SELECT
-    strftime('%Y-%m', ms.month_end) AS year_month,
+    strftime('%Y-%m', ms.month_start) AS year_month,
     COUNT(DISTINCT mship.member_id) AS active_member_count
 FROM
     MonthSeries ms
 LEFT JOIN
     memberships mship ON
         (mship.is_deleted IS NULL OR mship.is_deleted = 0 OR mship.is_deleted = FALSE)
-        AND DATE(mship.start_date) <= ms.month_end
-        AND (mship.end_date IS NULL OR DATE(mship.end_date) >= ms.month_end)
+        AND mship.start_date <= ms.month_end
+        AND (mship.end_date IS NULL OR mship.end_date >= ms.month_start)
+        AND mship.status IN ('active', 'pending', 'expired')
 GROUP BY
-    year_month, ms.month_end
+    ms.month_start
 ORDER BY
-    year_month ASC
-    "#;
-
+    ms.month_start ASC
+"#;
 #[tauri::command]
 pub async fn get_membership_type_distribution(
     state: State<'_, AppState>,
@@ -171,6 +171,11 @@ pub async fn get_active_memberships_over_time(
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> AppResult<Vec<ActiveMembershipsOverTimeItem>> {
+    tracing::info!(
+        "Fetching active memberships over time from {} to {}",
+        start_date,
+        end_date
+    );
     let rows =
         sqlx::query_as::<_, ActiveMembershipsOverTimeItem>(ACTIVE_MEMBERSHIPS_OVER_TIME_QUERY)
             .bind(start_date)
