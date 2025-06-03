@@ -50,7 +50,7 @@
 					onSearchChange(e.currentTarget.value);
 				}
 			}}
-			class="h-8 w-[150px] lg:w-[250px]"
+			class="h-8 w-[150px] lg:w-[250px] bg-card"
 		/>
 
 		{#if statusCol}

@@ -12,7 +12,7 @@
 		class={buttonVariants({
 			variant: "outline",
 			size: "sm",
-			class: "ml-auto hidden h-8 lg:flex",
+			class: "ml-auto hidden h-8 lg:flex bg-card",
 		})}
 	>
 		<Settings2Icon />

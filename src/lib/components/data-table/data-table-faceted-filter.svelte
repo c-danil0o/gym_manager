@@ -32,7 +32,7 @@
 <Popover.Root>
 	<Popover.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="outline" size="sm" class="h-8 border-dashed">
+			<Button {...props} variant="outline" size="sm" class="h-8 border-dashed bg-card">
 				<CirclePlusIcon />
 				{title}
 				{#if selectedValues.size > 0}

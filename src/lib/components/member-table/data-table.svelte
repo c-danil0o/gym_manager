@@ -508,7 +508,7 @@
 
 <div class="space-y-4">
 	<DataTableToolbar {table} {onSearchChange} onAddMember={handleAddMember} />
-	<div class="rounded-md border shadow">
+	<div class="rounded-md border shadow bg-card">
 		<Table.Root>
 			<Table.Header>
 				{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}

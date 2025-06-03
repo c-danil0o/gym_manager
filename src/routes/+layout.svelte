@@ -227,7 +227,7 @@
 				</Sheet.Root>
 				<div class="flex flex-1 items-center gap-6">
 					{#if $headerState.showBackButton}
-						<Button variant="outline" size="icon" onclick={handleBack} aria-label="Go back">
+						<Button variant="secondary" size="icon" onclick={handleBack} aria-label="Go back">
 							<ArrowLeft class="h-5 w-5" />
 						</Button>
 					{:else}

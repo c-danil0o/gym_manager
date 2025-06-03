@@ -37,7 +37,7 @@
 					onSearchChange(e.currentTarget.value);
 				}
 			}}
-			class="h-8 w-[150px] lg:w-[250px]"
+			class="h-8 w-[150px] lg:w-[250px] bg-card"
 		/>
 		<div class="flex items-center gap-6">
 			<div class="flex items-center gap-3">
