@@ -106,7 +106,7 @@
 			{#if result && result.member_name}
 				<div class="mt-6 space-y-3 text-lg p-4">
 					<!-- Member Name -->
-					<div class="grid grid-cols-[max-content,1fr] items-center gap-x-4">
+					<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 						<Label class="text-muted-foreground w-[100px]" for="dialog-member-name">Member:</Label>
 						<Input
 							id="dialog-member-name"
@@ -119,7 +119,7 @@
 
 					<!-- Card ID -->
 					{#if result.card_id}
-						<div class="grid grid-cols-[max-content,1fr] items-center gap-x-4">
+						<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 							<Label class="text-muted-foreground w-[100px]" for="dialog-card-id">Card ID:</Label>
 							<Input
 								id="dialog-card-id"
@@ -133,7 +133,7 @@
 
 					<!-- Membership Details -->
 					{#if result.membership_type_name}
-						<div class="grid grid-cols-[max-content,1fr] items-center gap-x-4">
+						<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 							<Label class="text-muted-foreground w-[100px]" for="dialog-membership-type"
 								>Membership:</Label
 							>
@@ -147,7 +147,7 @@
 						</div>
 
 						{#if result.membership_end_date}
-							<div class="grid grid-cols-[max-content,1fr] items-center gap-x-4">
+							<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 								<Label class="text-muted-foreground w-[100px]" for="dialog-membership-end"
 									>Ends:</Label
 								>
@@ -162,7 +162,7 @@
 						{/if}
 
 						{#if result.remaining_visits !== null && result.remaining_visits !== undefined}
-							<div class="grid grid-cols-[max-content,1fr] items-center gap-x-4">
+							<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 								<Label class="text-muted-foreground w-[100px]" for="dialog-remaining-visits"
 									>Visits Left:</Label
 								>

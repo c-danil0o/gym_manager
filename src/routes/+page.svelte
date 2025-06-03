@@ -137,7 +137,7 @@
 					bind:ref={inputElement}
 					bind:value={cardIdInput}
 					type="text"
-					class="h-14 !text-2xl flex-grow text-center"
+					class="h-14 text-2xl! grow text-center"
 					disabled={isProcessingScan}
 					aria-label="Card ID Input"
 				/>

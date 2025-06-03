@@ -18,7 +18,7 @@
 	});
 </script>
 
-<Card.Root class="flex flex-col w-[500px] h-[500px] flex-shrink-0">
+<Card.Root class="flex flex-col w-[500px] h-[500px] shrink-0">
 	<Card.Header class="items-center">
 		<Card.Title>Revenue per Membership Type</Card.Title>
 		<Card.Description>Showing number of memberships and total revenue</Card.Description>

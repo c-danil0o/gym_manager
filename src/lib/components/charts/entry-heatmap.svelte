@@ -123,7 +123,7 @@
 </script>
 
 <div class="w-full {className}" {...restProps}>
-	<Card.Root class="flex flex-col w-full h-[500px] flex-shrink-0">
+	<Card.Root class="flex flex-col w-full h-[500px] shrink-0">
 		<Card.Header class="text-center">
 			<Card.Title>{title}</Card.Title>
 			<Card.Description>{description}</Card.Description>

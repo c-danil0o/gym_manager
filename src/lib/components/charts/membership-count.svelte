@@ -16,7 +16,7 @@
 	});
 </script>
 
-<Card.Root class="flex flex-col w-[500px] h-[500px] flex-shrink-0">
+<Card.Root class="flex flex-col w-[500px] h-[500px] shrink-0">
 	<Card.Header class="items-center">
 		<Card.Title>Membership Type Distribution</Card.Title>
 		<Card.Description>Showing number of active memberships for each type</Card.Description>
