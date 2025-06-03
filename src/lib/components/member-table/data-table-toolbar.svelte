@@ -63,6 +63,5 @@
 			</Button>
 		{/if}
 	</div>
-	<DataTableViewOptions {table} />
 	<Button onclick={onAddMember} class="h-8 px-2 ml-3 text-xs lg:px-3">Add Member</Button>
 </div>

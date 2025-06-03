@@ -547,7 +547,7 @@
 
 <div class="space-y-4">
 	<DataTableToolbar {table} {onSearchChange} {onStartDateChange} {onEndDateChange} />
-	<div class="rounded-md border">
+	<div class="rounded-md border shadow">
 		<Table.Root>
 			<Table.Header>
 				{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}

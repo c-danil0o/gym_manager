@@ -127,11 +127,12 @@
 	}
 </script>
 
-<div class="space-y-20 w-full">
+<div class="flex flex-col xl:mt-20 gap-10 justify-between h-full w-full">
 	<!-- Scanner Input Card -->
-	<Card.Root class="mx-auto w-fit backdrop-blur shadow-md hover:shadow-lg">
+	<Card.Root class="mx-auto w-fit backdrop-blur py-2 shadow-md hover:shadow-lg">
 		<Card.Content>
 			<form onsubmit={handleSubmitScan} class="flex flex-col items-center gap-4">
+				<Label class="text-lg font-semibold mb-2">Card ID</Label>
 				<Input
 					bind:ref={inputElement}
 					bind:value={cardIdInput}
@@ -140,17 +141,18 @@
 					disabled={isProcessingScan}
 					aria-label="Card ID Input"
 				/>
-				<Separator/>
+				<Separator />
 				<div class="flex items-center gap-2">
-
-				<p class="text-muted-foreground text-sm p-3">Scan a member's card or enter ID and press ENTER</p>
-				<Button type="submit"  disabled={isProcessingScan}>
-					{#if isProcessingScan}
-						Processing... <!-- Or a spinner -->
-					{:else}
-						Submit
-					{/if}
-				</Button>
+					<p class="text-muted-foreground text-sm p-3">
+						Scan a member's card or enter ID and press ENTER
+					</p>
+					<Button type="submit" disabled={isProcessingScan}>
+						{#if isProcessingScan}
+							Processing... <!-- Or a spinner -->
+						{:else}
+							Submit
+						{/if}
+					</Button>
 				</div>
 			</form>
 		</Card.Content>

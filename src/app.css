@@ -24,7 +24,7 @@
 		--destructive-foreground: 210 40% 98%;
 		--ring: 222.2 84% 4.9%;
 		--radius: 0.5rem;
-		--sidebar-background: 0 0% 95%;
+		--sidebar-background: 0 0% 97%;
 		--sidebar-foreground: 240 5.3% 26.1%;
 		--sidebar-primary: 240 5.9% 10%;
 		--sidebar-primary-foreground: 0 0% 98%;
@@ -90,6 +90,11 @@
 		--color-chart-3: var(--chart-3);
 		--color-chart-4: var(--chart-4);
 		--color-chart-5: var(--chart-5);
+		--color-chart-6: var(--chart-6);
+		--color-chart-7: var(--chart-7);
+		--color-chart-8: var(--chart-8);
+		--color-chart-9: var(--chart-9);
+		--color-chart-10: var(--chart-10);
 	}
 }
 
