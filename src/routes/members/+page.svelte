@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 	onMount(() => {
 		setHeader({
-			title: 'Entry Log',
+			title: 'Members',
 			showBackButton: false
 		});
 	});

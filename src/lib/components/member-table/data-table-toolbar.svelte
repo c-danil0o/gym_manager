@@ -8,8 +8,13 @@
 	import { onMount } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import type { MembershipType } from '$lib/models/membership_type.js';
+	import { PlusCircle } from 'lucide-svelte';
 
-	let { table, onSearchChange, onAddMember }: { table: Table<TData>; onSearchChange?: (value: string) => void; onAddMember?: () => void } =
+	let {
+		table,
+		onSearchChange,
+		onAddMember
+	}: { table: Table<TData>; onSearchChange?: (value: string) => void; onAddMember?: () => void } =
 		$props();
 
 	const isFiltered = $derived(table.getState().columnFilters.length > 0);
@@ -63,5 +68,8 @@
 			</Button>
 		{/if}
 	</div>
-	<Button onclick={onAddMember} class="h-8 px-2 ml-3 text-xs lg:px-3">Add Member</Button>
+	<Button onclick={onAddMember} class="h-8 px-4 ml-3 text-xs lg:px-4">
+		<PlusCircle class="mr-2 h-4 w-4" />
+		Add</Button
+	>
 </div>

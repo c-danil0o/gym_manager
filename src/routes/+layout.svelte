@@ -225,17 +225,17 @@
 						</div>
 					</Sheet.Content>
 				</Sheet.Root>
-				<div class="flex flex-1 justify-between items-center gap-2">
+				<div class="flex flex-1 items-center gap-6">
 					{#if $headerState.showBackButton}
-						<Button variant="ghost" size="icon" onclick={handleBack} aria-label="Go back">
+						<Button variant="outline" size="icon" onclick={handleBack} aria-label="Go back">
 							<ArrowLeft class="h-5 w-5" />
 						</Button>
 					{:else}
-						<div class="w-5 h-5"></div>
+						<div class="w-[32px] h-5"></div>
 					{/if}
 					<h1 class="text-lg font-semibold md:text-xl">{$headerState.title}</h1>
-					<div class="w-5 h-5"></div>
 				</div>
+
 				<LightSwitch />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>

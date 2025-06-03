@@ -15,8 +15,10 @@
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { SpinLine } from 'svelte-loading-spinners';
 	import { setHeader } from '$lib/stores/state';
+	import Input from '$lib/components/ui/input/input.svelte';
 
 	let membershipTypes: MembershipType[] = [];
+	let filteredMembershipTypes: MembershipType[] = [];
 	let isLoading = true;
 	let error: string | null = null;
 
@@ -26,6 +28,7 @@
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
 			membershipTypes = result || [];
+			filteredMembershipTypes = membershipTypes;
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			error = e?.message;
@@ -61,14 +64,33 @@
 	function handleEdit(typeId: number) {
 		goto(`/memberships/${typeId}/edit`);
 	}
+
+	function onSearchChange(value: string) {
+		if (value.trim() === '') {
+			filteredMembershipTypes = membershipTypes;
+		} else {
+			const lowerValue = value.toLowerCase();
+			filteredMembershipTypes = membershipTypes.filter((type) =>
+				type.name.toLowerCase().includes(lowerValue)
+			);
+		}
+	}
 </script>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-semibold">Membership Types</h1>
-		<Button onclick={handleAddNew}>
+		<Input
+			placeholder="Search..."
+			oninput={(e) => {
+				if (onSearchChange) {
+					onSearchChange(e.currentTarget.value);
+				}
+			}}
+			class="h-8 w-[150px] lg:w-[250px]"
+		/>
+		<Button onclick={handleAddNew} class="h-8 text-xs">
 			<PlusCircle class="mr-2 h-4 w-4" />
-			Add New Type
+			Add
 		</Button>
 	</div>
 
@@ -106,11 +128,11 @@
 						<Table.Head>Enter by</Table.Head>
 						<Table.Head>Description</Table.Head>
 						<Table.Head class="text-right">Price</Table.Head>
-						<Table.Head class="text-center">Actions</Table.Head>
+						<Table.Head class="text-right pr-12">Actions</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each membershipTypes as type (type.id)}
+					{#each filteredMembershipTypes as type (type.id)}
 						<Table.Row>
 							<Table.Cell class="font-medium">{type.name}</Table.Cell>
 							<Table.Cell>{type.duration_days ? `${type.duration_days} days` : 'N/A'}</Table.Cell>
@@ -120,7 +142,7 @@
 							<Table.Cell>{type.enter_by ? `${type.enter_by}:00 h` : 'no limit'}</Table.Cell>
 							<Table.Cell>{type.description ? `${type.description}` : ''}</Table.Cell>
 							<Table.Cell class="text-right">${type.price.toFixed(2)}</Table.Cell>
-							<Table.Cell class="text-center space-x-2">
+							<Table.Cell class="text-right pr-8 space-x-2">
 								<Button
 									onclick={() => handleEdit(type.id)}
 									variant="outline"
