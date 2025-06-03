@@ -5,7 +5,7 @@
 		MembershipTypeCount,
 		MembershipRevenue
 	} from '$lib/components/charts';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
 	import type {
 		MembershipTypeDistribution,
@@ -17,7 +17,6 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
-	let loading = $state(false);
 
 	let chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
 	const chartConfigDist = $state<{
@@ -36,8 +35,8 @@
 		[key: string]: { label: string; color: string };
 	}>({});
 
-	let endDate: string = '';
-	let startDate: string = '';
+	let endDate = '';
+	let startDate = '';
 
 	let currentYear = today(getLocalTimeZone()).year;
 	const years: string[] = [];
@@ -49,7 +48,7 @@
 	let componentMounted = false;
 
 	$effect(() => {
-	  let year = selectedYear;
+		let year = selectedYear;
 		if (componentMounted && year) {
 			loadAnalyticsData();
 		}
@@ -64,7 +63,7 @@
 			endDate = `${selectedYear}-12-31`;
 		}
 
-		loading = true;
+		setLoading(true);
 		try {
 			await Promise.all([
 				fetchMembershipTypeData(),
@@ -73,7 +72,7 @@
 				fetchRevenueData()
 			]);
 		} finally {
-			loading = false;
+			setLoading(false);
 		}
 	}
 

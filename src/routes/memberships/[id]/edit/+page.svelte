@@ -15,14 +15,12 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { page } from '$app/state';
 
-	let submitting = false;
-	let isLoading = $state(false);
 	let error: string | null = $state(null);
 
 	const membershipTypeId = $derived(page.params.id);
@@ -51,10 +49,8 @@
 	const { form: formData, enhance } = form;
 
 	async function fetchMembershipType() {
-		isLoading = true;
 		if (!membershipTypeId) {
 			toast.error('Error loading membership type.');
-			isLoading = false;
 			return;
 		}
 
@@ -80,13 +76,11 @@
 			console.error('Error fetching member data:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load member data.');
-		} finally {
-			isLoading = false;
 		}
 	}
 
 	async function handleSubmit() {
-		submitting = true;
+		setLoading(true);
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
@@ -103,21 +97,23 @@
 			console.log(error);
 			const errorMessage = (error as ErrorResponse)?.message || 'Failed to update membership type!';
 			toast.error(errorMessage);
-			submitting = false;
 			return;
 		} finally {
-			submitting = false;
+			setLoading(false);
 		}
 	}
 	async function handleCancel() {
 		await goto('/memberships');
 	}
-	onMount(() => {
+
+	onMount(async () => {
 		setHeader({
 			title: 'Update Membership Type',
 			showBackButton: true
 		});
-		fetchMembershipType();
+		setLoading(true);
+		await fetchMembershipType();
+		setLoading(false);
 	});
 </script>
 

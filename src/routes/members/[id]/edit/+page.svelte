@@ -14,16 +14,15 @@
 	import { onMount } from 'svelte';
 	import { editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
 	import type { Member } from '$lib/models/member';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 
-	let isLoading = $state(false);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 
 	async function fetchMember() {
-		isLoading = true;
+		setLoading(true);
 		error = null;
 		try {
 			const result = await invoke<Member>('get_member_by_id', {
@@ -45,7 +44,7 @@
 			error = e?.message;
 			toast.error(error || 'Failed to load member data.');
 		} finally {
-			isLoading = false;
+			setLoading(false);
 		}
 	}
 
@@ -74,7 +73,7 @@
 	const { form: formData, enhance } = form;
 
 	async function handleSubmit() {
-		isLoading = true;
+		setLoading(true);
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
@@ -93,7 +92,7 @@
 
 			return;
 		} finally {
-			isLoading = false;
+			setLoading(false);
 		}
 	}
 

@@ -29,10 +29,9 @@
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { ErrorResponse } from '$lib/models/error';
 
-	let isLoading = $state(false);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 	const membershipId = $derived(page.url.searchParams.get('membershipId'));
@@ -43,7 +42,6 @@
 	let memberData = $state<{ first_name: string | null; last_name: string | null } | null>(null);
 
 	async function fetchMembershipTypes() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
@@ -52,12 +50,9 @@
 			console.error('Error fetching membership types:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load membership types.');
-		} finally {
-			isLoading = false;
 		}
 	}
 	async function fetchMembership() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MembershipInfo>('get_membership_by_id', {
@@ -88,8 +83,6 @@
 			console.error('Error fetching membership status:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load membership status.');
-		} finally {
-			isLoading = false;
 		}
 	}
 
@@ -101,7 +94,6 @@
 		membership_end_date: null,
 		membership_remaining_visits: 0,
 		membership_suspended: false
-
 	};
 
 	const form = superForm(initialValues, {
@@ -125,7 +117,7 @@
 	});
 
 	async function handleSubmit() {
-		isLoading = true;
+		setLoading(true);
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
@@ -144,7 +136,7 @@
 
 			return;
 		} finally {
-			isLoading = false;
+			setLoading(false);
 		}
 	}
 
@@ -252,10 +244,12 @@
 			title: 'Edit Membership',
 			showBackButton: true
 		});
+		setLoading(true);
 		await fetchMembershipTypes();
 		if (membershipId) {
-			fetchMembership();
+			await fetchMembership();
 		}
+		setLoading(false);
 	});
 </script>
 
@@ -409,16 +403,16 @@
 
 						<Form.Field {form} name="membership_remaining_visits" class="w-1/4">
 							<Form.Control>
-							{#snippet children({ props })}
-								<Form.Label class="font-semibold">Remaining Visits</Form.Label>
-								<Input
-									{...props}
-									type="number"
-									min={0}
-									max={selectedMembershipType?.duration_days}
-									bind:value={$formData.membership_remaining_visits}
-								/>
-								<Form.FieldErrors />
+								{#snippet children({ props })}
+									<Form.Label class="font-semibold">Remaining Visits</Form.Label>
+									<Input
+										{...props}
+										type="number"
+										min={0}
+										max={selectedMembershipType?.duration_days}
+										bind:value={$formData.membership_remaining_visits}
+									/>
+									<Form.FieldErrors />
 								{/snippet}
 							</Form.Control>
 						</Form.Field>
@@ -428,7 +422,7 @@
 								{#snippet children({ props })}
 									<Form.Label class="font-semibold w-full text-center">Suspended</Form.Label>
 									<div class="flex items-center h-[30px] w-full justify-center">
-										<Checkbox {...props}  bind:checked={$formData.membership_suspended} />
+										<Checkbox {...props} bind:checked={$formData.membership_suspended} />
 									</div>
 									<Form.FieldErrors />
 								{/snippet}

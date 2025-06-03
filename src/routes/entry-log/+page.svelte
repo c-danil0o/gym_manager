@@ -2,12 +2,13 @@
 	import { EntryLogDataTable } from '$lib/components/entry-table';
 	import type { EntryLog } from '$lib/models/entry';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	onMount(() => {
+		setLoading(true);
 		setHeader({
 			title: 'Entry Log',
 			showBackButton: false
@@ -62,6 +63,7 @@
 			// Handle error appropriately
 		} finally {
 			loading = false;
+			setLoading(false);
 		}
 	}
 
@@ -103,7 +105,7 @@
 	}
 
 	function handleEndDateChange(endDate: DateValue | undefined) {
-	console.log(endDate)
+		console.log(endDate);
 		if (endDate) {
 			currentParams = {
 				...currentParams,

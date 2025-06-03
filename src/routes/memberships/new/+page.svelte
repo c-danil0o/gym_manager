@@ -15,11 +15,9 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
-
-	let submitting = false;
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
@@ -45,7 +43,7 @@
 	const { form: formData, enhance } = form;
 
 	async function handleSubmit() {
-		submitting = true;
+		setLoading(true);
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
@@ -60,10 +58,9 @@
 			const errorMessage =
 				(error as ErrorResponse)?.message || 'Failed to add new membership type!';
 			toast.error(errorMessage);
-			submitting = false;
 			return;
 		} finally {
-			submitting = false;
+			setLoading(false);
 		}
 	}
 	async function handleCancel() {

@@ -17,26 +17,23 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Pencil, Plus, Trash2, RefreshCcw } from 'lucide-svelte';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { QueryResponse } from '$lib/models/table-state';
 
-	let isLoading = $state(false);
 	let isLoadingHistory = $state(true);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 
-
 	let data: MemberWithMembership | null = $state(null);
 
 	let membershipParams = $state({
-    page: 1,
-    perPage: 10,
-    totalPages: 1,
-    totalItems: 0
-  });
+		page: 1,
+		perPage: 10,
+		totalPages: 1,
+		totalItems: 0
+	});
 
 	async function fetchMemberWithMembership() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MemberWithMembership>('get_member_by_id_with_membership', {
@@ -51,8 +48,6 @@
 			console.error('Error fetching member with membership:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load member data.');
-		} finally {
-			isLoading = false;
 		}
 	}
 
@@ -71,9 +66,9 @@
 			const result = await invoke<QueryResponse<MembershipInfo>>('get_all_memberships_for_member', {
 				id: Number(memberId),
 				payload: {
-          page: membershipParams.page,
-          per_page: membershipParams.perPage
-        }
+					page: membershipParams.page,
+					per_page: membershipParams.perPage
+				}
 			});
 			if (result) {
 				membershipHistory = result;
@@ -90,10 +85,10 @@
 	}
 
 	$effect(() => {
-	    const currentPage = membershipParams.page;
-	    const perPage = membershipParams.perPage;
-      fetchMemberships();
-  });
+		const currentPage = membershipParams.page;
+		const perPage = membershipParams.perPage;
+		fetchMemberships();
+	});
 
 	async function handleEditMember(memberId: number | undefined) {
 		if (memberId) await goto(`/members/${memberId}/edit`);
@@ -124,6 +119,7 @@
 	async function handleDeleteMembership(id: number | null) {
 		if (!id) return;
 
+		setLoading(true);
 		try {
 			await invoke('delete_membership', { id });
 			toast.success('Membership deleted successfully.');
@@ -132,6 +128,8 @@
 		} catch (e: any) {
 			console.error('Error deleting membership:', e);
 			toast.error(e?.message || 'Failed to delete membership.');
+		} finally {
+			setLoading(false);
 		}
 	}
 
@@ -149,9 +147,10 @@
 			showBackButton: true
 		});
 		if (memberId) {
-			fetchMemberWithMembership();
-			fetchMemberships();
+			setLoading(true);
+			await Promise.all([fetchMemberWithMembership(), fetchMemberships()]);
 		}
+		setLoading(false);
 	});
 </script>
 
@@ -452,7 +451,12 @@
 							{/each}
 						</Table.Body>
 					</Table.Root>
-					<Pagination.Root class="mt-6" count={membershipParams.totalItems} perPage={membershipParams.perPage} bind:page={membershipParams.page}>
+					<Pagination.Root
+						class="mt-6"
+						count={membershipParams.totalItems}
+						perPage={membershipParams.perPage}
+						bind:page={membershipParams.page}
+					>
 						{#snippet children({ pages, currentPage })}
 							<Pagination.Content>
 								<Pagination.Item>

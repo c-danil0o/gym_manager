@@ -14,11 +14,10 @@
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 
-	let submitting = false;
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
 
@@ -52,7 +51,7 @@
 	}
 
 	async function handleSubmit() {
-		submitting = true;
+		setLoading(true);
 		newMember = null;
 		try {
 			const result = await form.validateForm();
@@ -68,10 +67,9 @@
 			showMembershipPrompt = false;
 			const errorMessage = (error as ErrorResponse)?.message || 'Failed to add new member!';
 			toast.error(errorMessage);
-			submitting = false;
 			return;
 		} finally {
-			submitting = false;
+			setLoading(false);
 		}
 	}
 	async function handleCancel() {

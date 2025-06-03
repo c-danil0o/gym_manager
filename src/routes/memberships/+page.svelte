@@ -14,16 +14,14 @@
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { SpinLine } from 'svelte-loading-spinners';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import Input from '$lib/components/ui/input/input.svelte';
 
 	let membershipTypes: MembershipType[] = [];
 	let filteredMembershipTypes: MembershipType[] = [];
-	let isLoading = true;
 	let error: string | null = null;
 
 	async function fetchMembershipTypes() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
@@ -33,17 +31,17 @@
 			console.error('Error fetching membership types:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load membership types.');
-		} finally {
-			isLoading = false;
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		setHeader({
 			title: 'Membership Types',
 			showBackButton: false
 		});
-		fetchMembershipTypes();
+		setLoading(true);
+		await fetchMembershipTypes();
+		setLoading(false);
 	});
 
 	function handleAddNew() {
@@ -94,11 +92,7 @@
 		</Button>
 	</div>
 
-	{#if isLoading}
-		<div class="absolute left-1/2 top-1/2">
-			<SpinLine size="60" color="#99c1f1" unit="px" duration="2s" />
-		</div>
-	{:else if error}
+	{#if error}
 		<Card.Root class="border-destructive">
 			<Card.Header>
 				<Card.Title class="text-destructive">Error</Card.Title>

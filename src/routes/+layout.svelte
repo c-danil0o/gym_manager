@@ -11,7 +11,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import { headerState, resetHeader } from '$lib/stores/state';
+	import { headerState, loadingState, resetHeader } from '$lib/stores/state';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 
 	import '../app.css';
@@ -24,7 +24,7 @@
 	import Login from '$lib/components/login/login.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
-	import { SpinLine } from 'svelte-loading-spinners';
+	import { Firework } from 'svelte-loading-spinners';
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
 	import { User } from 'lucide-svelte';
 
@@ -54,10 +54,9 @@
 	}
 </script>
 
-{#if $navigating}
-	<!-- Assuming you want a loading spinner while navigating -->
+{#if $navigating || $loadingState}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-background/50">
-		<SpinLine size="60" color="hsl(var(--primary))" unit="px" duration="1.2s" />
+		<Firework size="100" color="gray" unit="px" duration="1s" />
 	</div>
 {/if}
 {#if !mounted}

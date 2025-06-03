@@ -28,10 +28,9 @@
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { setHeader } from '$lib/stores/state';
+	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { ErrorResponse } from '$lib/models/error';
 
-	let isLoading = $state(false);
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
 	const membershipId = $derived(page.url.searchParams.get('membershipId'));
@@ -42,7 +41,6 @@
 	let membershipData = $state<MembershipInfo | null>(null);
 
 	async function fetchMembershipTypes() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
@@ -52,11 +50,9 @@
 			error = e?.message;
 			toast.error(error || 'Failed to load membership types.');
 		} finally {
-			isLoading = false;
 		}
 	}
 	async function fetchMembership() {
-		isLoading = true;
 		error = null;
 		try {
 			const result = await invoke<MembershipInfo>('get_membership_by_id', {
@@ -81,8 +77,6 @@
 			console.error('Error fetching membership data:', e);
 			error = e?.message;
 			toast.error(error || 'Failed to load membership status.');
-		} finally {
-			isLoading = false;
 		}
 	}
 
@@ -115,7 +109,7 @@
 	});
 
 	async function handleSubmit() {
-		isLoading = true;
+		setLoading(true);
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
@@ -134,7 +128,7 @@
 
 			return;
 		} finally {
-			isLoading = false;
+			setLoading(false);
 		}
 	}
 
@@ -219,14 +213,16 @@
 	});
 
 	onMount(async () => {
+		setLoading(true);
 		setHeader({
 			title: 'Renew Membership',
 			showBackButton: true
 		});
 		await fetchMembershipTypes();
 		if (membershipId) {
-			fetchMembership();
+			await fetchMembership();
 		}
+		setLoading(true);
 	});
 </script>
 
@@ -313,7 +309,7 @@
 													>{type.name}</Select.Item
 												>
 											{/each}
-											{#if membershipTypes.length === 0 && !isLoading}
+											{#if membershipTypes.length === 0}
 												<div class="px-2 py-1.5 text-sm text-muted-foreground">
 													No types available.
 												</div>
