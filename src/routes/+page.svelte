@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as m from '$lib/paraglide/messages.js';
 	import { onMount, tick } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { toast } from 'svelte-sonner';
@@ -12,7 +13,6 @@
 	import EntryStatusDialog from '$lib/components/entry-status-dialog/entry-status-dialog.svelte';
 
 	import type { ScanProcessingResult, EntryLog } from '$lib/models/entry';
-	import type { ErrorResponse } from '$lib/models/error';
 	import { setHeader } from '$lib/stores/state';
 	import { parseDateTime } from '@internationalized/date';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
@@ -34,8 +34,7 @@
 			recentEntries = await invoke<EntryLog[]>('get_recent_entry_logs', { limit: 7 });
 		} catch (e: any) {
 			console.log(e);
-			const errorMessage = (e as ErrorResponse)?.message || 'Failed to load recent entries!';
-			toast.error(errorMessage);
+			toast.error(m['scanner.toast_error_fetching_recent']());
 		} finally {
 			isLoadingEntries = false;
 		}
@@ -43,7 +42,7 @@
 
 	async function handleSubmitScan() {
 		if (!cardIdInput.trim()) {
-			toast.info('Please enter or scan a Card ID.');
+			toast.info(m['scanner.toast_empty_card_id']());
 			return;
 		}
 		isProcessingScan = true;
@@ -60,12 +59,9 @@
 			}
 		} catch (e: any) {
 			console.log(e);
-			const errorMessage =
-				(e as ErrorResponse)?.message || 'Error processing scan. Please try again.';
-			toast.error(errorMessage);
 			scanResult = {
 				status: 'Error',
-				message: e.message || 'An unexpected error occurred.',
+				message: m['scanner.error_unknown'](),
 				member_name: null,
 				card_id: cardIdInput.trim(),
 				membership_type_name: null,
@@ -96,7 +92,7 @@
 
 	onMount(() => {
 		setHeader({
-			title: 'Scanner',
+			title: m['scanner.title'](),
 			showBackButton: false
 		});
 
@@ -132,25 +128,25 @@
 	<Card.Root class="mx-auto w-fit backdrop-blur py-2 shadow-md hover:shadow-lg">
 		<Card.Content>
 			<form onsubmit={handleSubmitScan} class="flex flex-col items-center gap-4">
-				<Label class="text-lg font-semibold mb-2">Card ID</Label>
+				<Label class="text-lg font-semibold mb-2">{m['scanner.scan_card_title']()}</Label>
 				<Input
 					bind:ref={inputElement}
 					bind:value={cardIdInput}
 					type="text"
 					class="h-14 text-2xl! grow text-center"
 					disabled={isProcessingScan}
-					aria-label="Card ID Input"
+					aria-label={m['scanner.scan_card_title']()}
 				/>
 				<Separator />
 				<div class="flex items-center gap-2">
 					<p class="text-muted-foreground text-sm p-3">
-						Scan a member's card or enter ID and press ENTER
+						{m['scanner.description']()}
 					</p>
 					<Button type="submit" disabled={isProcessingScan}>
 						{#if isProcessingScan}
-							Processing... <!-- Or a spinner -->
+							{m['scanner.processing']()}
 						{:else}
-							Submit
+							{m['scanner.scan_card_button']()}
 						{/if}
 					</Button>
 				</div>
@@ -161,7 +157,7 @@
 	<!-- Recent Entries Card -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Recent Entries</Card.Title>
+			<Card.Title>{m['scanner.recent']()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			{#if isLoadingEntries}
@@ -173,15 +169,15 @@
 					</div>
 				{/each}
 			{:else if recentEntries.length === 0}
-				<p class="text-muted-foreground py-4 text-center">No recent entries.</p>
+				<p class="text-muted-foreground py-4 text-center">{m['scanner.no_recent']()}</p>
 			{:else}
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
-							<Table.Head>Member</Table.Head>
-							<Table.Head class="hidden sm:table-cell">Card ID Scanned</Table.Head>
-							<Table.Head>Status</Table.Head>
-							<Table.Head class="text-right">Time</Table.Head>
+							<Table.Head>{m['common.member']()}</Table.Head>
+							<Table.Head class="hidden sm:table-cell">{m['common.card_id']()}</Table.Head>
+							<Table.Head>{m['common.status']()}</Table.Head>
+							<Table.Head class="text-right">{m['common.time']()}</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>

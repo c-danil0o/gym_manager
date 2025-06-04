@@ -10,6 +10,7 @@
 	import Label from '../ui/label/label.svelte';
 	import Input from '../ui/input/input.svelte';
 	import { DateFormatter } from '@internationalized/date';
+	import { m } from '$lib/paraglide/messages';
 
 	// Props
 	let {
@@ -67,19 +68,19 @@
 	} {
 		switch (status) {
 			case 'Allowed':
-				return { icon: CheckCircle2, colorClass: 'text-green-500', title: 'Entry Allowed' };
+				return { icon: CheckCircle2, colorClass: 'text-green-500', title: m['scanner.status_allowed']()  };
 			case 'DeniedNoMembership':
 			case 'DeniedMembershipExpired':
 			case 'DeniedNoVisitsLeft':
 			case 'DeniedMembershipNotActiveYet':
 			case 'DeniedMemberNotFound':
 			case 'DeniedCardNotAssigned':
-				return { icon: XCircle, colorClass: 'text-red-500', title: 'Entry Denied' };
+				return { icon: XCircle, colorClass: 'text-red-500', title: m['scanner.status_denied']() };
 			case 'DeniedAfterHours':
 			case 'DeniedAlreadyCheckedIn':
-				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Entry Denied' };
+				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: m['scanner.status_denied']() };
 			default:
-				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: 'Scan Issue' };
+				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: m['scanner.status_issue']() };
 		}
 	}
 
@@ -107,7 +108,7 @@
 				<div class="mt-6 space-y-3 text-lg p-4">
 					<!-- Member Name -->
 					<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
-						<Label class="text-muted-foreground w-[100px]" for="dialog-member-name">Member:</Label>
+						<Label class="text-muted-foreground w-[100px]" for="dialog-member-name">{m['common.member']()}:</Label>
 						<Input
 							id="dialog-member-name"
 							type="text"
@@ -120,7 +121,7 @@
 					<!-- Card ID -->
 					{#if result.card_id}
 						<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
-							<Label class="text-muted-foreground w-[100px]" for="dialog-card-id">Card ID:</Label>
+							<Label class="text-muted-foreground w-[100px]" for="dialog-card-id">{m['common.card_id']()}:</Label>
 							<Input
 								id="dialog-card-id"
 								type="text"
@@ -135,7 +136,7 @@
 					{#if result.membership_type_name}
 						<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 							<Label class="text-muted-foreground w-[100px]" for="dialog-membership-type"
-								>Membership:</Label
+								>{m['common.membership']()}:</Label
 							>
 							<Input
 								id="dialog-membership-type"
@@ -149,7 +150,7 @@
 						{#if result.membership_end_date}
 							<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 								<Label class="text-muted-foreground w-[100px]" for="dialog-membership-end"
-									>Ends:</Label
+									>{m['scanner.ends']()}:</Label
 								>
 								<Input
 									id="dialog-membership-end"
@@ -164,7 +165,7 @@
 						{#if result.remaining_visits !== null && result.remaining_visits !== undefined}
 							<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
 								<Label class="text-muted-foreground w-[100px]" for="dialog-remaining-visits"
-									>Visits Left:</Label
+									>{m['common.visits_left']()}:</Label
 								>
 								<Input
 									id="dialog-remaining-visits"

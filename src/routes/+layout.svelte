@@ -23,12 +23,14 @@
 	import { goto } from '$app/navigation';
 	import Login from '$lib/components/login/login.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
-	import { ModeWatcher } from 'mode-watcher';
+	import { ModeWatcher, setMode } from 'mode-watcher';
 	import { Firework } from 'svelte-loading-spinners';
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
 	import { User } from 'lucide-svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { toast } from 'svelte-sonner';
+	import { isLocale, setLocale, getLocale } from '$lib/paraglide/runtime.js';
+	import { listen } from '@tauri-apps/api/event';
 
 	let { children } = $props();
 	$effect(() => {
@@ -60,72 +62,53 @@
 		backup_period_hours: number;
 	}
 
-	// let currentLanguage = $state(languageTag()); // Paraglide's current language
-	let appSettings = $state<AppSettings | null>(null);
-
 	async function loadAndApplySettings() {
 		try {
 			const settings = await invoke<AppSettings>('get_app_settings');
-			appSettings = settings;
 			console.log('App settings loaded:', settings);
 
-			// // Apply language
-			// if (settings.language && availableLanguageTags.includes(settings.language as any)) {
-			// 	if (languageTag() !== settings.language) {
-			// 		setLanguageTag(settings.language as (typeof availableLanguageTags)[number]);
-			// 	} else {
-			// 		currentLanguage = settings.language; // Sync $state if already correct
-			// 	}
-			// } else {
-			// 	// Fallback if stored language is invalid
-			// 	setLanguageTag(paraglide.referenceLanguage); // Or your default from Paraglide config
-			// }
+			if (settings.language && isLocale(settings.language)) {
+				if (getLocale() !== settings.language) {
+					console.log(getLocale());
+					console.log('Setting locale to:', settings.language);
+					setLocale(settings.language, {reload: false});
+				}
+			}
+			if (settings.theme === 'light' || settings.theme === 'dark') {
+				setMode(settings.theme as 'light' | 'dark');
+			}
 
-			// // Apply theme
-			// if (settings.theme === 'light' || settings.theme === 'dark' || settings.theme === 'system') {
-			// 	setMode(settings.theme as 'light' | 'dark' | 'system');
-			// }
-
-			// Timezone can be stored for display preferences, but frontend usually uses local TZ.
 			console.log('Loaded app settings:', settings);
 		} catch (e: any) {
 			toast.error('Failed to load app settings: ' + e.message);
-			// Apply defaults for i18n if settings load fails
-			// if (languageTag() === undefined) {
-			// 	// Check if paraglide itself has a language
-			// 	setLanguageTag(paraglide.referenceLanguage);
-			// }
 		}
 	}
 
-	onMount(async () => {
-		await loadAndApplySettings();
-		mounted = true;
+	onMount(() => {
+		let unlisten: () => void;
+		async function init() {
+			await loadAndApplySettings();
 
-		// // Listen for settings changes from backend (e.g., if another part of Rust changes them)
-		// const unlisten = await listen<AppSettings>('settings_changed', (event) => {
-		// 	console.log('Settings changed event received:', event.payload);
-		// 	toast.info('App settings have been updated.');
-		// 	appSettings = event.payload; // Update local copy
-		// 	// Re-apply language and theme if they changed
-		// 	if (event.payload.language && availableLanguageTags.includes(event.payload.language as any)) {
-		// 		if (languageTag() !== event.payload.language) {
-		// 			setLanguageTag(event.payload.language as (typeof availableLanguageTags)[number]);
-		// 		}
-		// 	}
-		// 	if (event.payload.theme) {
-		// 		setMode(event.payload.theme as 'light' | 'dark' | 'system');
-		// 	}
-		// });
-		// return () => {
-			// unlisten();
-		// }; // Cleanup listener
+			unlisten = await listen<AppSettings>('settings_changed', (event) => {
+				console.log('Settings changed event received:', event.payload);
+				toast.info('App settings have been updated.');
+				if (event.payload.language && isLocale(event.payload.language)) {
+					setLocale(event.payload.language);
+				}
+				if (event.payload.theme) {
+					setMode(event.payload.theme as 'light' | 'dark' | 'system');
+				}
+			});
+			mounted = true;
+		}
+		init();
+
+		return () => {
+			if (unlisten) {
+				unlisten();
+			}
+		};
 	});
-
-	// onSetLanguageTag((newLang) => {
-	// 	// Keep $state in sync with paraglide's runtime
-	// 	currentLanguage = newLang;
-	// });
 </script>
 
 {#if $navigating || $loadingState}

@@ -9,19 +9,12 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { z } from 'zod';
 	import { toast } from 'svelte-sonner';
-	import { SpinLine } from 'svelte-loading-spinners';
-
-	let loading = false;
+	import { m } from '$lib/paraglide/messages';
+	import { setLoading } from '$lib/stores/state';
 
 	const formSchema = z.object({
-		username: z
-			.string()
-			.min(2, { message: 'Username must be between 2 and 50 characters' })
-			.max(20, { message: 'Username must be between 2 and 50 characters' }),
-		password: z
-			.string()
-			.min(5, { message: 'Password must be between 5 and 20 characters' })
-			.max(20, { message: 'Password must be between 5 and 20 characters' })
+		username: z.string().min(2, { message: '' }).max(20, { message: '' }),
+		password: z.string().min(5, { message: '' }).max(20, { message: '' })
 	});
 
 	const defaultValues = {
@@ -38,41 +31,36 @@
 	const { form: formData, enhance } = form;
 
 	async function handleSubmit() {
-		loading = true;
+		setLoading(true);
 		const result = await form.validateForm();
 		if (result.valid) {
 			auth.clearError();
 			const loginSuccess = await auth.login(result.data.username, result.data.password);
 			if (loginSuccess) {
-				toast.success('Successfully logged in!');
+				toast.success(m['login.toast_success']());
 			} else {
-				toast.error('Login failed!');
+				toast.error(m['login.toast_fail']());
 			}
 		} else {
-			toast.error('Data is not valid!');
+			toast.error(m['login.toast_validation']());
 		}
-		loading = false;
+		setLoading(false);
 	}
 </script>
 
-{#if loading}
-	<div class="absolute left-1/2 top-1/2">
-		<SpinLine size="60" color="#99c1f1" unit="px" duration="2s" />
-	</div>
-{/if}
 <div class="w-full lg:grid lg:min-h-[600px] h-screen lg:grid-cols-2 xl:min-h-[800px]">
 	<div class="flex items-center justify-center py-12 w-full h-full">
 		<Card.Root class="w-full max-w-sm">
 			<Card.Header>
-				<Card.Title class="text-2xl">Login</Card.Title>
-				<Card.Description>Access to gym management system.</Card.Description>
+				<Card.Title class="text-2xl">{m['login.title']()}</Card.Title>
+				<Card.Description>{m['login.description']()}</Card.Description>
 			</Card.Header>
 			<form use:enhance method="post" on:submit|preventDefault={handleSubmit}>
 				<Card.Content class="grid gap-4">
 					<Form.Field {form} name="username">
 						<Form.Control>
 							{#snippet children({ props })}
-								<Form.Label class="font-semibold">Username</Form.Label>
+								<Form.Label class="font-semibold">{m['login.username']()}</Form.Label>
 								<Input {...props} type="text" bind:value={$formData.username} />
 								<Form.FieldErrors />
 							{/snippet}
@@ -82,14 +70,14 @@
 					<Form.Field {form} name="password">
 						<Form.Control>
 							{#snippet children({ props })}
-								<Form.Label class="font-semibold">Password</Form.Label>
+								<Form.Label class="font-semibold">{m['login.password']()}</Form.Label>
 								<Input {...props} type="password" bind:value={$formData.password} />
 								<Form.FieldErrors />
 							{/snippet}
 						</Form.Control>
 					</Form.Field>
 
-					<Form.Button type="submit" class="w-full">Login</Form.Button>
+					<Form.Button type="submit" class="w-full">{m['login.title']()}</Form.Button>
 				</Card.Content>
 			</form>
 		</Card.Root>
@@ -100,7 +88,7 @@
 			alt="placeholder"
 			width="1920"
 			height="1080"
-			class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+			class="h-full w-full object-cover dark:brightness-[0.8] grayscale"
 		/>
 	</div>
 </div>

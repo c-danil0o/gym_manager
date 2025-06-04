@@ -1,0 +1,12 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "login": {
+    "title": "Prijava",
+    "description": "Pristup sistemu za upravljanje teretanom",
+    "username": "Korisničko ime",
+    "password": "Lozinka",
+    "toast_success": "Uspješno ste se prijavili",
+    "toast_fail": "Neuspješna prijava, provjerite korisničko ime i lozinku",
+    "toast_validation": "Neispravan format korisničkog imena i lozinke"
+  }
+}
