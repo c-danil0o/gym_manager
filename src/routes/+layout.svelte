@@ -27,6 +27,8 @@
 	import { Firework } from 'svelte-loading-spinners';
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
 	import { User } from 'lucide-svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { toast } from 'svelte-sonner';
 
 	let { children } = $props();
 	$effect(() => {
@@ -44,14 +46,86 @@
 	}
 
 	let mounted = $state(false);
-	onMount(() => {
-		mounted = true;
-	});
 
 	function handleLogout() {
 		auth.logout();
 		goto('/');
 	}
+
+	interface AppSettings {
+		language: string;
+		theme: string;
+		timezone: string;
+		backup_url?: string | null;
+		backup_period_hours: number;
+	}
+
+	// let currentLanguage = $state(languageTag()); // Paraglide's current language
+	let appSettings = $state<AppSettings | null>(null);
+
+	async function loadAndApplySettings() {
+		try {
+			const settings = await invoke<AppSettings>('get_app_settings');
+			appSettings = settings;
+			console.log('App settings loaded:', settings);
+
+			// // Apply language
+			// if (settings.language && availableLanguageTags.includes(settings.language as any)) {
+			// 	if (languageTag() !== settings.language) {
+			// 		setLanguageTag(settings.language as (typeof availableLanguageTags)[number]);
+			// 	} else {
+			// 		currentLanguage = settings.language; // Sync $state if already correct
+			// 	}
+			// } else {
+			// 	// Fallback if stored language is invalid
+			// 	setLanguageTag(paraglide.referenceLanguage); // Or your default from Paraglide config
+			// }
+
+			// // Apply theme
+			// if (settings.theme === 'light' || settings.theme === 'dark' || settings.theme === 'system') {
+			// 	setMode(settings.theme as 'light' | 'dark' | 'system');
+			// }
+
+			// Timezone can be stored for display preferences, but frontend usually uses local TZ.
+			console.log('Loaded app settings:', settings);
+		} catch (e: any) {
+			toast.error('Failed to load app settings: ' + e.message);
+			// Apply defaults for i18n if settings load fails
+			// if (languageTag() === undefined) {
+			// 	// Check if paraglide itself has a language
+			// 	setLanguageTag(paraglide.referenceLanguage);
+			// }
+		}
+	}
+
+	onMount(async () => {
+		await loadAndApplySettings();
+		mounted = true;
+
+		// // Listen for settings changes from backend (e.g., if another part of Rust changes them)
+		// const unlisten = await listen<AppSettings>('settings_changed', (event) => {
+		// 	console.log('Settings changed event received:', event.payload);
+		// 	toast.info('App settings have been updated.');
+		// 	appSettings = event.payload; // Update local copy
+		// 	// Re-apply language and theme if they changed
+		// 	if (event.payload.language && availableLanguageTags.includes(event.payload.language as any)) {
+		// 		if (languageTag() !== event.payload.language) {
+		// 			setLanguageTag(event.payload.language as (typeof availableLanguageTags)[number]);
+		// 		}
+		// 	}
+		// 	if (event.payload.theme) {
+		// 		setMode(event.payload.theme as 'light' | 'dark' | 'system');
+		// 	}
+		// });
+		// return () => {
+			// unlisten();
+		// }; // Cleanup listener
+	});
+
+	// onSetLanguageTag((newLang) => {
+	// 	// Keep $state in sync with paraglide's runtime
+	// 	currentLanguage = newLang;
+	// });
 </script>
 
 {#if $navigating || $loadingState}
@@ -246,7 +320,7 @@
 					<DropdownMenu.Content align="end">
 						<DropdownMenu.Label>My Account</DropdownMenu.Label>
 						<DropdownMenu.Separator />
-						<DropdownMenu.Item>Settings</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => goto('/settings')}>Settings</DropdownMenu.Item>
 						<DropdownMenu.Item>Update</DropdownMenu.Item>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item onclick={handleLogout}>Logout</DropdownMenu.Item>

@@ -68,7 +68,7 @@ fn main() {
         tracing::info!("Database pool initialized and migrations run.");
 
         // --- Create and Manage State ---
-        let app_state = AppState::new(pool.clone());
+        let app_state = AppState::new(pool.clone(), settings);
         app.manage(app_state); // Register the state with Tauri
         tracing::info!("Application state created and managed.");
 
@@ -85,6 +85,8 @@ fn main() {
     final_builder
         .invoke_handler(tauri::generate_handler![
             commands::admin_commands::login_admin,
+            commands::admin_commands::get_app_settings,
+            commands::admin_commands::update_app_settings,
             commands::membership_type_commands::add_membership_type,
             commands::membership_type_commands::get_all_membership_types,
             commands::membership_type_commands::get_membership_type_by_id,

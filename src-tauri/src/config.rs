@@ -6,10 +6,24 @@ use tokio::fs; // Use tokio's async fs
 
 const CONFIG_FILENAME: &str = "app_settings.json";
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppSettings {
     pub backup_url: Option<String>,
-    // Add other settings here if needed
+    pub backup_period: Option<u64>,
+    pub language: String,
+    pub theme: String,
+    pub timezone: String,
+}
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            language: "en".to_string(),
+            theme: "light".to_string(),
+            timezone: "UTC".to_string(),
+            backup_url: None,
+            backup_period: Some(24), //In hours
+        }
+    }
 }
 
 fn get_config_path(app_handle: &AppHandle) -> Result<PathBuf> {
@@ -26,10 +40,11 @@ fn get_config_path(app_handle: &AppHandle) -> Result<PathBuf> {
 pub async fn load_settings(app_handle: &AppHandle) -> Result<AppSettings> {
     let config_path = get_config_path(app_handle)?;
     if !config_path.exists() {
-        tracing::info!("Settings file not found, returning default settings.");
-        return Ok(AppSettings::default()); // Return default if file doesn't exist
-    }
-
+           tracing::info!("Settings file not found at {:?}, creating with defaults.", config_path);
+           let default_settings = AppSettings::default();
+           save_settings(app_handle, &default_settings).await?;
+           return Ok(default_settings);
+       }
     let content = fs::read_to_string(config_path).await?;
     let settings: AppSettings =
         serde_json::from_str(&content).map_err(|e| AppError::Config(format!("Failed to parse settings file: {}", e)))?;
@@ -44,7 +59,6 @@ pub async fn save_settings(app_handle: &AppHandle, settings: &AppSettings) -> Re
     Ok(())
 }
 
-// Helper to parse URL and token (can be part of BackupConfig or called separately)
 pub fn parse_backup_url(full_url: &str) -> Result<(String, String)> {
     let parsed_url = url::Url::parse(full_url)
         .map_err(|_| AppError::Config("Invalid backup URL format".to_string()))?;
@@ -55,12 +69,11 @@ pub fn parse_backup_url(full_url: &str) -> Result<(String, String)> {
         .map(|(_, value)| value.into_owned())
         .ok_or_else(|| AppError::Config("Backup URL must contain a 'token' query parameter".to_string()))?;
 
-    // Reconstruct the base URL without the query string
     let base_url = format!(
         "{}://{}/{}",
         parsed_url.scheme(),
         parsed_url.host_str().ok_or(AppError::Config("URL missing host".to_string()))?,
-        parsed_url.path().trim_start_matches('/') // Remove leading slash if present
+        parsed_url.path().trim_start_matches('/')
     );
 
 
