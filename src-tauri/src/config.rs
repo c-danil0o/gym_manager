@@ -9,7 +9,7 @@ const CONFIG_FILENAME: &str = "app_settings.json";
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppSettings {
     pub backup_url: Option<String>,
-    pub backup_period: Option<u64>,
+    pub backup_period_hours: Option<u64>,
     pub language: String,
     pub theme: String,
     pub timezone: String,
@@ -19,9 +19,9 @@ impl Default for AppSettings {
         Self {
             language: "en".to_string(),
             theme: "light".to_string(),
-            timezone: "UTC".to_string(),
+            timezone: "Europe/Belgrade".to_string(),
             backup_url: None,
-            backup_period: Some(24), //In hours
+            backup_period_hours: Some(12),
         }
     }
 }

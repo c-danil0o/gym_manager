@@ -7,19 +7,13 @@ use chrono::{NaiveDate, Utc};
 use chrono_tz::Tz;
 use tauri::State;
 
-const GYM_TIMEZONE: &str = "Europe/Belgrade";
-
 async fn determine_membership_status(
     start_date: &Option<NaiveDate>,
     end_date: &Option<NaiveDate>,
     remaining_visits: Option<i64>,
+    timezone: &Tz,
 ) -> AppResult<String> {
-    let gym_tz: Tz = GYM_TIMEZONE.parse().map_err(|e| {
-        tracing::error!("Failed to parse GYM_TIMEZONE_STR: {}", e);
-        AppError::Config("Invalid gym timezone configuration.".to_string())
-    })?;
-
-    let now_date = Utc::now().with_timezone(&gym_tz).date_naive();
+    let now_date = Utc::now().with_timezone(timezone).date_naive();
     if remaining_visits.is_some() && remaining_visits.unwrap_or(0) <= 0 {
         return Ok("expired".to_string());
     }
@@ -171,6 +165,10 @@ pub async fn save_membership(
         payload.member_id,
         payload.membership_id
     );
+    let gym_tz: Tz = state.settings.read().await.timezone.parse().map_err(|e| {
+        tracing::error!("Failed to parse timezone from settings: {}", e);
+        AppError::Config("Invalid gym timezone configuration.".to_string())
+    })?;
 
     // Validate member exists
     let member_exists = sqlx::query_scalar!(
@@ -215,6 +213,7 @@ pub async fn save_membership(
             &payload.membership_start_date,
             &payload.membership_end_date,
             payload.membership_remaining_visits,
+            &gym_tz
         )
         .await?;
     }

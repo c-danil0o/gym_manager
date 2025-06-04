@@ -12,8 +12,6 @@ use chrono_tz::Tz;
 use sqlx::{Row, SqliteConnection};
 use tauri::State;
 
-const GYM_TIMEZONE: &str = "Europe/Belgrade";
-
 async fn calculate_and_update_membership_status_if_needed(
     conn: &mut SqliteConnection,
     membership_id: i64,
@@ -330,8 +328,8 @@ pub async fn process_scan(
 
     if let Some(enter_by_hours) = membership.membership_type_enter_by {
         // Check if entry is allowed based on enter_by_hours
-        let gym_tz: Tz = GYM_TIMEZONE.parse().map_err(|e| {
-            tracing::error!("Failed to parse GYM_TIMEZONE_STR: {}", e);
+        let gym_tz: Tz = state.settings.read().await.timezone.parse().map_err(|e| {
+            tracing::error!("Failed to parse timezone from settings: {}", e);
             AppError::Config("Invalid gym timezone configuration.".to_string())
         })?;
 

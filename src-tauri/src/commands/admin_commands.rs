@@ -3,8 +3,9 @@ use crate::{
     error::Result as AppResult,
     models::User,
     state::AppState,
-    utils,
+    utils, AppError,
 };
+use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
 
@@ -106,6 +107,10 @@ pub async fn update_app_settings(
         changed = true;
     }
     if let Some(tz) = payload.timezone {
+        let gym_tz: Tz = tz.parse().map_err(|e| {
+            tracing::error!("Failed to parse timezone from settings: {}", e);
+            return AppError::Config("Invalid gym timezone configuration.".to_string());
+        })?;
         settings.timezone = tz;
         changed = true;
     }
@@ -119,12 +124,12 @@ pub async fn update_app_settings(
             }
             Err(e) => {
                 tracing::error!("Invalid backup URL format: {}", e);
-                return Err(e);
+                return Err(AppError::Config("Invalid backup URL format".to_string()));
             }
         }
     }
-    if payload.backup_period_hours.is_none() {
-        settings.backup_period = payload.backup_period_hours;
+    if payload.backup_period_hours.is_some() {
+        settings.backup_period_hours = payload.backup_period_hours;
         changed = true;
     }
 
