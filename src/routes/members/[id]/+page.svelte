@@ -391,7 +391,7 @@
 											: ''}
 								>
 									<Table.Cell class="font-medium"
-										>{item.membership_type_name || {m.deleted_type()}}</Table.Cell
+										>{item.membership_type_name || m.deleted_type()}</Table.Cell
 									>
 									<Table.Cell>
 										<Badge variant={getMembershipStatusBadgeVariant(item.membership_status)}

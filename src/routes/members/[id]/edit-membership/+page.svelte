@@ -193,8 +193,11 @@
 			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
 			$formData.membership_end_date = newEnd;
 		}
-		if (selectedMembershipType.visit_limit)
+		if (selectedMembershipType?.visit_limit  && selectedMembershipType.visit_limit > 0) {
 			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
+		} else {
+			$formData.membership_remaining_visits = selectedMembershipType.duration_days || 0;
+		}
 	}
 
 	$effect(() => {
@@ -422,7 +425,9 @@
 						<Form.Field {form} name="membership_suspended" class="w-1/4">
 							<Form.Control>
 								{#snippet children({ props })}
-									<Form.Label class="font-semibold w-full text-center">{m.membership_suspended()}</Form.Label>
+									<Form.Label class="font-semibold w-full text-center"
+										>{m.membership_suspended()}</Form.Label
+									>
 									<div class="flex items-center h-[30px] w-full justify-center">
 										<Checkbox {...props} bind:checked={$formData.membership_suspended} />
 									</div>

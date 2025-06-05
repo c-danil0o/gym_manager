@@ -165,6 +165,7 @@
 	"enter_by_hours": "Enter by (hours)",
 	"start_date": "Start Date",
 	"not_started_yet": "Not started yet",
+	"visit_limit_desc": "0 means unlimited visits",
 	"end_date": "End Date",
 	"not_defined": "Not defined",
 	"remaining_visits": "Remaining Visits",

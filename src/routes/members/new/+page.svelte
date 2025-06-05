@@ -78,6 +78,14 @@
 		await goto('/members');
 	}
 
+	async function handleCancelPrompt() {
+		if (newMember) {
+			await goto(`/members/${newMember.id}`);
+		} else {
+			await goto('/members');
+		}
+	}
+
 	async function assignMembership() {
 		if (newMember) {
 			await goto(`/members/${newMember.id}/new-membership`);
@@ -164,7 +172,9 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Form.Button>
+					<Form.Button variant="outline" onclick={handleCancel} class="w-full"
+						>{m['common.cancel']()}</Form.Button
+					>
 					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
 				</div>
 			</form>
@@ -176,15 +186,21 @@
 				<AlertDialog.Header>
 					<AlertDialog.Title>{m.membership_prompt()}</AlertDialog.Title>
 					<AlertDialog.Description>
-						{m['common.member']()} <b
+						{m['common.member']()}
+						<b
 							>{newMember.first_name}
 							{newMember.last_name}</b
-						> {m.membership_prompt_desc()}
+						>
+						{m.membership_prompt_desc()}
 					</AlertDialog.Description>
 				</AlertDialog.Header>
 				<AlertDialog.Footer>
-					<AlertDialog.Cancel onclick={handleCancel}>{m.membership_prompt_cancel()}</AlertDialog.Cancel>
-					<AlertDialog.Action onclick={assignMembership}>{m.membership_prompt_yes()}</AlertDialog.Action>
+					<AlertDialog.Cancel onclick={handleCancelPrompt}
+						>{m.membership_prompt_cancel()}</AlertDialog.Cancel
+					>
+					<AlertDialog.Action onclick={assignMembership}
+						>{m.membership_prompt_yes()}</AlertDialog.Action
+					>
 				</AlertDialog.Footer>
 			</AlertDialog.Content>
 		</AlertDialog.Root>

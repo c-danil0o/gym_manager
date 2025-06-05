@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses } from '$lib/utils';
+	import { cn, getSubtleStatusClasses, translateStatus } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -164,8 +164,11 @@
 			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
 			$formData.membership_end_date = newEnd;
 		}
-		if (selectedMembershipType.visit_limit)
+		if (selectedMembershipType?.visit_limit  && selectedMembershipType.visit_limit > 0) {
 			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
+		} else {
+			$formData.membership_remaining_visits = selectedMembershipType.duration_days || 0;
+		}
 	}
 
 	$effect(() => {
@@ -222,7 +225,7 @@
 		if (membershipId) {
 			await fetchMembership();
 		}
-		setLoading(true);
+		setLoading(false);
 	});
 </script>
 
@@ -272,7 +275,7 @@
 								type="text"
 								class={getSubtleStatusClasses(membershipData?.membership_status || '')}
 								readonly
-								value={membershipData?.membership_status}
+								value={translateStatus(membershipData?.membership_status || '')}
 							/>
 						</div>
 					</div>

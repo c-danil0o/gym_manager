@@ -157,6 +157,9 @@
 								max={$formData.duration_days}
 								bind:value={$formData.visit_limit}
 							/>
+							<Form.Description class="text-sm text-muted-foreground">
+                {m.visit_limit_desc()}
+							</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
