@@ -2,12 +2,12 @@ use crate::dto::{
     GetMemberByIdPayload, GetMembersPaginatedPayload, MemberInfo, MemberPayload,
     MemberWithMembership, PaginatedResponse,
 };
+use crate::error::{ErrorCodes, TranslatableError};
 use crate::{
     error::{AppError, Result as AppResult},
     models::Member,
     state::AppState,
 };
-use sqlx::Sqlite;
 use tauri::State;
 
 const DEFAULT_PAGE: i32 = 1;
@@ -80,13 +80,14 @@ pub async fn add_member(payload: MemberPayload, state: State<'_, AppState>) -> A
         }
         Err(sqlx::Error::Database(db_err)) if db_err.is_unique_violation() => {
             tracing::warn!(
-                "Failed to create member: card_id {} or email alrady exists! Error: {:?}",
+                "Failed to create member: card_id {} exists! Error: {:?}",
                 payload.card_id,
                 db_err
             );
-            Err(AppError::Validation(format!(
-                "A card_id or email already exists. Card: {}",
-                payload.card_id
+            Err(AppError::Translatable(TranslatableError::with_params(
+                ErrorCodes::CARD_ALREADY_EXISTS,
+                serde_json::json!({"card_id": payload.card_id}),
+                "failed to create member: card_id already exists!",
             )))
         }
         Err(e) => {
@@ -394,16 +395,11 @@ pub async fn get_member_by_id(
 }
 #[tauri::command]
 pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()> {
-    tracing::info!("Attempting to (soft) delete member with id: {}", id);
+    tracing::info!("Attempting to delete member with id: {}", id);
 
-    let now = chrono::Utc::now().naive_utc();
-    let result = sqlx::query!(
-        "UPDATE members SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
-        now,
-        id
-    )
-    .execute(&state.db_pool)
-    .await?;
+    let result = sqlx::query!("DELETE FROM members WHERE id = ?", id)
+        .execute(&state.db_pool)
+        .await?;
 
     if result.rows_affected() == 0 {
         tracing::warn!("No member found with id {} to delete.", id);
@@ -413,7 +409,7 @@ pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()>
         )));
     }
 
-    tracing::info!("Successfully soft-deleted member with id: {}", id);
+    tracing::info!("Successfully member with id: {}", id);
     Ok(())
 }
 
@@ -493,9 +489,10 @@ pub async fn update_member(
                 payload.card_id,
                 db_err
             );
-            Err(AppError::Validation(format!(
-                "A card_id or email already exists. Card: {}",
-                payload.card_id
+            Err(AppError::Translatable(TranslatableError::with_params(
+                ErrorCodes::CARD_ALREADY_EXISTS,
+                serde_json::json!({"card_id": payload.card_id}),
+                "failed to create member: card_id already exists!",
             )))
         }
         Err(e) => {

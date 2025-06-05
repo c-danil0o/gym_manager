@@ -19,6 +19,7 @@
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
+	import { translateErrorCode } from '$lib/utils';
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
@@ -55,12 +56,13 @@
 				toast.error(m.toast_error_invalid_data());
 			}
 		} catch (error) {
-			// TRANSLATE ERROR
 			console.log(error);
-			const errorMessage =
-				(error as ErrorResponse)?.message || 'Failed to add new membership type!';
-			toast.error(errorMessage);
-			return;
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_error_membership_type_fail());
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -115,7 +117,7 @@
 								bind:value={$formData.visit_limit}
 							/>
 							<Form.Description class="text-sm text-muted-foreground">
-                {m.visit_limit_desc()}
+								{m.visit_limit_desc()}
 							</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}
@@ -160,7 +162,9 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full"
+						>{m['common.cancel']()}</Button
+					>
 					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
 				</div>
 			</form>

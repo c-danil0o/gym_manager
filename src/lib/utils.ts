@@ -15,8 +15,8 @@ type FlyAndScaleParams = {
 	duration?: number;
 };
 
-export function translateStatus(status: string|null): string{
-	switch (status?.toLowerCase()){
+export function translateStatus(status: string | null): string {
+	switch (status?.toLowerCase()) {
 		case 'active':
 			return m.active();
 		case 'expired':
@@ -27,10 +27,28 @@ export function translateStatus(status: string|null): string{
 			return m.suspended();
 		default:
 			return m.inactive();
-			
-
 	}
+}
+export function translateErrorCode(errorCode: string, params: any) {
+	switch (errorCode) {
+		case 'error.card_already_exists':
+			return params?.card_id
+				? m.error_card_already_exists({ cardId: params.card_id })
+				: m.error_card_already_exists_generic();
 
+			case 'error.membership_type_name_exists':
+				return params?.name
+					? m.error_membership_name_already_exists({ name: params.name })
+					: m.error_membership_name_already_exists_generic();
+			
+			case 'error.overlapping_membership':
+				return params?.id
+					? m.error_overlapping_membership({id: params?.id})
+					: m.error_overlapping_membership({id: ''});
+
+		default:
+			return m.error_unknown_error();
+	}
 }
 
 export function getStatusClasses(status: string): string {
@@ -66,21 +84,21 @@ export function getSubtleStatusClasses(status: string): string {
 }
 
 export function getMembershipStatusBadgeVariant(
-		status: string | null
-	): 'default' | 'secondary' | 'destructive' | 'outline' {
-		switch (status?.toLowerCase()) {
-			case 'active':
-				return 'default'; // Or a success color if you have one
-			case 'expired':
-				return 'destructive';
-			case 'pending':
-				return 'secondary';
-			case 'cancelled':
-				return 'outline';
-			default:
-				return 'secondary';
-		}
+	status: string | null
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+	switch (status?.toLowerCase()) {
+		case 'active':
+			return 'default'; // Or a success color if you have one
+		case 'expired':
+			return 'destructive';
+		case 'pending':
+			return 'secondary';
+		case 'cancelled':
+			return 'outline';
+		default:
+			return 'secondary';
 	}
+}
 
 export const flyAndScale = (
 	node: Element,

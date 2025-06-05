@@ -1,4 +1,6 @@
-use serde::Serialize;
+use std::{error, fmt};
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -30,6 +32,8 @@ pub enum AppError {
     NotFound(String),
     #[error("API error: Status {status}, Message: {message}")]
     ApiError { status: u16, message: String },
+    #[error("Translatable error: {0}")]
+    Translatable(#[from] TranslatableError),
 }
 
 impl Serialize for AppError {fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -39,15 +43,64 @@ where
     #[derive(Serialize)]
     struct ErrorMessage {
         message: String,
+        error_code: Option<String>,
+        params: Option<serde_json::Value>,
     }
 
     let error_message = ErrorMessage {
         message: self.to_string(),
+        error_code: match self {
+            AppError::Translatable(translatable_error) => Some(translatable_error.error_code.clone()),
+            _ => None,
+        },
+        params: match self {
+            AppError::Translatable(translatable_error) => translatable_error.params.clone(),
+            _ => None,
+        },
     };
 
     error_message.serialize(serializer)
 }
 }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TranslatableError {
+    pub error_code: String,
+    pub params: Option<serde_json::Value>,
+    pub fallback_message: String,
+}
+
+impl TranslatableError {
+    pub fn new(error_code: &str, fallback_message: &str) -> Self {
+        Self {
+            error_code: error_code.to_string(),
+            params: None,
+            fallback_message: fallback_message.to_string(),
+        }
+    }
+
+    pub fn with_params(error_code: &str, params: serde_json::Value, fallback_message: &str) -> Self {
+        Self {
+            error_code: error_code.to_string(),
+            params: Some(params),
+            fallback_message: fallback_message.to_string(),
+        }
+    }
+}
+
+impl fmt::Display for TranslatableError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.fallback_message)
+    }
+}
+pub struct ErrorCodes;
+
+impl ErrorCodes {
+    pub const MEMBERSHIP_TYPE_NAME_EXISTS: &'static str = "error.membership_type_name_exists";
+    pub const CARD_ALREADY_EXISTS: &'static str = "error.card_already_exists";
+    pub const OVERLAPPING_MEMBERSHIP: &'static str = "error.overlapping_membership";
+}
+
+impl std::error::Error for TranslatableError {}
 
 // Custom Result type alias
 pub type Result<T> = std::result::Result<T, AppError>;

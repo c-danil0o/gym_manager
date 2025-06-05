@@ -18,6 +18,7 @@
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
+	import { translateErrorCode } from '$lib/utils';
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
@@ -66,10 +67,12 @@
 			}
 		} catch (error) {
 			showMembershipPrompt = false;
-			// TRANSLATE ERROR
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed to add new member!';
-			toast.error(errorMessage);
-			return;
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_error_new_member_fail());
+			}
 		} finally {
 			setLoading(false);
 		}

@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses, translateStatus } from '$lib/utils';
+	import { cn, getSubtleStatusClasses, translateErrorCode, translateStatus } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -122,11 +122,12 @@
 			}
 		} catch (error) {
 			console.log(error);
-			// TRANSLATE ERROR
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed to renew membership!';
-			toast.error(errorMessage);
-
-			return;
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_renew_membership_fail());
+			}
 		} finally {
 			setLoading(false);
 		}

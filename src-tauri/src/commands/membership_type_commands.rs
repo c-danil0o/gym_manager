@@ -1,4 +1,5 @@
 use crate::dto::NewMembershipTypePayload;
+use crate::error::{ErrorCodes, TranslatableError};
 use crate::{
     error::{AppError, Result as AppResult},
     models::MembershipType,
@@ -56,9 +57,9 @@ pub async fn update_membership_type(
         }
     }
     if let Some(limit) = payload.visit_limit {
-        if limit <= 0 {
+        if limit < 0 {
             return Err(AppError::Validation(
-                "Visit limit must be positive if provided.".to_string(),
+                "Visit limit must be positive or 0 if provided.".to_string(),
             ));
         }
         if limit > payload.duration_days.unwrap_or(0) {
@@ -131,10 +132,12 @@ pub async fn update_membership_type(
                 payload.name,
                 db_err
             );
-            return Err(AppError::Validation(format!(
-                "A membership type with the name '{}' already exists.",
-                payload.name
-            )));
+
+            return Err(AppError::Translatable(TranslatableError::with_params(
+                ErrorCodes::MEMBERSHIP_TYPE_NAME_EXISTS,
+                serde_json::json!({"name": payload.name}),
+                "failed to update membership_type: name already exists!",
+            )))
         }
         Err(e) => {
             tracing::error!("Failed to update membership type in database: {:?}", e);
@@ -239,9 +242,10 @@ pub async fn add_membership_type(
                 payload.name,
                 db_err
             );
-            Err(AppError::Validation(format!(
-                "A membership type with the name '{}' already exists.",
-                payload.name
+            return Err(AppError::Translatable(TranslatableError::with_params(
+                ErrorCodes::MEMBERSHIP_TYPE_NAME_EXISTS,
+                serde_json::json!({"name": payload.name}),
+                "failed to update membership_type: name already exists!",
             )))
         }
         Err(e) => {
@@ -283,8 +287,29 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
 
     let now = chrono::Utc::now().naive_utc();
     let mut tx = state.db_pool.begin().await.map_err(AppError::Sqlx)?;
+     let current_record = sqlx::query!(
+        "SELECT name FROM membership_types WHERE id = ? AND is_deleted = FALSE",
+        id
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
+    
+    let current_name = match current_record {
+        Some(record) => record.name,
+        None => {
+            tracing::warn!("No membership type found with id {} to delete.", id);
+            return Err(AppError::NotFound(format!(
+                "Membership type with id {} not found.",
+                id
+            )));
+        }
+    };
+    
+    // Create unique deleted name using timestamp
+    let deleted_name = format!("{}_deleted_{}", current_name, now.and_utc().timestamp());   
     let result = sqlx::query!(
-        "UPDATE membership_types SET is_deleted = TRUE, updated_at = ? WHERE id = ?",
+        "UPDATE membership_types SET name = ?, is_deleted = TRUE, updated_at = ? WHERE id = ?",
+        deleted_name,
         now,
         id
     )

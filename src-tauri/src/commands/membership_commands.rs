@@ -1,4 +1,5 @@
 use crate::dto::{MembershipInfo, MembershipPayload, PaginatedResponse, PaginationPayload};
+use crate::error::{ErrorCodes, TranslatableError};
 use crate::{
     error::{AppError, Result as AppResult},
     state::AppState,
@@ -275,9 +276,11 @@ pub async fn save_membership(
                     "Member with ID {} already has an overlapping membership.",
                     payload.member_id
                 );
-                return Err(AppError::Validation(
-                    "Member already has an overlapping membership.".to_string(),
-                ));
+            return Err(AppError::Translatable(TranslatableError::with_params(
+                ErrorCodes::OVERLAPPING_MEMBERSHIP,
+                serde_json::json!({"id": payload.member_id}),
+                "failed to add membership:Member already has overlapping membership",
+            )))
             }
             Ok(_) => {}
             Err(e) => {

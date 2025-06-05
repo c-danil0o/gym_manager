@@ -263,5 +263,4 @@
 	"visit_limit_min": "Ograničenje posjeta mora biti 0 ili pozitivno",
 	"visit_limit_max": "Ograničenje posjeta mora biti manje od 366",
 	"entry_by_min_max": "Sati između 1 i 24"
-
 }

@@ -18,6 +18,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
+	import { translateErrorCode } from '$lib/utils';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -88,9 +89,12 @@
 			}
 		} catch (error) {
 			console.log(error);
-			// TRANSLATE ERROR
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed to edit member!';
-			toast.error(errorMessage);
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_error_update_member_fail());
+			}
 
 			return;
 		} finally {

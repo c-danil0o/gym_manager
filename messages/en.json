@@ -262,5 +262,17 @@
 	"duration_max": "Duration cannot be greater than a year",
 	"visit_limit_min": "Visit limit must be 0 or positive",
 	"visit_limit_max": "Visit limit must less than 366",
-	"entry_by_min_max": "Hours between 1 and 24"
+	"entry_by_min_max": "Hours between 1 and 24",
+	"toast_error_new_member_fail": "Failed to add new member",
+	"toast_error_update_member_fail": "Failed to add new member",
+	"error_unknown_error": "An unknown error occurred",
+	"error_card_already_exists": "Card ID {cardId} already in use for another member!",
+	"error_card_already_exists_generic": "Card ID already in use for another member!",
+	"toast_error_membership_type_fail": "Error creating new membership type!",
+	"error_membership_name_already_exists": "Membership name {name} already exists!",
+	"error_membership_name_already_exists_generic": "Membership name already exists!",
+	"toast_renew_membership_fail": "Failed to renew membership",
+	"error_overlapping_membership": "Member ID:{id} already has overlapping membership",
+	"toast_new_membership_fail": "Failed to create new membership",
+	"toast_update_membership_fail": "Failed to update existing membership"
 }

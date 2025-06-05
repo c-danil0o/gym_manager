@@ -25,7 +25,7 @@
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses } from '$lib/utils';
+	import { cn, getSubtleStatusClasses, translateErrorCode } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { Member } from '$lib/models/member';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
@@ -115,10 +115,12 @@
 			}
 		} catch (error) {
 			console.log(error);
-			// TRANSLATE ERROR
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed to assign membership!';
-			toast.error(errorMessage);
-			return;
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_new_membership_fail());
+			}
 		} finally {
 			setLoading(false);
 		}

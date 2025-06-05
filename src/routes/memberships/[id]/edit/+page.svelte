@@ -21,6 +21,7 @@
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { page } from '$app/state';
 	import { m } from '$lib/paraglide/messages';
+	import { translateErrorCode } from '$lib/utils';
 
 	let error: string | null = $state(null);
 
@@ -95,11 +96,13 @@
 				toast.error(m['toast_error_invalid_data']());
 			}
 		} catch (error) {
-			// TRANSLATE ERROR
 			console.log(error);
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed to update membership type!';
-			toast.error(errorMessage);
-			return;
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.toast_error_membership_type_update_fail());
+			}
 		} finally {
 			setLoading(false);
 		}

@@ -107,7 +107,7 @@ pub async fn update_app_settings(
         changed = true;
     }
     if let Some(tz) = payload.timezone {
-        let gym_tz: Tz = tz.parse().map_err(|e| {
+        let _gym_tz: Tz = tz.parse().map_err(|e| {
             tracing::error!("Failed to parse timezone from settings: {}", e);
             return AppError::Config("Invalid gym timezone configuration.".to_string());
         })?;
