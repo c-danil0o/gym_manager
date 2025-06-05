@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n          SELECT COUNT(*) FROM memberships\n          WHERE member_id = ? AND is_deleted = FALSE AND status in ('active', 'pending', 'suspended')\n          AND (\n          (start_date <= ? AND end_date >= ?)\n          OR (start_date <= ? AND end_date IS NULL)\n          )\n          ",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9654718a5770ccf46de0893e14544a2c903dce99ee8fd83a744476fb65c770d1"
+}

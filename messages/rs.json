@@ -294,5 +294,8 @@
 	"denied_already_checked_in": "odbijeno_već_prijavljen",
 	"denied_after_hours": "odbijeno_posle_graničnih_sati",
 	"error_updating_membership": "greška_ažuriranje_članarine",
-	"error": "greška"
+	"error": "greška",
+
+	"from_end_date": "Od datuma isteka",
+	"from_now": "Od sada"
 }

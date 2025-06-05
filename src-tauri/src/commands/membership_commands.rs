@@ -257,7 +257,7 @@ pub async fn save_membership(
         let overlapping_membership = sqlx::query_scalar!(
             r#"
           SELECT COUNT(*) FROM memberships
-          WHERE member_id = ? AND is_deleted = FALSE
+          WHERE member_id = ? AND is_deleted = FALSE AND status in ('active', 'pending', 'suspended')
           AND (
           (start_date <= ? AND end_date >= ?)
           OR (start_date <= ? AND end_date IS NULL)

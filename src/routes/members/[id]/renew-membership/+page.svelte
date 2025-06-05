@@ -9,6 +9,7 @@
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
@@ -40,6 +41,7 @@
 	let selectedMembershipType: MembershipType | null = $state(null);
 	let membership_status: string | null = $state(null);
 	let membershipData = $state<MembershipInfo | null>(null);
+	let renewType: 'end' | 'now' = $state('end');
 
 	async function fetchMembershipTypes() {
 		error = null;
@@ -78,6 +80,18 @@
 			toast.error(m.failed_load_membership());
 		}
 	}
+	$effect(() => {
+		const currentRenewType = renewType;
+
+		if (currentRenewType === 'end') {
+			if (membershipData?.membership_end_date)
+				$formData.membership_start_date = parseDate(membershipData.membership_end_date)
+					.add({ days: 1 })
+					.toString();
+		} else {
+			$formData.membership_start_date = today(getLocalTimeZone()).toString();
+		}
+	});
 
 	const initialValues: z.infer<MembershipSchemaType> = {
 		member_id: 0,
@@ -370,6 +384,20 @@
 							</span>
 						</div>
 					</div>
+					<RadioGroup.Root bind:value={renewType} class="flex justify-evenly" name="type">
+						<div class="flex items-center space-x-3 space-y-0">
+							<RadioGroup.Item value="end" />
+							<Label class="font-normal">{m.from_end_date()}</Label>
+						</div>
+						<div class="flex items-center space-x-3 space-y-0">
+							<RadioGroup.Item
+								value="now"
+								disabled={membershipData?.membership_status === 'active' ||
+									membershipData?.membership_status === 'suspended'}
+							/>
+							<Label class="font-normal">{m.from_now()}</Label>
+						</div>
+					</RadioGroup.Root>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
 						<Form.Field {form} name="membership_start_date" class="w-1/2">
 							<Form.Control>

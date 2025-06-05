@@ -297,5 +297,8 @@
 	"denied_already_checked_in": "denied_already_checked_in",
 	"denied_after_hours": "denied_after_hours",
 	"error_updating_membership": "error_updating_membership",
-	"error": "error"
+	"error": "error",
+
+	"from_end_date": "From end date",
+	"from_now": "From now"
 }

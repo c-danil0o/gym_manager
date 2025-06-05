@@ -142,7 +142,7 @@
 							>
 							<Table.Cell>{type.enter_by ? `${type.enter_by}:00 h` : m['common.unlimited']()}</Table.Cell>
 							<Table.Cell>{type.description ? `${type.description}` : ''}</Table.Cell>
-							<Table.Cell class="text-right">${type.price.toFixed(2)}</Table.Cell>
+							<Table.Cell class="text-right">{type.price.toFixed(2)} {m.locale_currency()}</Table.Cell>
 							<Table.Cell class="text-right pr-8 space-x-2">
 								<Button
 									onclick={() => handleEdit(type.id)}
