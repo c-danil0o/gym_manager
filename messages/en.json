@@ -120,7 +120,7 @@
 	"toast_membership_type_delete": "Membership type {typeName} deleted successfully.",
 	"no_membership_types_found": "No membership types found.",
 	"membership_types_add_first": "Add the first one!",
-	"memberhsip_delete_desc": "This action cannot be undone. This will permanently delete membership type and any user that was assigned with it will loose membership!",
+	"membership_delete_desc": "This action cannot be undone. This will permanently delete membership type and any user that was assigned with it will loose membership!",
 	"toast_new_membership_type_success": "New membeship type added successfully!",
 	"toast_error_invalid_data": "Data is not valid!",
 	"new_membership_type": "New Membership Type",
@@ -263,6 +263,7 @@
 	"visit_limit_min": "Visit limit must be 0 or positive",
 	"visit_limit_max": "Visit limit must less than 366",
 	"entry_by_min_max": "Hours between 1 and 24",
+
 	"toast_error_new_member_fail": "Failed to add new member",
 	"toast_error_update_member_fail": "Failed to add new member",
 	"error_unknown_error": "An unknown error occurred",
@@ -277,7 +278,24 @@
 	"toast_update_membership_fail": "Failed to update existing membership",
 	"invalid_character": "Invalid character in field",
 	"visit_limit_greater_than_duration": "Visit limit cannot be greater than membership duration",
+	"not_provided": "Not provided",
+	"previous": "Previous",
+	"next": "Next",
 
 	"locale_code": "en-US",
-	"locale_currency": "USD"
+	"locale_currency": "USD",
+
+	"allowed": "allowed",
+	"denied_member_not_found": "denied_member_not_found",
+	"denied_no_membership": "denied_no_membership",
+	"denied_no_visits_left": "denied_no_visits_left",
+	"denied_membership_expired": "denied_membership_expired",
+	"denied_membership_not_active_yet": "denied_membership_not_active_yet",
+	"denied_membership_inactive": "denied_membership_inactive",
+	"denied_membership_suspended": "denied_membership_suspended",
+	"denied_membership_invalid_status": "denied_membership_invalid_status",
+	"denied_already_checked_in": "denied_already_checked_in",
+	"denied_after_hours": "denied_after_hours",
+	"error_updating_membership": "error_updating_membership",
+	"error": "error"
 }

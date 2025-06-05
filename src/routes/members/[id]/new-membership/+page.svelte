@@ -25,7 +25,7 @@
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses, translateErrorCode } from '$lib/utils';
+	import { cn, getSubtleStatusClasses, translateErrorCode, translateStatus } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { Member } from '$lib/models/member';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
@@ -415,7 +415,7 @@
 								type="text"
 								class={getSubtleStatusClasses(membership_status || '')}
 								readonly
-								value={membership_status}
+								value={translateStatus(membership_status)}
 							/>
 						</div>
 

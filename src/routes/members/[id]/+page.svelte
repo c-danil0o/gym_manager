@@ -215,12 +215,12 @@
 
 						<div class="w-full space-y-2">
 							<Label class="font-semibold">{m.email()}</Label>
-							<Input readonly type="text" value={data?.email || 'Not provided'} />
+							<Input readonly type="text" value={data?.email || m.not_provided()} />
 						</div>
 
 						<div class="w-full space-y-2">
 							<Label class="font-semibold">{m.phone()}</Label>
-							<Input readonly type="text" value={data?.phone || 'Not provided'} />
+							<Input readonly type="text" value={data?.phone || m.not_provided()} />
 						</div>
 
 						<div class="w-full space-y-2">
@@ -230,7 +230,7 @@
 								type="text"
 								value={data?.date_of_birth
 									? df.format(new Date(data.date_of_birth))
-									: 'Not provided'}
+									: m.not_provided()}
 							/>
 						</div>
 

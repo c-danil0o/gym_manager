@@ -15,6 +15,77 @@ type FlyAndScaleParams = {
 	duration?: number;
 };
 
+export function translateEntryMessage(message: string): string {
+	const [key, param] = message.split('|');
+
+	switch (key) {
+		case 'card_invalid':
+			return m['scan_message.card_invalid']();
+		case 'member_not_found':
+			return m['scan_message.member_not_found']();
+		case 'no_membership':
+			return m['scan_message.no_membership']();
+		case 'invalid_membership':
+			return m['scan_message.invalid_membership']();
+		case 'no_visits_left':
+			return m['scan_message.no_visits_left']();
+		case 'expired_on':
+			return m['scan_message.expired_on']({ date: param ?? '???' });
+		case 'pending':
+			return m['scan_message.pending']({ date: param ?? '???' });
+		case 'inactive':
+			return m['scan_message.inactive']();
+		case 'suspended':
+			return m['scan_message.suspended']();
+		case 'invalid_status':
+			return m['scan_message.invalid_status']();
+		case 'after_hours':
+			return m['scan_message.after_hours']({ hour: param ?? '???' });
+		case 'already_checked':
+			return m['scan_message.already_checked']();
+		case 'error':
+			return m['scan_message.error']();
+		case 'allowed':
+			return m['scan_message.allowed']();
+		default:
+			return message; // fallback if key isn't known
+	}
+}
+export function translateAccessStatus(status: string | null): string {
+	if (!status) return '';
+
+	switch (status) {
+		case 'allowed':
+			return m.allowed();
+		case 'denied_member_not_found':
+			return m.denied_member_not_found();
+		case 'denied_no_membership':
+			return m.denied_no_membership();
+		case 'denied_no_visits_left':
+			return m.denied_no_visits_left();
+		case 'denied_membership_expired':
+			return m.denied_membership_expired();
+		case 'denied_membership_not_active_yet':
+			return m.denied_membership_not_active_yet();
+		case 'denied_membership_inactive':
+			return m.denied_membership_inactive();
+		case 'denied_membership_suspended':
+			return m.denied_membership_suspended();
+		case 'denied_membership_invalid_status':
+			return m.denied_membership_invalid_status();
+		case 'denied_already_checked_in':
+			return m.denied_already_checked_in();
+		case 'denied_after_hours':
+			return m.denied_after_hours();
+		case 'error_updating_membership':
+			return m.error_updating_membership();
+		case 'error':
+			return m.error();
+		default:
+			return status; // Return original status if no translation found
+	}
+}
+
 export function translateStatus(status: string | null): string {
 	switch (status?.toLowerCase()) {
 		case 'active':
@@ -36,15 +107,15 @@ export function translateErrorCode(errorCode: string, params: any) {
 				? m.error_card_already_exists({ cardId: params.card_id })
 				: m.error_card_already_exists_generic();
 
-			case 'error.membership_type_name_exists':
-				return params?.name
-					? m.error_membership_name_already_exists({ name: params.name })
-					: m.error_membership_name_already_exists_generic();
-			
-			case 'error.overlapping_membership':
-				return params?.id
-					? m.error_overlapping_membership({id: params?.id})
-					: m.error_overlapping_membership({id: ''});
+		case 'error.membership_type_name_exists':
+			return params?.name
+				? m.error_membership_name_already_exists({ name: params.name })
+				: m.error_membership_name_already_exists_generic();
+
+		case 'error.overlapping_membership':
+			return params?.id
+				? m.error_overlapping_membership({ id: params?.id })
+				: m.error_overlapping_membership({ id: '' });
 
 		default:
 			return m.error_unknown_error();

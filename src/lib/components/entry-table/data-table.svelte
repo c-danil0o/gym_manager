@@ -30,7 +30,7 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils.js';
+	import { cn, translateAccessStatus, translateEntryMessage } from '$lib/utils.js';
 	import { Trash2 } from 'lucide-svelte';
 	import type { EntryLog } from '$lib/models/entry';
 	import { parseDateTime, type DateValue } from '@internationalized/date';
@@ -242,7 +242,7 @@
 			},
 			cell: ({ row }) => {
 				const snippet = createRawSnippet<[string]>((getNotes) => {
-					const value = getNotes();
+					const value = translateEntryMessage(getNotes());
 					return {
 						render: () =>
 							`<div class='text-wrap max-w-[300px] hidden xl:table-cell'>${value || ''}</div>`
@@ -388,7 +388,7 @@
 	{#if status}
 		<div class="flex items-center">
 			<Badge variant={status.value === 'allowed' ? 'default' : 'destructive'}>
-				{status.label}
+				{translateAccessStatus(status.label)}
 			</Badge>
 		</div>
 	{/if}

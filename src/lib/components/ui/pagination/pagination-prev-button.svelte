@@ -3,6 +3,8 @@
 	import ChevronLeft from "@lucide/svelte/icons/chevron-left";
 	import { cn } from "$lib/utils.js";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
+	import { m } from "$lib/paraglide/messages";
+
 
 	let {
 		ref = $bindable(null),
@@ -13,7 +15,7 @@
 </script>
 
 {#snippet Fallback()}
-	<span>Previous</span>
+	<span>{m.previous()}</span>
 	<ChevronLeft />
 {/snippet}
 

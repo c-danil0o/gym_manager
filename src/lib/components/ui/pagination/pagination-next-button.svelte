@@ -3,6 +3,7 @@
 	import ChevronRight from "@lucide/svelte/icons/chevron-right";
 	import { cn } from "$lib/utils.js";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
+	import { m } from "$lib/paraglide/messages";
 
 	let {
 		ref = $bindable(null),
@@ -13,7 +14,7 @@
 </script>
 
 {#snippet Fallback()}
-	<span>Next</span>
+	<span>{m.next()}</span>
 	<ChevronRight />
 {/snippet}
 

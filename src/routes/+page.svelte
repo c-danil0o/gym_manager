@@ -17,6 +17,7 @@
 	import { parseDateTime } from '@internationalized/date';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
+	import { translateAccessStatus, translateEntryMessage } from '$lib/utils';
 
 	let cardIdInput = $state('');
 	let inputElement: any | null = $state(null); // For focusing
@@ -192,7 +193,7 @@
 								>
 								<Table.Cell>
 									<Badge variant={entry.status === 'allowed' ? 'default' : 'destructive'}>
-										{entry.status}
+										{translateAccessStatus(entry.status)}
 									</Badge>
 								</Table.Cell>
 								<Table.Cell class="text-right text-muted-foreground text-sm"
