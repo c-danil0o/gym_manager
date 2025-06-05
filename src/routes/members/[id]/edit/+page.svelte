@@ -22,6 +22,8 @@
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
+	const locale = m.locale_code() || 'bs-BA';
+
 
 	async function fetchMember() {
 		setLoading(true);
@@ -185,7 +187,7 @@
 									{...props}
 									value={date_of_birth}
 									onValueChange={handleDobChange}
-									locale="bs-BA"
+									locale={locale}
 								/>
 								<Form.FieldErrors />
 								<Form.Description class="text-xs">{m.optional()}</Form.Description>

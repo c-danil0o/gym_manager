@@ -136,8 +136,9 @@
 	async function handleCancel() {
 		window.history.back();
 	}
+	const locale = m.locale_code() || 'bs-BA';
 
-	const df = new DateFormatter('bs-BA', {
+	const df = new DateFormatter(locale, {
 		dateStyle: 'long'
 	});
 
@@ -165,7 +166,7 @@
 			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
 			$formData.membership_end_date = newEnd;
 		}
-		if (selectedMembershipType?.visit_limit  && selectedMembershipType.visit_limit > 0) {
+		if (selectedMembershipType?.visit_limit && selectedMembershipType.visit_limit > 0) {
 			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
 		} else {
 			$formData.membership_remaining_visits = selectedMembershipType.duration_days || 0;
@@ -337,13 +338,37 @@
 
 						<div class="w-1/2 space-y-2">
 							<Label class="font-semibold">{m.enter_by_hours()}</Label>
-							<Input type="text" readonly value={selectedMembershipType?.enter_by ?? ''} />
+							<div class="relative flex">
+								<Input
+									type="text"
+									readonly
+									class="pr-15"
+									value={selectedMembershipType?.enter_by ?? ''}
+								/>
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+									h
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="w-full space-y-2 pb-2">
 						<Label class="font-semibold">{m.price()}</Label>
-						<Input type="text" readonly value={selectedMembershipType?.price ?? ''} />
+						<div class="relative flex">
+							<Input
+								type="text"
+								class="pr-15"
+								readonly
+								value={selectedMembershipType?.price ?? ''}
+							/>
+							<span
+								class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+							>
+								{m.locale_currency()}
+							</span>
+						</div>
 					</div>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
 						<Form.Field {form} name="membership_start_date" class="w-1/2">

@@ -133,9 +133,9 @@
 			await goto('/members');
 		}
 	}
+	const locale = m.locale_code() || 'bs-BA';
 
-
-	const df = new DateFormatter('bs-BA', {
+	const df = new DateFormatter(locale, {
 		dateStyle: 'long'
 	});
 
@@ -317,13 +317,37 @@
 
 						<div class="w-1/2 space-y-2">
 							<Label class="font-semibold">{m.enter_by_hours()}</Label>
-							<Input type="text" readonly value={selectedMembershipType?.enter_by ?? ''} />
+							<div class="relative flex">
+								<Input
+									type="text"
+									readonly
+									class="pr-15"
+									value={selectedMembershipType?.enter_by ?? ''}
+								/>
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+									h
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="w-full space-y-2 pb-2">
 						<Label class="font-semibold">{m.price()}</Label>
-						<Input type="text" readonly value={selectedMembershipType?.price ?? ''} />
+						<div class="relative flex">
+							<Input
+								type="text"
+								class="pr-15"
+								readonly
+								value={selectedMembershipType?.price ?? ''}
+							/>
+							<span
+								class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+							>
+								{m.locale_currency()}
+							</span>
+						</div>
 					</div>
 
 					<Separator />

@@ -22,6 +22,7 @@
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
+	const locale = m.locale_code() || 'bs-BA';
 
 	const initialValues: z.infer<NewMemberTypeSchema> = {
 		card_id: '',
@@ -156,7 +157,7 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-							<DateField {...props} {placeholder} onValueChange={handleDateChange} locale="bs-BA" />
+							<DateField {...props} {placeholder} onValueChange={handleDateChange} locale={locale} />
 							<Form.FieldErrors />
 							<Form.Description class="text-xs">{m.optional()}</Form.Description>
 						{/snippet}

@@ -351,11 +351,12 @@
 	export function clearSelection() {
 		rowSelection = {};
 	}
+	const locale = m.locale_code() || 'bs-BA';
 
 	function formatDate(dateStr: string | null | undefined): string {
 		if (!dateStr) return 'N/A';
 		const date = parseDateTime(dateStr).toDate('UTC');
-		return date.toLocaleString('bs-BA', {
+		return date.toLocaleString(locale, {
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit',

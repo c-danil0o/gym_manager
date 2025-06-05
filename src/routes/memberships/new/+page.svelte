@@ -99,7 +99,19 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m['common.duration']()}</Form.Label>
-							<Input {...props} type="number" min={1} bind:value={$formData.duration_days} />
+							<div class="relative flex">
+								<Input
+									{...props}
+									type="text"
+									bind:value={$formData.duration_days}
+									class="pr-15"
+								/>
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+									days
+								</span>
+							</div>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -111,9 +123,7 @@
 							<Form.Label class="font-semibold">{m['common.visit_limit']()}</Form.Label>
 							<Input
 								{...props}
-								type="number"
-								min="0"
-								max={$formData.duration_days}
+								type="text"
 								bind:value={$formData.visit_limit}
 							/>
 							<Form.Description class="text-sm text-muted-foreground">
@@ -128,14 +138,22 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.enter_by_with_desc()}</Form.Label>
-							<Input
-								{...props}
-								type="number"
-								min="1"
-								max="24"
-								placeholder="optional"
-								bind:value={$formData.enter_by}
-							/>
+							<div class="relative flex">
+								<Input
+									{...props}
+									type="number"
+									min="1"
+									max="24"
+									placeholder="optional"
+									bind:value={$formData.enter_by}
+									class="pr-15"
+								/>
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+								h
+								</span>
+							</div>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -145,7 +163,14 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m['common.price']()}</Form.Label>
-							<Input {...props} type="number" bind:value={$formData.price} />
+							<div class="relative flex">
+								<Input {...props} type="number" class="pr-15" bind:value={$formData.price} />
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+									{m.locale_currency()}
+								</span>
+							</div>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>

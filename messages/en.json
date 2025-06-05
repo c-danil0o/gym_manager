@@ -274,5 +274,10 @@
 	"toast_renew_membership_fail": "Failed to renew membership",
 	"error_overlapping_membership": "Member ID:{id} already has overlapping membership",
 	"toast_new_membership_fail": "Failed to create new membership",
-	"toast_update_membership_fail": "Failed to update existing membership"
+	"toast_update_membership_fail": "Failed to update existing membership",
+	"invalid_character": "Invalid character in field",
+	"visit_limit_greater_than_duration": "Visit limit cannot be greater than membership duration",
+
+	"locale_code": "en-US",
+	"locale_currency": "USD"
 }

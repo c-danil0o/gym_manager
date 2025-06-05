@@ -13,7 +13,11 @@
 	import type { MembershipInfo, MemberWithMembership } from '$lib/models/member_with_membership';
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { getMembershipStatusBadgeVariant, getSubtleStatusClasses, translateStatus } from '$lib/utils';
+	import {
+		getMembershipStatusBadgeVariant,
+		getSubtleStatusClasses,
+		translateStatus
+	} from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Pencil, Plus, Trash2, RefreshCcw } from 'lucide-svelte';
@@ -136,7 +140,9 @@
 		if (memberId) await goto(`/members/${memberId}/new-membership`);
 	}
 
-	const df = new DateFormatter('bs-BA', {
+	const locale = m.locale_code() || 'bs-BA';
+
+	const df = new DateFormatter(locale, {
 		dateStyle: 'long'
 	});
 
@@ -166,7 +172,7 @@
 								onclick={() => handleEditMember(data?.id)}
 								variant="outline"
 								size="icon"
-								title=m.edit_member()
+								title="m.edit_member()"
 							>
 								<Pencil class="h-4 w-4" />
 							</Button>
@@ -284,13 +290,32 @@
 
 								<div class="w-1/2 space-y-2">
 									<Label class="font-semibold">{m.enter_by_hours()}</Label>
-									<Input type="text" readonly value={data?.membership_type_enter_by ?? ''} />
+									<div class="relative flex">
+									<Input type="text" class='pr-15' readonly value={data?.membership_type_enter_by ?? ''} />
+										<span
+											class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+										>
+											h
+										</span>
+									</div>
 								</div>
 							</div>
 
 							<div class="w-full space-y-2 pb-2">
 								<Label class="font-semibold">{m['common.price']()}</Label>
-								<Input type="text" readonly value={data?.membership_type_price ?? ''} />
+								<div class="relative flex">
+									<Input
+										class="pr-15"
+										type="text"
+										readonly
+										value={data?.membership_type_price ?? ''}
+									/>
+									<span
+										class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+									>
+										{m.locale_currency()}
+									</span>
+								</div>
 							</div>
 
 							<Separator />

@@ -34,6 +34,7 @@
 	import { m } from '$lib/paraglide/messages';
 
 	let error: string | null = $state(null);
+	const locale = m.locale_code() || 'bs-BA';
 	const memberId = $derived(page.params.id);
 	const membershipId = $derived(page.url.searchParams.get('membershipId'));
 
@@ -147,7 +148,7 @@
 		window.history.back();
 	}
 
-	const df = new DateFormatter('bs-BA', {
+	const df = new DateFormatter(locale, {
 		dateStyle: 'long'
 	});
 
@@ -194,7 +195,7 @@
 			const newEnd = startDateObj.add({ days: selectedMembershipType.duration_days }).toString();
 			$formData.membership_end_date = newEnd;
 		}
-		if (selectedMembershipType?.visit_limit  && selectedMembershipType.visit_limit > 0) {
+		if (selectedMembershipType?.visit_limit && selectedMembershipType.visit_limit > 0) {
 			$formData.membership_remaining_visits = selectedMembershipType.visit_limit;
 		} else {
 			$formData.membership_remaining_visits = selectedMembershipType.duration_days || 0;
@@ -268,7 +269,7 @@
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
-						<Label class="font-semibold">{m['common.member']}</Label>
+						<Label class="font-semibold">{m['common.member']()}</Label>
 						<Input
 							type="text"
 							readonly
@@ -305,7 +306,7 @@
 													>{type.name}</Select.Item
 												>
 											{/each}
-											{#if membershipTypes.length === 0 && !isLoading}
+											{#if membershipTypes.length === 0}
 												<div class="px-2 py-1.5 text-sm text-muted-foreground">
 													{m.no_types_available()}
 												</div>
@@ -329,13 +330,37 @@
 
 						<div class="w-1/2 space-y-2">
 							<Label class="font-semibold">{m.enter_by_hours()}</Label>
-							<Input type="text" readonly value={selectedMembershipType?.enter_by ?? ''} />
+							<div class="relative flex">
+								<Input
+									type="text"
+									readonly
+									class="pr-15"
+									value={selectedMembershipType?.enter_by ?? ''}
+								/>
+								<span
+									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+								>
+									h
+								</span>
+							</div>
 						</div>
 					</div>
 
 					<div class="w-full space-y-2 pb-2">
 						<Label class="font-semibold">{m.price()}</Label>
-						<Input type="text" readonly value={selectedMembershipType?.price ?? ''} />
+						<div class="relative flex">
+							<Input
+								type="text"
+								class="pr-15"
+								readonly
+								value={selectedMembershipType?.price ?? ''}
+							/>
+							<span
+								class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
+							>
+								{m.locale_currency()}
+							</span>
+						</div>
 					</div>
 
 					<Separator />

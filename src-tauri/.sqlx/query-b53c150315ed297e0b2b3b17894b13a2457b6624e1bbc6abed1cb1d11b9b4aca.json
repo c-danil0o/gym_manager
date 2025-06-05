@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT name FROM membership_types WHERE id = ? AND is_deleted = FALSE",
+  "describe": {
+    "columns": [
+      {
+        "name": "name",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b53c150315ed297e0b2b3b17894b13a2457b6624e1bbc6abed1cb1d11b9b4aca"
+}

@@ -11,7 +11,6 @@
 	import Input from '../ui/input/input.svelte';
 	import { DateFormatter } from '@internationalized/date';
 	import { m } from '$lib/paraglide/messages';
-	import type { MessageFunction } from '@inlang/paraglide-js';
 
 	// Props
 	let {
@@ -28,7 +27,9 @@
 	let timerId: number | undefined = undefined;
 	let progressIntervalId: number | undefined = undefined;
 
-	const df = new DateFormatter('bs-BA', {
+	const locale = m.locale_code() || 'bs-BA';
+
+	const df = new DateFormatter(locale, {
 		dateStyle: 'long'
 	});
 
