@@ -31,6 +31,7 @@
 	import { toast } from 'svelte-sonner';
 	import { isLocale, setLocale, getLocale } from '$lib/paraglide/runtime.js';
 	import { listen } from '@tauri-apps/api/event';
+	import { m } from '$lib/paraglide/messages';
 
 	let { children } = $props();
 	$effect(() => {
@@ -69,18 +70,15 @@
 
 			if (settings.language && isLocale(settings.language)) {
 				if (getLocale() !== settings.language) {
-					console.log(getLocale());
-					console.log('Setting locale to:', settings.language);
-					setLocale(settings.language, {reload: false});
+					setLocale(settings.language, { reload: false });
 				}
 			}
 			if (settings.theme === 'light' || settings.theme === 'dark') {
 				setMode(settings.theme as 'light' | 'dark');
 			}
-
-			console.log('Loaded app settings:', settings);
 		} catch (e: any) {
-			toast.error('Failed to load app settings: ' + e.message);
+			console.log(e);
+			toast.error(m['main.toast_failed_settings']());
 		}
 	}
 
@@ -91,7 +89,7 @@
 
 			unlisten = await listen<AppSettings>('settings_changed', (event) => {
 				console.log('Settings changed event received:', event.payload);
-				toast.info('App settings have been updated.');
+				toast.info(m['main.toast_settings_updated']());
 				if (event.payload.language && isLocale(event.payload.language)) {
 					setLocale(event.payload.language);
 				}
@@ -139,7 +137,7 @@
 								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
 						>
 							<Scanner class="h-4 w-4" />
-							Scanner
+							{m['common.scanner']()}
 						</a>
 						<a
 							href="/members"
@@ -148,7 +146,7 @@
 								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
 						>
 							<User class="h-4 w-4" />
-							Members
+							{m['common.members']()}
 						</a>
 						<a
 							href="/memberships"
@@ -157,7 +155,7 @@
 								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
 						>
 							<Package class="h-4 w-4" />
-							Memberships
+							{m['common.memberships']()}
 						</a>
 						<a
 							href="/entry-log"
@@ -166,7 +164,7 @@
 								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
 						>
 							<Log class="h-4 w-4" />
-							Entry Log
+							{m['common.entry_log']()}
 						</a>
 						<a
 							href="/analytics"
@@ -175,15 +173,15 @@
 								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
 						>
 							<ChartLine class="h-4 w-4" />
-							Analytics
+							{m['common.analytics']()}
 						</a>
 					</nav>
 				</div>
 				<div class="mt-auto p-4 shrink-0">
 					<Card.Root>
 						<Card.Header class="p-2 pt-0 md:p-4">
-							<Card.Title>Add new member</Card.Title>
-							<Card.Description>Create new member and assign him a membership.</Card.Description>
+							<Card.Title>{m['main.add_new_member']()}</Card.Title>
+							<Card.Description>{m['main.add_new_member_desc']()}</Card.Description>
 						</Card.Header>
 						<Card.Content class="p-2 pt-0 md:p-4 md:pt-0">
 							<Button
@@ -191,7 +189,7 @@
 								class="w-full"
 								onclick={() => {
 									goto('/members/new');
-								}}>Add</Button
+								}}>{m['common.add']()}</Button
 							>
 						</Card.Content>
 					</Card.Root>
@@ -206,7 +204,7 @@
 					<Sheet.Trigger>
 						<Button variant="outline" size="icon" class="shrink-0 md:hidden">
 							<Menu class="h-5 w-5" />
-							<span class="sr-only">Toggle navigation menu</span>
+							<span class="sr-only">{m['main.menu_toggle']()}</span>
 						</Button>
 					</Sheet.Trigger>
 					<Sheet.Content side="left" class="flex flex-col">
@@ -222,7 +220,7 @@
 									: ''} text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Scanner class="h-5 w-5" />
-								Scanner
+								{m['common.scanner']()}
 							</a>
 							<a
 								href="/members"
@@ -232,7 +230,7 @@
 									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<User class="h-5 w-5" />
-								Members
+								{m['common.members']()}
 							</a>
 							<a
 								href="/memberships"
@@ -241,7 +239,7 @@
 									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Package class="h-5 w-5" />
-								Memberships
+								{m['common.memberships']()}
 							</a>
 							<a
 								href="/entry-log"
@@ -250,7 +248,7 @@
 									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<Log class="h-5 w-5" />
-								Entry Log
+								{m['common.entry_log']()}
 							</a>
 							<a
 								href="/analytics"
@@ -259,14 +257,14 @@
 									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
 							>
 								<ChartLine class="h-5 w-5" />
-								Analytics
+								{m['common.analytics']()}
 							</a>
 						</nav>
 						<div class="mt-auto">
 							<Card.Root>
 								<Card.Header>
-									<Card.Title>Add Member</Card.Title>
-									<Card.Description>Create new member and assign him a membership</Card.Description>
+									<Card.Title>{m['main.add_new_member']()}</Card.Title>
+									<Card.Description>{m['main.add_new_member_desc']()}</Card.Description>
 								</Card.Header>
 								<Card.Content>
 									<Button
@@ -297,16 +295,14 @@
 					<DropdownMenu.Trigger>
 						<Button variant="secondary" size="icon" class="rounded-full">
 							<CircleUser class="h-5 w-5" />
-							<span class="sr-only">Toggle user menu</span>
+							<span class="sr-only">{m['main.user_toggle']()}</span>
 						</Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
-						<DropdownMenu.Label>My Account</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item onclick={() => goto('/settings')}>Settings</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => goto('/settings')}>{m['common.settings']()}</DropdownMenu.Item>
 						<DropdownMenu.Item>Update</DropdownMenu.Item>
 						<DropdownMenu.Separator />
-						<DropdownMenu.Item onclick={handleLogout}>Logout</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={handleLogout}>{m['common.logout']()}</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</header>

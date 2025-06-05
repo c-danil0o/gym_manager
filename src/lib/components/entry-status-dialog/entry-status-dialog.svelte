@@ -11,6 +11,7 @@
 	import Input from '../ui/input/input.svelte';
 	import { DateFormatter } from '@internationalized/date';
 	import { m } from '$lib/paraglide/messages';
+	import type { MessageFunction } from '@inlang/paraglide-js';
 
 	// Props
 	let {
@@ -68,7 +69,11 @@
 	} {
 		switch (status) {
 			case 'Allowed':
-				return { icon: CheckCircle2, colorClass: 'text-green-500', title: m['scanner.status_allowed']()  };
+				return {
+					icon: CheckCircle2,
+					colorClass: 'text-green-500',
+					title: m['scanner.status_allowed']()
+				};
 			case 'DeniedNoMembership':
 			case 'DeniedMembershipExpired':
 			case 'DeniedNoVisitsLeft':
@@ -78,12 +83,55 @@
 				return { icon: XCircle, colorClass: 'text-red-500', title: m['scanner.status_denied']() };
 			case 'DeniedAfterHours':
 			case 'DeniedAlreadyCheckedIn':
-				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: m['scanner.status_denied']() };
+				return {
+					icon: AlertTriangle,
+					colorClass: 'text-yellow-500',
+					title: m['scanner.status_denied']()
+				};
 			default:
-				return { icon: AlertTriangle, colorClass: 'text-yellow-500', title: m['scanner.status_issue']() };
+				return {
+					icon: AlertTriangle,
+					colorClass: 'text-yellow-500',
+					title: m['scanner.status_issue']()
+				};
 		}
 	}
+	function translateMessage(message: string): string {
+		const [key, param] = message.split('|');
 
+		switch (key) {
+			case 'card_invalid':
+				return m['scan_message.card_invalid']();
+			case 'member_not_found':
+				return m['scan_message.member_not_found']();
+			case 'no_membership':
+				return m['scan_message.no_membership']();
+			case 'invalid_membership':
+				return m['scan_message.invalid_membership']();
+			case 'no_visits_left':
+				return m['scan_message.no_visits_left']();
+			case 'expired_on':
+				return m['scan_message.expired_on']({ date: param ?? '???' });
+			case 'pending':
+				return m['scan_message.pending']({ date: param ?? '???' });
+			case 'inactive':
+				return m['scan_message.inactive']();
+			case 'suspended':
+				return m['scan_message.suspended']();
+			case 'invalid_status':
+				return m['scan_message.invalid_status']();
+			case 'after_hours':
+				return m['scan_message.after_hours']({ hour: param ?? '???' });
+			case 'already_checked':
+				return m['scan_message.already_checked']();
+			case 'error':
+				return m['scan_message.error']();
+			case 'allowed':
+				return m['scan_message.allowed']();
+			default:
+				return message; // fallback if key isn't known
+		}
+	}
 	let statusInfo = $derived(getStatusInfo(result?.status));
 </script>
 
@@ -100,7 +148,7 @@
 					>{statusInfo.title}</Dialog.Title
 				>
 				<Dialog.Description class="text-lg text-muted-foreground">
-					{result.message}
+					{translateMessage(result.message)}
 				</Dialog.Description>
 			</Dialog.Header>
 
@@ -108,7 +156,9 @@
 				<div class="mt-6 space-y-3 text-lg p-4">
 					<!-- Member Name -->
 					<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
-						<Label class="text-muted-foreground w-[100px]" for="dialog-member-name">{m['common.member']()}:</Label>
+						<Label class="text-muted-foreground w-[100px]" for="dialog-member-name"
+							>{m['common.member']()}:</Label
+						>
 						<Input
 							id="dialog-member-name"
 							type="text"
@@ -121,7 +171,9 @@
 					<!-- Card ID -->
 					{#if result.card_id}
 						<div class="grid grid-cols-[max-content_1fr] items-center gap-x-4">
-							<Label class="text-muted-foreground w-[100px]" for="dialog-card-id">{m['common.card_id']()}:</Label>
+							<Label class="text-muted-foreground w-[100px]" for="dialog-card-id"
+								>{m['common.card_id']()}:</Label
+							>
 							<Input
 								id="dialog-card-id"
 								type="text"

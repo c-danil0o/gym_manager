@@ -32,6 +32,7 @@
 	import { cn, getMembershipStatusBadgeVariant } from '$lib/utils.js';
 	import type { MemberInfo } from '$lib/models/member_with_membership';
 	import { Pencil, RefreshCcw } from 'lucide-svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	// Server-side data structure
 	interface TableData<T> {
@@ -140,7 +141,7 @@
 			header: ({ column }) => {
 				return renderSnippet(ColumnHeader, {
 					column,
-					title: 'Member',
+					title: m.member(),
 					onSort: handleSort
 				});
 			},
@@ -162,7 +163,7 @@
 			header: ({ column }) =>
 				renderSnippet(ColumnHeader, {
 					column,
-					title: 'Card ID',
+					title: m.card_id(),
 					onSort: handleSort
 				}),
 			cell: ({ row }) => {
@@ -178,7 +179,7 @@
 			header: ({ column }) => {
 				return renderSnippet(ColumnHeader, {
 					column,
-					title: 'Email',
+					title: m.email(),
 					onSort: handleSort
 				});
 			},
@@ -200,7 +201,7 @@
 			header: ({ column }) => {
 				return renderSnippet(ColumnHeader, {
 					column,
-					title: 'Membership',
+					title: m.membership(),
 					onSort: handleSort
 				});
 			},
@@ -222,7 +223,7 @@
 			header: ({ column }) =>
 				renderSnippet(ColumnHeader, {
 					column,
-					title: 'Status',
+					title: m.status(),
 					onSort: handleSort
 				}),
 			cell: ({ row }) => {
@@ -238,7 +239,7 @@
 			header: ({ column }) =>
 				renderSnippet(ColumnHeader, {
 					column,
-					title: 'Actions',
+					title: m.actions(),
 					onSort: handleSort,
 					class: 'text-right mr-10'
 				}),
@@ -397,11 +398,11 @@
 {#snippet Pagination({ table }: { table: TableType<MemberInfo> })}
 	<div class="flex items-center justify-between px-2">
 		<div class="text-muted-foreground flex-1 text-sm">
-			Showing {serverData?.data?.length || 0} of {serverData?.total || 0} total rows.
+			{m.showing_rows_table({row: serverData?.data?.length || 0, total: serverData?.total || 0 })}
 		</div>
 		<div class="flex items-center space-x-6 lg:space-x-8">
 			<div class="flex items-center space-x-2">
-				<p class="text-sm font-medium text-muted-foreground">Rows per page</p>
+				<p class="text-sm font-medium text-muted-foreground">{m.rows_per_page()}</p>
 				<Select.Root
 					allowDeselect={false}
 					type="single"
@@ -425,7 +426,7 @@
 			<div
 				class="flex w-[100px] items-center justify-center text-sm font-medium text-muted-foreground"
 			>
-				Page {pagination?.pageIndex + 1 || 1} of {serverData.total_pages || 1}
+				{m.page_of_total({page: pagination?.pageIndex + 1 || 1, total: serverData.total_pages || 1})}
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button
@@ -434,7 +435,7 @@
 					onclick={() => onPageChange(1)}
 					disabled={pagination.pageIndex === 0 || loading}
 				>
-					<span class="sr-only">Go to first page</span>
+					<span class="sr-only">{m.goto_first()}</span>
 					<ChevronsLeftIcon />
 				</Button>
 				<Button
@@ -443,7 +444,7 @@
 					onclick={() => onPageChange(pagination.pageIndex)}
 					disabled={pagination.pageIndex === 0 || loading}
 				>
-					<span class="sr-only">Go to previous page</span>
+					<span class="sr-only">{m.goto_prev()}</span>
 					<ChevronLeftIcon />
 				</Button>
 				<Button
@@ -452,7 +453,7 @@
 					onclick={() => onPageChange(pagination.pageIndex + 2)}
 					disabled={pagination.pageIndex >= serverData.total_pages - 1 || loading}
 				>
-					<span class="sr-only">Go to next page</span>
+					<span class="sr-only">{m.goto_next()}</span>
 					<ChevronRightIcon />
 				</Button>
 				<Button
@@ -461,7 +462,7 @@
 					onclick={() => onPageChange(serverData.total_pages)}
 					disabled={pagination.pageIndex >= serverData.total_pages - 1 || loading}
 				>
-					<span class="sr-only">Go to last page</span>
+					<span class="sr-only">{m.goto_last()}</span>
 					<ChevronsRightIcon />
 				</Button>
 			</div>
@@ -532,13 +533,13 @@
 						<Table.Cell colspan={columns.length} class="h-24 text-center">
 							<div class="flex items-center justify-center">
 								<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-								<span class="ml-2">Loading...</span>
+								<span class="ml-2">{m.loading()}</span>
 							</div>
 						</Table.Cell>
 					</Table.Row>
 				{:else if serverData.data?.length === 0}
 					<Table.Row>
-						<Table.Cell colspan={columns.length} class="h-24 text-center">No results.</Table.Cell>
+						<Table.Cell colspan={columns.length} class="h-24 text-center">{m.no_results()}</Table.Cell>
 					</Table.Row>
 				{:else}
 					{#each table.getRowModel().rows as row (row.id)}

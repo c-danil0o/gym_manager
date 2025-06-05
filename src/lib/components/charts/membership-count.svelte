@@ -2,6 +2,7 @@
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { PieChart, Text } from 'layerchart';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		chartData = [],
@@ -18,8 +19,8 @@
 
 <Card.Root class="flex flex-col w-[500px] h-[500px] shrink-0">
 	<Card.Header class="items-center">
-		<Card.Title>Membership Type Distribution</Card.Title>
-		<Card.Description>Showing number of active memberships for each type</Card.Description>
+		<Card.Title>{m.membership_type_distribution()}</Card.Title>
+		<Card.Description>{m.membership_type_dist_desc()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="flex-1 flex items-center">
 		<Chart.Container config={chartConfig} class="mx-auto aspect-square h-[300px] ">
@@ -42,7 +43,7 @@
 						dy={3}
 					/>
 					<Text
-						value="Memberships"
+						value={m.memberships()}
 						textAnchor="middle"
 						verticalAnchor="middle"
 						class="fill-foreground text-muted-foreground"

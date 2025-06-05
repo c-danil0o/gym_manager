@@ -18,6 +18,7 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
+	import { m } from '$lib/paraglide/messages';
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
@@ -48,12 +49,13 @@
 			const result = await form.validateForm();
 			if (result.valid) {
 				await invoke('add_membership_type', { payload: result.data });
-				toast.success('New membership type added successfully!');
+				toast.success(m.toast_new_membership_type_success());
 				handleCancel();
 			} else {
-				toast.error('Data is not valid!');
+				toast.error(m.toast_error_invalid_data());
 			}
 		} catch (error) {
+			// TRANSLATE ERROR
 			console.log(error);
 			const errorMessage =
 				(error as ErrorResponse)?.message || 'Failed to add new membership type!';
@@ -68,7 +70,7 @@
 	}
 	onMount(() => {
 		setHeader({
-			title: 'New Membership Type',
+			title: m.new_membership_type(),
 			showBackButton: true
 		});
 	});
@@ -77,14 +79,14 @@
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-2xl">Add New Membership Type</Card.Title>
+			<Card.Title class="text-2xl">{m.add_new_memberhsip_type()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="name">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Name</Form.Label>
+							<Form.Label class="font-semibold">{m['common.name']()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.name} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -94,7 +96,7 @@
 				<Form.Field {form} name="duration_days">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Duration</Form.Label>
+							<Form.Label class="font-semibold">{m['common.duration']()}</Form.Label>
 							<Input {...props} type="number" min={1} bind:value={$formData.duration_days} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -104,7 +106,7 @@
 				<Form.Field {form} name="visit_limit">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Visit limit</Form.Label>
+							<Form.Label class="font-semibold">{m['common.visit_limit']()}</Form.Label>
 							<Input
 								{...props}
 								type="number"
@@ -120,12 +122,12 @@
 				<Form.Field {form} name="enter_by">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Enter by (hour of the day)</Form.Label>
+							<Form.Label class="font-semibold">{m.enter_by_with_desc()}</Form.Label>
 							<Input
 								{...props}
 								type="number"
-								min="0"
-								max="23"
+								min="1"
+								max="24"
 								placeholder="optional"
 								bind:value={$formData.enter_by}
 							/>
@@ -137,7 +139,7 @@
 				<Form.Field {form} name="price">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Price</Form.Label>
+							<Form.Label class="font-semibold">{m['common.price']()}</Form.Label>
 							<Input {...props} type="number" bind:value={$formData.price} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -147,7 +149,7 @@
 				<Form.Field {form} name="description">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Description</Form.Label>
+							<Form.Label class="font-semibold">{m['common.description']()}</Form.Label>
 							<Textarea {...props} bind:value={$formData.description} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -155,8 +157,8 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
-					<Form.Button type="submit" class="w-full">Confirm</Form.Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
+					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

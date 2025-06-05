@@ -8,6 +8,7 @@
 	import Label from '../ui/label/label.svelte';
 	import DateField from '../date-field/date-field.svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import { m } from '$lib/paraglide/messages.js';
 
 	let {
 		table,
@@ -31,7 +32,7 @@
 <div class="flex items-center justify-between">
 	<div class="flex flex-1 items-center space-x-6">
 		<Input
-			placeholder="Search..."
+			placeholder={m.search()}
 			oninput={(e) => {
 				if (onSearchChange) {
 					onSearchChange(e.currentTarget.value);
@@ -41,22 +42,22 @@
 		/>
 		<div class="flex items-center gap-6">
 			<div class="flex items-center gap-3">
-				<Label class="text-xs text-muted-foreground">From</Label>
+				<Label class="text-xs text-muted-foreground">{m.from()}</Label>
 				<DateField height={'h-8 py-1'} onValueChange={onStartDateChange} value={startDate} />
 			</div>
 			<div class="flex items-center gap-3">
-				<Label class="text-xs text-muted-foreground">To</Label>
+				<Label class="text-xs text-muted-foreground">{m.to()}</Label>
 				<DateField height={'h-8 py-1'} onValueChange={onEndDateChange} value={todayDate} />
 			</div>
 		</div>
 
 		{#if statusCol}
-			<DataTableFacetedFilter column={statusCol} title="Status" options={statuses} />
+			<DataTableFacetedFilter column={statusCol} title={m.status()} options={statuses} />
 		{/if}
 
 		{#if isFiltered}
 			<Button variant="ghost" onclick={() => table.resetColumnFilters()} class="h-8 px-2 lg:px-3">
-				Reset
+				{m.reset()}
 				<XIcon />
 			</Button>
 		{/if}

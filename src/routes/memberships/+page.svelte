@@ -13,9 +13,9 @@
 	import Trash2 from 'lucide-svelte/icons/trash-2';
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import type { MembershipType } from '$lib/models/membership_type';
-	import { SpinLine } from 'svelte-loading-spinners';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import Input from '$lib/components/ui/input/input.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let membershipTypes: MembershipType[] = [];
 	let filteredMembershipTypes: MembershipType[] = [];
@@ -29,14 +29,13 @@
 			filteredMembershipTypes = membershipTypes;
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
-			error = e?.message;
-			toast.error(error || 'Failed to load membership types.');
+			toast.error(m.toast_failed_membership_types());
 		}
 	}
 
 	onMount(async () => {
 		setHeader({
-			title: 'Membership Types',
+			title: m.membership_types(),
 			showBackButton: false
 		});
 		setLoading(true);
@@ -51,11 +50,11 @@
 	async function handleDelete(typeId: number, typeName: string) {
 		try {
 			await invoke('delete_membership_type', { id: typeId });
-			toast.success(`Membership type "${typeName}" deleted successfully.`);
+			toast.success(m.toast_membership_type_delete({ typeName: typeName }));
 			fetchMembershipTypes();
 		} catch (e: any) {
 			console.error('Error deleting membership type:', e);
-			toast.error(e.message || `Failed to delete ${typeName}.`);
+			toast.error(m.toast_membership_type_delete_fail());
 		}
 	}
 
@@ -78,7 +77,7 @@
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<Input
-			placeholder="Search..."
+			placeholder={m['common.search']() + '...'}
 			oninput={(e) => {
 				if (onSearchChange) {
 					onSearchChange(e.currentTarget.value);
@@ -88,26 +87,28 @@
 		/>
 		<Button onclick={handleAddNew} class="h-8 text-xs">
 			<PlusCircle class="mr-2 h-4 w-4" />
-			Add
+			{m['common.add']()}
 		</Button>
 	</div>
 
 	{#if error}
 		<Card.Root class="border-destructive">
 			<Card.Header>
-				<Card.Title class="text-destructive">Error</Card.Title>
+				<Card.Title class="text-destructive">{m['common.error']()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<p>{error}</p>
-				<Button onclick={fetchMembershipTypes} variant="outline" class="mt-4">Try Again</Button>
+				<Button onclick={fetchMembershipTypes} variant="outline" class="mt-4"
+					>{m['common.try_again']()}</Button
+				>
 			</Card.Content>
 		</Card.Root>
 	{:else if membershipTypes.length === 0}
 		<Card.Root>
 			<Card.Content class="pt-6">
-				<p class="text-center text-muted-foreground">No membership types found.</p>
+				<p class="text-center text-muted-foreground">{m.no_membership_types_found()}</p>
 				<p class="text-center mt-2">
-					<Button onclick={handleAddNew} variant="link">Add the first one!</Button>
+					<Button onclick={handleAddNew} variant="link">{m.membership_types_add_first()}</Button>
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -116,24 +117,30 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Name</Table.Head>
-						<Table.Head>Duration</Table.Head>
-						<Table.Head>Visits</Table.Head>
-						<Table.Head>Enter by</Table.Head>
-						<Table.Head>Description</Table.Head>
-						<Table.Head class="text-right">Price</Table.Head>
-						<Table.Head class="text-right pr-12">Actions</Table.Head>
+						<Table.Head>{m['common.name']()}</Table.Head>
+						<Table.Head>{m['common.duration']()}</Table.Head>
+						<Table.Head>{m['common.visits']()}</Table.Head>
+						<Table.Head>{m['common.enter_by']()}</Table.Head>
+						<Table.Head>{m['common.description']()}</Table.Head>
+						<Table.Head class="text-right">{m['common.price']()}</Table.Head>
+						<Table.Head class="text-right pr-12">{m['common.actions']()}</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
 					{#each filteredMembershipTypes as type (type.id)}
 						<Table.Row>
 							<Table.Cell class="font-medium">{type.name}</Table.Cell>
-							<Table.Cell>{type.duration_days ? `${type.duration_days} days` : 'N/A'}</Table.Cell>
 							<Table.Cell
-								>{type.visit_limit ? `${type.visit_limit} visits` : 'Unlimited'}</Table.Cell
+								>{type.duration_days
+									? `${type.duration_days} ${type.duration_days === 1 ? m['common.day']() : m['common.days']()}`
+									: 'N/A'}</Table.Cell
 							>
-							<Table.Cell>{type.enter_by ? `${type.enter_by}:00 h` : 'no limit'}</Table.Cell>
+							<Table.Cell
+								>{type.visit_limit
+									? `${type.visit_limit} ${type.visit_limit === 1 ? m['common.visit_single']() : m['common.visit_plural']()}`
+									: m['common.unlimited']()}</Table.Cell
+							>
+							<Table.Cell>{type.enter_by ? `${type.enter_by}:00 h` : m['common.unlimited']()}</Table.Cell>
 							<Table.Cell>{type.description ? `${type.description}` : ''}</Table.Cell>
 							<Table.Cell class="text-right">${type.price.toFixed(2)}</Table.Cell>
 							<Table.Cell class="text-right pr-8 space-x-2">
@@ -141,28 +148,27 @@
 									onclick={() => handleEdit(type.id)}
 									variant="outline"
 									size="icon"
-									title="Edit"
+									title={m['common.edit']()}
 								>
 									<Pencil class="h-4 w-4" />
 								</Button>
 								<AlertDialog.Root>
 									<AlertDialog.Trigger>
-										<Button variant="destructive" size="icon" title="Delete">
+										<Button variant="destructive" size="icon" title={m['common.delete']()}>
 											<Trash2 class="h-4 w-4" />
 										</Button>
 									</AlertDialog.Trigger>
 									<AlertDialog.Content>
 										<AlertDialog.Header>
-											<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+											<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
 											<AlertDialog.Description>
-												This action cannot be undone. This will permanently delete membership type
-												and any user that was assigned with it will loose membership!</AlertDialog.Description
+												{m.membership_delete_desc()}</AlertDialog.Description
 											>
 										</AlertDialog.Header>
 										<AlertDialog.Footer>
-											<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+											<AlertDialog.Cancel>{m['common.cancel']()}</AlertDialog.Cancel>
 											<AlertDialog.Action onclick={() => handleDelete(type.id, type.name)}
-												>Continue</AlertDialog.Action
+												>{m['common.confirm']()}</AlertDialog.Action
 											>
 										</AlertDialog.Footer>
 									</AlertDialog.Content>

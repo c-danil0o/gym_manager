@@ -2,6 +2,7 @@
 	import { EntryLogDataTable } from '$lib/components/entry-table';
 	import type { EntryLog } from '$lib/models/entry';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
+	import { m } from '$lib/paraglide/messages';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { invoke } from '@tauri-apps/api/core';
@@ -60,7 +61,7 @@
 			tableData = response;
 		} catch (error) {
 			console.error('Failed to fetch entry log data:', error);
-			// Handle error appropriately
+			toast.error(m.failed_to_fetch_entry_log())
 		} finally {
 			loading = false;
 			setLoading(false);
@@ -138,10 +139,10 @@
 		try {
 			await invoke('delete_entry_log', { entryLogId: id });
 			fetchTableData(currentParams); // Refresh data after deletion
-			toast.success('Entry log deleted successfully.');
+			toast.success(m.entry_log_delete_success());
 		} catch (e: any) {
 			console.error('Error deleting entry log:', e);
-			toast.error(e?.message || 'Failed to entry log.');
+			toast.error(m.entry_log_delete_fail());
 		}
 	}
 

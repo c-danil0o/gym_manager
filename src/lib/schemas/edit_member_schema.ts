@@ -1,14 +1,15 @@
+import { m } from '$lib/paraglide/messages';
 import { z } from 'zod';
 
 export const editMemberSchema = z.object({
-	id: z.number().int('ID must be an integer').positive('ID must be a positive number'),
-	first_name: z.string().min(1, 'First name is required'),
-	last_name: z.string().min(1, 'Last name is required'),
+	id: z.number().int(m.id_must_integer()).positive(m.id_must_positive()),
+	first_name: z.string().min(1, m.first_name_required()),
+	last_name: z.string().min(1, m.last_name_required()),
 	card_id: z
 		.string()
-		.min(6, 'Card number must be exactly 6 characters')
-		.max(6, 'Card number must be exactly 6 characters'),
-	email: z.string().email('Invalid email format').optional().nullable(),
+		.min(8, m.id_must_8())
+		.max(8, m.id_must_8()),
+	email: z.string().email(m.invalid_email_format()).optional().nullable(),
 	phone: z.string().optional().nullable(),
 	date_of_birth: z.string().optional().nullable()
 });

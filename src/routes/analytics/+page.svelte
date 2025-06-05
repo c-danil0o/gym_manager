@@ -17,6 +17,7 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
 	const chartConfigDist = $state<{
@@ -199,10 +200,10 @@
 
 <div class="flex flex-col gap-10">
 	<div class="flex items-center justify-center w-full">
-		<Label class="mr-4">Select Year:</Label>
+		<Label class="mr-4">{m.select_year()}:</Label>
 		<Select.Root type="single" bind:value={selectedYear}>
 			<Select.Trigger class="w-fit">
-				{selectedYear ? selectedYear : 'Select year'}
+				{selectedYear ? selectedYear : m.select_year()}
 			</Select.Trigger>
 			<Select.Content>
 				<Select.Group>

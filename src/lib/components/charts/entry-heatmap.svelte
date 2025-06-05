@@ -4,6 +4,7 @@
 	import { scaleLinear } from 'd3-scale';
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import { m } from '$lib/paraglide/messages';
 
 	// Props interface
 	interface ChartDataItem {
@@ -23,8 +24,8 @@
 
 	let {
 		data,
-		title = 'Entry Hours',
-		description = 'Showing hourly entry patterns for each day of the week',
+		title = m.entry_hours(),
+		description = m.entry_hours_desc(),
 		showAllDays = true,
 		colors = [
 			'var(--chart-1)',
@@ -39,7 +40,7 @@
 		...restProps
 	}: Props = $props();
 
-	const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const dayNames = [m.sunday(), m.monday(), m.tuesday(), m.wednesday(), m.thursday(), m.friday(), m.saturday()];
 
 	// Reactive calculations using $derived
 	const groupedData = $derived.by(() => {
@@ -131,7 +132,7 @@
 		<Card.Content class="flex-1 flex items-center">
 			{#if transformedData.length === 0}
 				<div class="flex items-center justify-center h-32 text-muted-foreground">
-					No data available
+					{m.no_data_available()}
 				</div>
 			{:else}
 				<Chart.Container config={chartConfig} class="mx-auto w-full h-[350px]">

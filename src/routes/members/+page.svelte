@@ -3,12 +3,14 @@
 	import { MemberDataTable } from '$lib/components/member-table';
 	import type { MemberInfo } from '$lib/models/member_with_membership';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
+	import { m } from '$lib/paraglide/messages';
 	import { setHeader } from '$lib/stores/state';
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	onMount(() => {
 		setHeader({
-			title: 'Members',
+			title: m['common.members'](),
 			showBackButton: false
 		});
 	});
@@ -54,6 +56,7 @@
 			tableData = response;
 		} catch (error) {
 			console.error('Failed to fetch table data:', error);
+			toast.error(m.failed_to_fetch_members());
 			// Handle error appropriately
 		} finally {
 			loading = false;

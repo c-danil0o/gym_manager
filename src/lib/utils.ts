@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
+import { m } from './paraglide/messages';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -13,6 +14,24 @@ type FlyAndScaleParams = {
 	start?: number;
 	duration?: number;
 };
+
+export function translateStatus(status: string|null): string{
+	switch (status?.toLowerCase()){
+		case 'active':
+			return m.active();
+		case 'expired':
+			return m.expired();
+		case 'pending':
+			return m.pending();
+		case 'suspended':
+			return m.suspended();
+		default:
+			return m.inactive();
+			
+
+	}
+
+}
 
 export function getStatusClasses(status: string): string {
 	switch (status?.toLowerCase()) {

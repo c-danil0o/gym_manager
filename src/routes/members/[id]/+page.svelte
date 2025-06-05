@@ -13,12 +13,13 @@
 	import type { MembershipInfo, MemberWithMembership } from '$lib/models/member_with_membership';
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { getMembershipStatusBadgeVariant, getSubtleStatusClasses } from '$lib/utils';
+	import { getMembershipStatusBadgeVariant, getSubtleStatusClasses, translateStatus } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Pencil, Plus, Trash2, RefreshCcw } from 'lucide-svelte';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { QueryResponse } from '$lib/models/table-state';
+	import { m } from '$lib/paraglide/messages';
 
 	let isLoadingHistory = $state(true);
 	let error: string | null = $state(null);
@@ -46,8 +47,7 @@
 			}
 		} catch (e: any) {
 			console.error('Error fetching member with membership:', e);
-			error = e?.message;
-			toast.error(error || 'Failed to load member data.');
+			toast.error(m.failed_to_load_member());
 		}
 	}
 
@@ -77,8 +77,7 @@
 			}
 		} catch (e: any) {
 			console.error('Error fetching membership history:', e);
-			error = e?.message;
-			toast.error(error || 'Failed to load member data.');
+			toast.error(m.failed_load_membership_data());
 		} finally {
 			isLoadingHistory = false;
 		}
@@ -104,11 +103,11 @@
 
 		try {
 			await invoke('delete_member', { id });
-			toast.success('Member deleted successfully.');
+			toast.success(m.member_delete_success());
 			goto('/members');
 		} catch (e: any) {
 			console.error('Error deleting member:', e);
-			toast.error(e?.message || 'Failed to delete member!.');
+			toast.error(m.member_delete_fail());
 		}
 	}
 
@@ -122,12 +121,12 @@
 		setLoading(true);
 		try {
 			await invoke('delete_membership', { id });
-			toast.success('Membership deleted successfully.');
+			toast.success(m.membership_delete_success());
 			fetchMemberships();
 			fetchMemberWithMembership();
 		} catch (e: any) {
 			console.error('Error deleting membership:', e);
-			toast.error(e?.message || 'Failed to delete membership.');
+			toast.error(m.membership_delete_fail());
 		} finally {
 			setLoading(false);
 		}
@@ -143,7 +142,7 @@
 
 	onMount(async () => {
 		setHeader({
-			title: 'Member Details',
+			title: m.member_details(),
 			showBackButton: true
 		});
 		if (memberId) {
@@ -160,35 +159,35 @@
 			<Card.Root class="w-full">
 				<Card.Header>
 					<Card.Title class="text-2xl flex justify-between"
-						>Member
+						>{m['common.member']()}
 
 						<div class="space-x-2">
 							<Button
 								onclick={() => handleEditMember(data?.id)}
 								variant="outline"
 								size="icon"
-								title="Edit Member"
+								title=m.edit_member()
 							>
 								<Pencil class="h-4 w-4" />
 							</Button>
 
 							<AlertDialog.Root>
 								<AlertDialog.Trigger>
-									<Button variant="destructive" size="icon" title="Delete">
+									<Button variant="destructive" size="icon" title={m['common.delete']()}>
 										<Trash2 class="h-4 w-4" />
 									</Button>
 								</AlertDialog.Trigger>
 								<AlertDialog.Content>
 									<AlertDialog.Header>
-										<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+										<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
 										<AlertDialog.Description>
-											This action cannot be undone. This will permanently delete member from system!</AlertDialog.Description
+											{m.member_delete_desc()}</AlertDialog.Description
 										>
 									</AlertDialog.Header>
 									<AlertDialog.Footer>
-										<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+										<AlertDialog.Cancel>{m['common.cancel']()}</AlertDialog.Cancel>
 										<AlertDialog.Action onclick={() => handleDeleteMember(data?.id || null)}
-											>Continue</AlertDialog.Action
+											>{m['common.confirm']()}</AlertDialog.Action
 										>
 									</AlertDialog.Footer>
 								</AlertDialog.Content>
@@ -199,27 +198,27 @@
 				<Card.Content>
 					<div class="space-y-6">
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">First Name</Label>
+							<Label class="font-semibold">{m.first_name()}</Label>
 							<Input readonly type="text" value={data?.first_name || ''} />
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Last Name</Label>
+							<Label class="font-semibold">{m.last_name()}</Label>
 							<Input readonly type="text" value={data?.last_name || ''} />
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Email</Label>
+							<Label class="font-semibold">{m.email()}</Label>
 							<Input readonly type="text" value={data?.email || 'Not provided'} />
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Phone</Label>
+							<Label class="font-semibold">{m.phone()}</Label>
 							<Input readonly type="text" value={data?.phone || 'Not provided'} />
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Date of birth</Label>
+							<Label class="font-semibold">{m.date_of_birth()}</Label>
 							<Input
 								readonly
 								type="text"
@@ -230,7 +229,7 @@
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Card Number</Label>
+							<Label class="font-semibold">{m.card_number()}</Label>
 							<Input readonly type="text" value={data?.card_id} />
 						</div>
 					</div>
@@ -240,7 +239,7 @@
 			<Card.Root class="w-full">
 				<Card.Header>
 					<Card.Title class="text-2xl flex justify-between"
-						>Membership
+						>{m['common.membership']()}
 
 						{#if data?.membership_id}
 							<div class="space-x-2">
@@ -251,14 +250,14 @@
 									class="bg-blue-100 dark:bg-blue-900"
 									disabled={data?.membership_status !== 'active' &&
 										data?.membership_status !== 'expired'}
-									title="Renew Membership"
+									title={m.renew_membership()}
 								>
 									<RefreshCcw class="h-4 w-4" />
 								</Button>
 								<Button
 									onclick={() => handleAddNewMembership(data?.id)}
 									size="icon"
-									title="Add Membership"
+									title={m.add_membership()}
 								>
 									<Plus class="h-4 w-4" />
 								</Button>
@@ -270,27 +269,27 @@
 					{#if data?.membership_id}
 						<div class="space-y-6">
 							<div class="w-full space-y-2">
-								<Label class="font-semibold">Membership Type</Label>
+								<Label class="font-semibold">{m.membership_type()}</Label>
 								<Input type="text" readonly value={data?.membership_type_name ?? ''} />
 							</div>
 							<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
 								<div class="w-1/2 space-y-2">
-									<Label class="font-semibold">Duration (days)</Label>
+									<Label class="font-semibold">{m.duration_days()}</Label>
 									<Input type="text" readonly value={data?.membership_type_duration_days ?? ''} />
 								</div>
 								<div class="w-1/2 space-y-2">
-									<Label class="font-semibold">Visit Limit</Label>
+									<Label class="font-semibold">{m['common.visit_limit']()}</Label>
 									<Input type="text" readonly value={data?.membership_type_visit_limit ?? ''} />
 								</div>
 
 								<div class="w-1/2 space-y-2">
-									<Label class="font-semibold">Enter by (hours)</Label>
+									<Label class="font-semibold">{m.enter_by_hours()}</Label>
 									<Input type="text" readonly value={data?.membership_type_enter_by ?? ''} />
 								</div>
 							</div>
 
 							<div class="w-full space-y-2 pb-2">
-								<Label class="font-semibold">Price</Label>
+								<Label class="font-semibold">{m['common.price']()}</Label>
 								<Input type="text" readonly value={data?.membership_type_price ?? ''} />
 							</div>
 
@@ -298,62 +297,62 @@
 
 							<div class="flex flex-col md:flex-row gap-4 w-full justify-between pt-2">
 								<div class="w-1/2 space-y-2">
-									<Label class="font-semibold">Start Date</Label>
+									<Label class="font-semibold">{m.start_date()}</Label>
 									<Input
 										type="text"
 										readonly
 										value={data?.membership_start_date
 											? df.format(new Date(data.membership_start_date))
-											: 'Not started yet'}
+											: m.not_started_yet()}
 									/>
 								</div>
 
 								<div class="w-1/2 space-y-2">
-									<Label class="font-semibold">End Date</Label>
+									<Label class="font-semibold">{m.end_date()}</Label>
 									<Input
 										type="text"
 										readonly
 										value={data?.membership_end_date
 											? df.format(new Date(data.membership_end_date))
-											: 'Not defined'}
+											: m.not_defined()}
 									/>
 								</div>
 							</div>
 
 							<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
 								<div class="w-3/4 space-y-2">
-									<Label class="font-semibold">Status</Label>
+									<Label class="font-semibold">{m['common.status']()}</Label>
 									<Input
 										type="text"
 										class={getSubtleStatusClasses(data?.membership_status || '')}
 										readonly
-										value={data?.membership_status}
+										value={translateStatus(data?.membership_status)}
 									/>
 								</div>
 
 								<div class="w-1/4 space-y-2">
-									<Label class="font-semibold">Remaining Visits</Label>
+									<Label class="font-semibold">{m.remaining_visits()}</Label>
 									<Input type="text" readonly value={data?.membership_remaining_visits} />
 								</div>
 							</div>
 
 							<div class="w-full space-y-2 pb-2">
-								<Label class="font-semibold">Purchase Date</Label>
+								<Label class="font-semibold">{m.purchase_date()}</Label>
 								<Input
 									type="text"
 									readonly
 									value={data?.membership_purchase_date
 										? df.format(new Date(data.membership_purchase_date))
-										: 'Membership not purchased yet'}
+										: m.memership_not_purchased()}
 								/>
 							</div>
 						</div>
 					{:else}
 						<div class="flex flex-col h-full items-center justify-center space-y-4">
 							<Button onclick={() => handleAddNewMembership(data?.id)} title="Edit Member"
-								>Assign Membership</Button
+								>{m.assign_membership()}</Button
 							>
-							<p class="text-muted-foreground">No membership assigned yet.</p>
+							<p class="text-muted-foreground">{m.no_membership_yet()}</p>
 						</div>
 					{/if}
 				</Card.Content>
@@ -362,24 +361,24 @@
 
 		<Card.Root class="mt-6">
 			<Card.Header>
-				<Card.Title>Membership History</Card.Title>
+				<Card.Title>{m.membership_history()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				{#if isLoadingHistory}
-					<p>Loading history...</p>
+					<p>{m.loading_history()}</p>
 					<!-- Skeleton loaders -->
 				{:else if membershipHistory.data.length === 0}
-					<p class="text-muted-foreground">No past or future memberships recorded.</p>
+					<p class="text-muted-foreground">{m.no_past_or_future_memberships()}</p>
 				{:else}
 					<Table.Root>
 						<Table.Header>
 							<Table.Row>
-								<Table.Head>Type</Table.Head>
-								<Table.Head>Status</Table.Head>
-								<Table.Head>Start Date</Table.Head>
-								<Table.Head>End Date</Table.Head>
-								<Table.Head>Visits Left</Table.Head>
-								<Table.Head class="text-center">Actions</Table.Head>
+								<Table.Head>{m.type()}</Table.Head>
+								<Table.Head>{m.status()}</Table.Head>
+								<Table.Head>{m.start_date()}</Table.Head>
+								<Table.Head>{m.end_date()}</Table.Head>
+								<Table.Head>{m.visits_left()}</Table.Head>
+								<Table.Head class="text-center">{m.actions()}</Table.Head>
 							</Table.Row>
 						</Table.Header>
 						<Table.Body>
@@ -392,7 +391,7 @@
 											: ''}
 								>
 									<Table.Cell class="font-medium"
-										>{item.membership_type_name || 'Deleted Type'}</Table.Cell
+										>{item.membership_type_name || {m.deleted_type()}}</Table.Cell
 									>
 									<Table.Cell>
 										<Badge variant={getMembershipStatusBadgeVariant(item.membership_status)}
@@ -418,7 +417,7 @@
 											size="icon"
 											disabled={item.membership_status !== 'active' &&
 												item.membership_status !== 'pending'}
-											title="Edit Membership"
+											title={m.edit_membership()}
 										>
 											<Pencil class="h-4 w-4" />
 										</Button>
@@ -431,17 +430,16 @@
 											</AlertDialog.Trigger>
 											<AlertDialog.Content>
 												<AlertDialog.Header>
-													<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+													<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
 													<AlertDialog.Description>
-														This action cannot be undone. This will permanently delete membership
-														from this member!</AlertDialog.Description
+														{m.delete_membership_desc()}</AlertDialog.Description
 													>
 												</AlertDialog.Header>
 												<AlertDialog.Footer>
-													<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+													<AlertDialog.Cancel>{m['common.cancel']()}</AlertDialog.Cancel>
 													<AlertDialog.Action
 														onclick={() => handleDeleteMembership(item.membership_id)}
-														>Continue</AlertDialog.Action
+														>{m['common.confirm']()}</AlertDialog.Action
 													>
 												</AlertDialog.Footer>
 											</AlertDialog.Content>

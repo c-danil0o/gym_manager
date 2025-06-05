@@ -9,6 +9,7 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import type { MembershipType } from '$lib/models/membership_type.js';
 	import { PlusCircle } from 'lucide-svelte';
+	import { m } from '$lib/paraglide/messages.js';
 
 	let {
 		table,
@@ -44,7 +45,7 @@
 <div class="flex items-center justify-between">
 	<div class="flex flex-1 items-center space-x-2">
 		<Input
-			placeholder="Search..."
+			placeholder={m.search()}
 			oninput={(e) => {
 				if (onSearchChange) {
 					onSearchChange(e.currentTarget.value);
@@ -54,22 +55,22 @@
 		/>
 
 		{#if statusCol}
-			<DataTableFacetedFilter column={statusCol} title="Status" options={statuses} />
+			<DataTableFacetedFilter column={statusCol} title={m.status()} options={statuses} />
 		{/if}
 
 		{#if membershipCol}
-			<DataTableFacetedFilter column={membershipCol} title="Membership" options={membershipTypes} />
+			<DataTableFacetedFilter column={membershipCol} title={m.membership()} options={membershipTypes} />
 		{/if}
 
 		{#if isFiltered}
 			<Button variant="ghost" onclick={() => table.resetColumnFilters()} class="h-8 px-2 lg:px-3">
-				Reset
+				{m.reset()}
 				<XIcon />
 			</Button>
 		{/if}
 	</div>
 	<Button onclick={onAddMember} class="h-8 px-4 ml-3 text-xs lg:px-4">
 		<PlusCircle class="mr-2 h-4 w-4" />
-		Add</Button
+		{m.add()}</Button
 	>
 </div>

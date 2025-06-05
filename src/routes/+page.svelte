@@ -206,4 +206,4 @@
 	</Card.Root>
 </div>
 
-<EntryStatusDialog bind:open={showStatusDialog} autoCloseDelay={5000} result={scanResult} />
+<EntryStatusDialog bind:open={showStatusDialog} autoCloseDelay={15000} result={scanResult} />

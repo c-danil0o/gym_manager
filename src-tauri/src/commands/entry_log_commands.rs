@@ -98,7 +98,7 @@ pub async fn process_scan(
     if scanned_card_id.is_empty() {
         return Ok(ScanProcessingResult {
             status: EntryStatus::Error,
-            message: "Card ID cannot be empty.".to_string(),
+            message: "card_invalid".to_string(),
             member_name: None,
             card_id: None,
             membership_type_name: None,
@@ -129,7 +129,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedMemberNotFound,
                 "denied_member_not_found",
-                "Member not found for this card ID.",
+                "member_not_found",
                 None,
                 None,
             )
@@ -190,7 +190,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
                 "denied_no_membership",
-                "No active or pending membership found for this member.",
+                "no_membership",
                 Some(member_full_name),
                 None,
             )
@@ -213,7 +213,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
                 "denied_no_membership",
-                "Membership information is incomplete.",
+                "invalid_membership",
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -240,14 +240,14 @@ pub async fn process_scan(
                     (
                         EntryStatus::DeniedNoVisitsLeft,
                         "denied_no_visits_left",
-                        String::from("Membership has no visits remaining."),
+                        String::from("no_visits_left"),
                     )
                 } else {
                     (
                         EntryStatus::DeniedMembershipExpired,
                         "denied_membership_expired",
                         format!(
-                            "Membership expired on {:?}.",
+                            "expired_on|{:?}",
                             membership.membership_end_date
                         ),
                     )
@@ -273,7 +273,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedMembershipNotActiveYet,
                 "denied_membership_not_active_yet",
-                &format!("Membership not active yet. Starts on {:?}.", start_date),
+                &format!("pending|{:?}.", start_date),
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -287,7 +287,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
                 "denied_membership_inactive",
-                "Membership is inactive.",
+                "incative",
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -301,7 +301,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedMembershipSuspended,
                 "denied_membership_suspended",
-                "Membership is currently suspended.",
+                "suspended",
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -317,7 +317,7 @@ pub async fn process_scan(
                 Some(membership_id),
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
-                "denied_membership_invalid_status",
+                "invalid_status",
                 &format!("Membership is currently {:?}.", membership_status),
                 Some(member_full_name),
                 Some(&membership),
@@ -346,7 +346,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::DeniedAfterHours,
                 "denied_after_hours",
-                &format!("Entry not allowed after {}:00.", enter_by_hours),
+                &format!("after_hours|{}", enter_by_hours),
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -411,7 +411,7 @@ pub async fn process_scan(
                 scanned_card_id,
                 EntryStatus::Error,
                 "error",
-                "Failed to update membership visits.",
+                "error",
                 Some(member_full_name),
                 Some(&membership),
             )
@@ -432,7 +432,7 @@ pub async fn process_scan(
 
     Ok(ScanProcessingResult {
         status: EntryStatus::Allowed,
-        message: "Entry Allowed!".to_string(),
+        message: "allowed".to_string(),
         member_name: Some(member_full_name),
         card_id: member.card_id.clone(),
         membership_type_name: membership.membership_type_name.clone(),

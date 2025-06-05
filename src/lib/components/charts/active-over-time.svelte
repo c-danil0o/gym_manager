@@ -4,6 +4,7 @@
 	import { scaleTime } from 'd3-scale';
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import { m } from '$lib/paraglide/messages';
 
 	// Props interface
 	interface ChartDataItem {
@@ -20,8 +21,8 @@
 
 	let {
 		data,
-		title = 'Memberships Over Time',
-		description = 'Showing active memberships count over time',
+		title = m.memberships_over_time(),
+		description = m.memberships_over_time_desc(),
 		class: className = '',
 		...restProps
 	}: Props = $props();
@@ -130,7 +131,7 @@
 		<Card.Content class="flex-1 flex items-center mx-5">
 			{#if transformedData.length === 0}
 				<div class="flex items-center justify-center h-32 text-muted-foreground">
-					No data available
+					{m.no_data_available()}
 				</div>
 			{:else}
 				<Chart.Container config={chartConfig} class="mx-auto w-full h-[350px]">

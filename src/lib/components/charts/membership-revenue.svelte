@@ -4,6 +4,7 @@
 	import { scaleBand } from 'd3-scale';
 	import { BarChart } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
+	import { m } from '$lib/paraglide/messages';
 
 	let {
 		chartData = [],
@@ -20,8 +21,8 @@
 
 <Card.Root class="flex flex-col w-[500px] h-[500px] shrink-0">
 	<Card.Header class="items-center">
-		<Card.Title>Revenue per Membership Type</Card.Title>
-		<Card.Description>Showing number of memberships and total revenue</Card.Description>
+		<Card.Title>{m.membership_revenue()}</Card.Title>
+		<Card.Description>{m.membership_revenue_desc()}</Card.Description>
 	</Card.Header>
 	<Card.Content class="flex-1 flex items-center">
 		<Chart.Container config={chartConfig} class="mx-auto aspect-square h-[300px] ">
@@ -68,7 +69,7 @@
 		</Chart.Container>
 	</Card.Content>
 	<Card.Footer class="flex flex-col items-center justify-center gap-2">
-    <div class="text-muted-foreground text-sm">Total Revenue</div>
-    <div class="text-2xl font-bold">{total.toLocaleString('en-US', { style: 'currency', currency: 'BAM' })}</div>
+    <div class="text-muted-foreground text-sm">{m.total_revenue()}</div>
+    <div class="text-2xl font-bold">{total.toLocaleString('en-US', { style: 'currency', currency: m.currency() })}</div>
 	</Card.Footer>
 </Card.Root>

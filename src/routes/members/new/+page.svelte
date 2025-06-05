@@ -17,6 +17,7 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
+	import { m } from '$lib/paraglide/messages';
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
@@ -59,12 +60,13 @@
 				const member: Member = await invoke('add_member', { payload: result.data });
 				newMember = member;
 				showMembershipPrompt = true;
-				toast.success('New member added successfully!');
+				toast.success(m.new_member_add_success());
 			} else {
-				toast.error('Data is not valid!');
+				toast.error(m.toast_error_invalid_data());
 			}
 		} catch (error) {
 			showMembershipPrompt = false;
+			// TRANSLATE ERROR
 			const errorMessage = (error as ErrorResponse)?.message || 'Failed to add new member!';
 			toast.error(errorMessage);
 			return;
@@ -93,14 +95,14 @@
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-2xl">Add New Member</Card.Title>
+			<Card.Title class="text-2xl">{m.add_new_member()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="first_name">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">First Name</Form.Label>
+							<Form.Label class="font-semibold">{m.first_name()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.first_name} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -110,7 +112,7 @@
 				<Form.Field {form} name="last_name">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Last Name</Form.Label>
+							<Form.Label class="font-semibold">{m.last_name()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.last_name} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -120,9 +122,9 @@
 				<Form.Field {form} name="email">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Email</Form.Label>
+							<Form.Label class="font-semibold">{m.email()}</Form.Label>
 							<Input {...props} type="email" bind:value={$formData.email} />
-							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.Description class="text-xs">{m.optional()}</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -131,9 +133,9 @@
 				<Form.Field {form} name="phone">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Phone</Form.Label>
+							<Form.Label class="font-semibold">{m.phone()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.phone} />
-							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.Description class="text-xs">{m.optional()}</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -142,10 +144,10 @@
 				<Form.Field {form} name="date_of_birth">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Date of birth</Form.Label>
+							<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
 							<DateField {...props} {placeholder} onValueChange={handleDateChange} locale="bs-BA" />
 							<Form.FieldErrors />
-							<Form.Description class="text-xs">Optional</Form.Description>
+							<Form.Description class="text-xs">{m.optional()}</Form.Description>
 						{/snippet}
 					</Form.Control>
 				</Form.Field>
@@ -153,17 +155,17 @@
 				<Form.Field {form} name="card_id">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Card Number</Form.Label>
+							<Form.Label class="font-semibold">{m.card_number()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.card_id} />
-							<Form.Description class="text-xs">Use scanner or enter manually</Form.Description>
+							<Form.Description class="text-xs">{m.use_scanner_or_enter()}</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Form.Button>
-					<Form.Button type="submit" class="w-full">Confirm</Form.Button>
+					<Form.Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Form.Button>
+					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>
@@ -172,17 +174,17 @@
 		<AlertDialog.Root bind:open={showMembershipPrompt}>
 			<AlertDialog.Content>
 				<AlertDialog.Header>
-					<AlertDialog.Title>Assign Membership?</AlertDialog.Title>
+					<AlertDialog.Title>{m.membership_prompt()}</AlertDialog.Title>
 					<AlertDialog.Description>
-						Member <b
+						{m['common.member']()} <b
 							>{newMember.first_name}
 							{newMember.last_name}</b
-						> has been created. Would you like to assign a membership to this member now?
+						> {m.membership_prompt_desc()}
 					</AlertDialog.Description>
 				</AlertDialog.Header>
 				<AlertDialog.Footer>
-					<AlertDialog.Cancel onclick={handleCancel}>No, Later</AlertDialog.Cancel>
-					<AlertDialog.Action onclick={assignMembership}>Yes, Add Membership</AlertDialog.Action>
+					<AlertDialog.Cancel onclick={handleCancel}>{m.membership_prompt_cancel()}</AlertDialog.Cancel>
+					<AlertDialog.Action onclick={assignMembership}>{m.membership_prompt_yes()}</AlertDialog.Action>
 				</AlertDialog.Footer>
 			</AlertDialog.Content>
 		</AlertDialog.Root>

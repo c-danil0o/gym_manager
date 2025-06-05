@@ -16,6 +16,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import { type SettingsSchemaType, settingsSchema } from '$lib/schemas/settings_schema';
+	import { m } from '$lib/paraglide/messages';
 
 	const languages = [
 		{ id: 'en', name: 'English' },
@@ -27,7 +28,7 @@
 		timezone: 'UTC',
 		theme: 'light',
 		backup_url: '',
-		backup_period_hours: null
+		backup_period_hours: 0
 	};
 
 	const form = superForm(initialValues, {
@@ -50,7 +51,7 @@
 			formData.set(settings);
 		} catch (error) {
 			console.error('Failed to load settings:', error);
-			toast.error('Failed to load settings!');
+			toast.error(m['main.toast_failed_settings']() );
 		}
 	}
 
@@ -60,13 +61,13 @@
 			const result = await form.validateForm();
 			if (result.valid) {
 				await invoke('update_app_settings', { payload: result.data });
-				toast.success('Settings updated successfully!');
+				toast.success(m.settings_updated());
 			} else {
 				toast.error('Data is not valid!');
 			}
 		} catch (error) {
 			console.log(error);
-			const errorMessage = (error as ErrorResponse)?.message || 'Failed update settings!';
+			const errorMessage = (error as ErrorResponse)?.message || m.settings_update_failed();
 			toast.error(errorMessage);
 			return;
 		} finally {
@@ -90,17 +91,17 @@
 	<Card.Root>
 		<Card.Content>
 			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
-				<Card.Title class="text-xl">Locale</Card.Title>
+				<Card.Title class="text-xl">{m.locale()}</Card.Title>
 				<Form.Field {form} name="language">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Language</Form.Label>
+							<Form.Label class="font-semibold">{m.language()}</Form.Label>
 
 							<Select.Root type="single" bind:value={$formData.language}>
 								<Select.Trigger {...props}>
 									{languages.find((l) => l.id === $formData.language)
 										? languages.find((l) => l.id === $formData.language)?.name
-										: 'Select language'}
+										: m.select_language()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>
@@ -111,7 +112,7 @@
 										{/each}
 										{#if languages.length === 0}
 											<div class="px-2 py-1.5 text-sm text-muted-foreground">
-												No languages available.
+												{m.no_languages()}.
 											</div>
 										{/if}
 									</Select.Group>
@@ -125,7 +126,7 @@
 				<Form.Field {form} name="timezone">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Timezone</Form.Label>
+							<Form.Label class="font-semibold">{m.timezone()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.timezone} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -134,14 +135,14 @@
 
 				<Separator />
 
-				<Card.Title class="text-xl">Appearance</Card.Title>
+				<Card.Title class="text-xl">{m.appearance()}</Card.Title>
 				<Form.Field {form} name="theme">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Theme</Form.Label>
+							<Form.Label class="font-semibold">{m.theme()}</Form.Label>
 							<Select.Root type="single" bind:value={$formData.theme}>
 								<Select.Trigger {...props}>
-									{$formData?.theme ? $formData.theme : 'Select theme'}
+									{$formData?.theme ? $formData.theme : m.select_theme()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>
@@ -156,11 +157,11 @@
 				</Form.Field>
 				<Separator />
 
-				<Card.Title class="text-xl">Backup</Card.Title>
+				<Card.Title class="text-xl">{m.backup()}</Card.Title>
 				<Form.Field {form} name="backup_url">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Backup URL</Form.Label>
+							<Form.Label class="font-semibold">{m.backup_url()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.backup_url} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -170,7 +171,7 @@
 				<Form.Field {form} name="backup_period_hours">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Backup period</Form.Label>
+							<Form.Label class="font-semibold">{m.backup_period()}</Form.Label>
 							<Select.Root
 								type="single"
 								value={String($formData.backup_period_hours)}
@@ -179,7 +180,7 @@
 								}}
 							>
 								<Select.Trigger {...props}>
-									{$formData?.backup_period_hours ? $formData.backup_period_hours + 'h': 'Select period'}
+									{$formData?.backup_period_hours ? $formData.backup_period_hours + 'h': m.select_period()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>
@@ -196,8 +197,8 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around mt-10">
-					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
-					<Form.Button type="submit" class="w-full">Save</Form.Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
+					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

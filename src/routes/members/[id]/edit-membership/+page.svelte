@@ -24,13 +24,14 @@
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses } from '$lib/utils';
+	import { cn, getSubtleStatusClasses, translateStatus } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { MembershipInfo } from '$lib/models/member_with_membership';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { ErrorResponse } from '$lib/models/error';
+	import { m } from '$lib/paraglide/messages';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -49,7 +50,7 @@
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			error = e?.message;
-			toast.error(error || 'Failed to load membership types.');
+			toast.error(m.toast_failed_membership_types());
 		}
 	}
 	async function fetchMembership() {
@@ -76,13 +77,13 @@
 					last_name: result.member_last_name
 				};
 			} else {
-				toast.error('Membership not found.');
+				toast.error(m.membership_not_found());
 				window.history.back();
 			}
 		} catch (e: any) {
 			console.error('Error fetching membership status:', e);
 			error = e?.message;
-			toast.error(error || 'Failed to load membership status.');
+			toast.error(m.failed_load_membership());
 		}
 	}
 
@@ -124,13 +125,14 @@
 				await invoke('save_membership', {
 					payload: result.data
 				});
-				toast.success('Data saved successfully!');
+				toast.success(m.memebership_update_success());
 				window.history.back();
 			} else {
-				toast.error('Data is not valid!');
+				toast.error(m['toast_error_invalid_data']());
 			}
 		} catch (error) {
 			console.log(error);
+			// TRANSLATE ERROR
 			const errorMessage = (error as ErrorResponse)?.message || 'Failed to edit membership!';
 			toast.error(errorMessage);
 
@@ -241,7 +243,7 @@
 
 	onMount(async () => {
 		setHeader({
-			title: 'Edit Membership',
+			title: m.edit_membership(),
 			showBackButton: true
 		});
 		setLoading(true);
@@ -256,13 +258,13 @@
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
 	<Card.Root class="w-full">
 		<Card.Header>
-			<Card.Title class="text-2xl">Membership</Card.Title>
+			<Card.Title class="text-2xl">{m['common.membership']()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
-						<Label class="font-semibold">Member</Label>
+						<Label class="font-semibold">{m['common.member']}</Label>
 						<Input
 							type="text"
 							readonly
@@ -274,7 +276,7 @@
 					<Form.Field {form} name="membership_type_id">
 						<Form.Control>
 							{#snippet children({ props })}
-								<Form.Label class="font-semibold">Membership Type</Form.Label>
+								<Form.Label class="font-semibold">{m.membership_type()}</Form.Label>
 								<Select.Root
 									type="single"
 									value={$formData.membership_type_id ? String($formData.membership_type_id) : ''}
@@ -290,7 +292,7 @@
 									<Select.Trigger {...props}>
 										{selectedMembershipType
 											? selectedMembershipType.name
-											: 'Select membership type'}
+											: m.select_membership_type()}
 									</Select.Trigger>
 									<Select.Content>
 										<Select.Group>
@@ -301,7 +303,7 @@
 											{/each}
 											{#if membershipTypes.length === 0 && !isLoading}
 												<div class="px-2 py-1.5 text-sm text-muted-foreground">
-													No types available.
+													{m.no_types_available()}
 												</div>
 											{/if}
 										</Select.Group>
@@ -313,22 +315,22 @@
 					</Form.Field>
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
 						<div class="w-1/2 space-y-2">
-							<Label class="font-semibold">Duration (days)</Label>
+							<Label class="font-semibold">{m.duration_days()}</Label>
 							<Input type="text" readonly value={selectedMembershipType?.duration_days ?? ''} />
 						</div>
 						<div class="w-1/2 space-y-2">
-							<Label class="font-semibold">Visit Limit</Label>
+							<Label class="font-semibold">{m.visit_limit()}</Label>
 							<Input type="text" readonly value={selectedMembershipType?.visit_limit ?? ''} />
 						</div>
 
 						<div class="w-1/2 space-y-2">
-							<Label class="font-semibold">Enter by (hours)</Label>
+							<Label class="font-semibold">{m.enter_by_hours()}</Label>
 							<Input type="text" readonly value={selectedMembershipType?.enter_by ?? ''} />
 						</div>
 					</div>
 
 					<div class="w-full space-y-2 pb-2">
-						<Label class="font-semibold">Price</Label>
+						<Label class="font-semibold">{m.price()}</Label>
 						<Input type="text" readonly value={selectedMembershipType?.price ?? ''} />
 					</div>
 
@@ -338,7 +340,7 @@
 						<Form.Field {form} name="membership_start_date" class="w-1/2">
 							<Form.Control>
 								{#snippet children({ props })}
-									<Form.Label class="font-semibold">Start Date</Form.Label>
+									<Form.Label class="font-semibold">{m.start_date()}</Form.Label>
 									<Popover.Root>
 										<Popover.Trigger
 											class={cn(
@@ -349,7 +351,7 @@
 										>
 											{start_date
 												? df.format(start_date.toDate(getLocalTimeZone()))
-												: 'Pick a date'}
+												: m.pick_date()}
 											<CalendarIcon class="ml-auto size-4 opacity-50" />
 										</Popover.Trigger>
 										<Popover.Content class="w-auto p-0" side="top">
@@ -368,7 +370,7 @@
 						<Form.Field {form} name="membership_end_date" class="w-1/2">
 							<Form.Control>
 								{#snippet children({ props })}
-									<Form.Label class="font-semibold">End Date</Form.Label>
+									<Form.Label class="font-semibold">{m.end_date()}</Form.Label>
 									<Popover.Root>
 										<Popover.Trigger
 											class={cn(
@@ -377,7 +379,7 @@
 												!end_date && 'text-muted-foreground'
 											)}
 										>
-											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : 'Pick a date'}
+											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : m.pick_date()}
 											<CalendarIcon class="ml-auto size-4 opacity-50" />
 										</Popover.Trigger>
 										<Popover.Content class="w-auto p-0" side="top">
@@ -392,19 +394,19 @@
 
 					<div class="flex flex-col md:flex-row gap-4 w-full justify-between">
 						<div class="w-1/2 space-y-2 pb-2">
-							<Label class="font-semibold">Status</Label>
+							<Label class="font-semibold">{m.status()}</Label>
 							<Input
 								type="text"
 								class={getSubtleStatusClasses(membership_status || '')}
 								readonly
-								value={membership_status}
+								value={translateStatus(membership_status)}
 							/>
 						</div>
 
 						<Form.Field {form} name="membership_remaining_visits" class="w-1/4">
 							<Form.Control>
 								{#snippet children({ props })}
-									<Form.Label class="font-semibold">Remaining Visits</Form.Label>
+									<Form.Label class="font-semibold">{m.remaining_visits()}</Form.Label>
 									<Input
 										{...props}
 										type="number"
@@ -420,7 +422,7 @@
 						<Form.Field {form} name="membership_suspended" class="w-1/4">
 							<Form.Control>
 								{#snippet children({ props })}
-									<Form.Label class="font-semibold w-full text-center">Suspended</Form.Label>
+									<Form.Label class="font-semibold w-full text-center">{m.membership_suspended()}</Form.Label>
 									<div class="flex items-center h-[30px] w-full justify-center">
 										<Checkbox {...props} bind:checked={$formData.membership_suspended} />
 									</div>
@@ -431,14 +433,14 @@
 					</div>
 
 					<div class="w-full space-y-2 pb-2">
-						<Label class="font-semibold">Purchase Date</Label>
+						<Label class="font-semibold">{m.purchase_date()}</Label>
 						<Input type="text" readonly value={df.format(new Date())} />
 					</div>
 				</div>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
-					<Form.Button type="submit" class="w-full">Save</Form.Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">{m.cancel()}</Button>
+					<Form.Button type="submit" class="w-full">{m.save()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

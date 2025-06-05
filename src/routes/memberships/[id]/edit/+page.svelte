@@ -20,6 +20,7 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { page } from '$app/state';
+	import { m } from '$lib/paraglide/messages';
 
 	let error: string | null = $state(null);
 
@@ -68,14 +69,14 @@
 					description: result.description || ''
 				});
 			} else {
-				toast.error('Membership type not found.');
+				toast.error(m.membership_type_not_found());
 				goto('/memberships');
 				return;
 			}
 		} catch (e: any) {
-			console.error('Error fetching member data:', e);
+			console.error('Error fetching membership data:', e);
 			error = e?.message;
-			toast.error(error || 'Failed to load member data.');
+			toast.error(m.failed_load_membership_data());
 		}
 	}
 
@@ -88,12 +89,13 @@
 					id: Number(membershipTypeId),
 					payload: result.data
 				});
-				toast.success('Membership type updated successfully!');
+				toast.success(m.membership_type_update_success());
 				handleCancel();
 			} else {
-				toast.error('Data is not valid!');
+				toast.error(m['toast_error_invalid_data']());
 			}
 		} catch (error) {
+			// TRANSLATE ERROR
 			console.log(error);
 			const errorMessage = (error as ErrorResponse)?.message || 'Failed to update membership type!';
 			toast.error(errorMessage);
@@ -108,7 +110,7 @@
 
 	onMount(async () => {
 		setHeader({
-			title: 'Update Membership Type',
+			title: m.update_membership_type(),
 			showBackButton: true
 		});
 		setLoading(true);
@@ -120,14 +122,14 @@
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
 	<Card.Root>
 		<Card.Header>
-			<Card.Title class="text-2xl">Update Membership Type</Card.Title>
+			<Card.Title class="text-2xl">{m.update_membership_type()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="name">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Name</Form.Label>
+							<Form.Label class="font-semibold">{m['common.name']()}</Form.Label>
 							<Input {...props} type="text" bind:value={$formData.name} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -137,7 +139,7 @@
 				<Form.Field {form} name="duration_days">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Duration</Form.Label>
+							<Form.Label class="font-semibold">{m['common.duration']()}</Form.Label>
 							<Input {...props} type="number" min="1" bind:value={$formData.duration_days} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -147,7 +149,7 @@
 				<Form.Field {form} name="visit_limit">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Visit limit</Form.Label>
+							<Form.Label class="font-semibold">{m['common.visit_limit']()}</Form.Label>
 							<Input
 								{...props}
 								type="number"
@@ -163,12 +165,12 @@
 				<Form.Field {form} name="enter_by">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Enter by (hour of the day)</Form.Label>
+							<Form.Label class="font-semibold">{m['enter_by_with_desc']()}</Form.Label>
 							<Input
 								{...props}
 								type="number"
-								min="0"
-								max="23"
+								min="1"
+								max="24"
 								placeholder="optional"
 								bind:value={$formData.enter_by}
 							/>
@@ -180,7 +182,7 @@
 				<Form.Field {form} name="price">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Price</Form.Label>
+							<Form.Label class="font-semibold">{m['common.price']()}</Form.Label>
 							<Input {...props} type="number" bind:value={$formData.price} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -190,7 +192,7 @@
 				<Form.Field {form} name="description">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">Description</Form.Label>
+							<Form.Label class="font-semibold">{m['common.description']()}</Form.Label>
 							<Textarea {...props} bind:value={$formData.description} />
 							<Form.FieldErrors />
 						{/snippet}
@@ -198,8 +200,8 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full">Cancel</Button>
-					<Form.Button type="submit" class="w-full">Save</Form.Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
+					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>
