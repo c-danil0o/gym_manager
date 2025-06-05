@@ -48,7 +48,6 @@ WHERE
     ms.status = 'active'
     AND (ms.is_deleted IS NULL OR ms.is_deleted = FALSE)
     AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
-    AND (m.is_deleted IS NULL OR m.is_deleted = FALSE)
 GROUP BY
     mt.name
 ORDER BY

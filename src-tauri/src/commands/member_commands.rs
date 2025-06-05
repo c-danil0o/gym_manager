@@ -130,8 +130,7 @@ LEFT JOIN latest_memberships ms
     ON m.id = ms.member_id AND ms.rn = 1
 LEFT JOIN
     membership_types mt ON ms.membership_type_id = mt.id AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
-WHERE
-    (m.is_deleted IS NULL OR m.is_deleted = FALSE)
+WHERE 1 = 1
 "#;
 
 const COUNT_MEMBERS_QUERY: &str = r#"
@@ -140,7 +139,7 @@ FROM members m
 LEFT JOIN latest_memberships ms ON m.id = ms.member_id AND ms.rn = 1
 LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
     AND (mt.is_deleted IS NULL OR mt.is_deleted = FALSE)
-WHERE (m.is_deleted IS NULL OR m.is_deleted = FALSE)
+WHERE 1 = 1
 "#;
 
 #[tauri::command]
@@ -340,7 +339,7 @@ pub async fn get_member_by_id_with_membership(
       LEFT JOIN
           membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
       WHERE
-          m.is_deleted = FALSE AND m.id = ?
+          m.id = ?
       "#,
       member_id
   ).fetch_optional(&state.db_pool).await;

@@ -72,7 +72,7 @@ pub async fn get_all_memberships_for_member(
         JOIN memberships ms ON m.id = ms.member_id AND ms.is_deleted = FALSE
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
         WHERE
-            m.is_deleted = FALSE AND m.id = ?
+            m.id = ?
         LIMIT ? OFFSET ?
         "#,
         id,
@@ -137,7 +137,7 @@ pub async fn get_membership_by_id(
             ms.purchase_date as membership_purchase_date
         FROM
             memberships ms
-        JOIN members m ON ms.member_id = m.id AND m.is_deleted = FALSE
+        JOIN members m ON ms.member_id = m.id
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
         WHERE
             ms.is_deleted = FALSE AND ms.id = ?
