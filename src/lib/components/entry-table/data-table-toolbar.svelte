@@ -14,12 +14,15 @@
 		table,
 		onSearchChange,
 		onStartDateChange,
-		onEndDateChange
+		onEndDateChange,
+		handleClearLog
 	}: {
 		table: Table<TData>;
 		onSearchChange?: (value: string) => void;
 		onStartDateChange?: (value: DateValue | undefined) => void;
 		onEndDateChange?: (value: DateValue | undefined) => void;
+		handleClearLog?: () => void;
+
 	} = $props();
 
 	let todayDate: DateValue = today(getLocalTimeZone());
@@ -62,5 +65,9 @@
 			</Button>
 		{/if}
 	</div>
+
+	<Button variant="outline" onclick={handleClearLog} class="h-8 px-2 lg:px-3 mr-5 text-xs">
+		{m.clear_entry_log()}
+	</Button>
 	<DataTableViewOptions {table} />
 </div>

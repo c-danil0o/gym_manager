@@ -9,6 +9,10 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
+	import Label from '$lib/components/ui/label/label.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 	onMount(() => {
 		setLoading(true);
 		setHeader({
@@ -26,6 +30,8 @@
 
 	let todayDate: DateValue = today(getLocalTimeZone());
 	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 6 });
+	let deleteDialogOpen = $state(false);
+	let selectedPeriod = $state<string | undefined>(null);
 
 	let loading = $state(false);
 	let currentParams = $state<QueryRequest>({
@@ -91,6 +97,10 @@
 		};
 	}
 
+	function handleClearLog() {
+		deleteDialogOpen = true;
+	}
+
 	function handleSearchChange(searchString: string) {
 		currentParams = {
 			...currentParams,
@@ -151,6 +161,25 @@
 		}
 	}
 
+	async function handleDeleteLogs() {
+		if (!selectedPeriod) {
+			toast.error(m.select_period());
+			return;
+		}
+
+		try {
+			setLoading(true);
+			await invoke('delete_entry_logs', { period: Number.parseInt(selectedPeriod) });
+			deleteDialogOpen = false;
+			selectedPeriod = undefined;
+			fetchTableData(currentParams);
+			toast.success(m.entry_log_delete_success());
+		} catch (e: any) {
+			console.error('Error deleting entry logs:', e);
+			toast.error(m.entry_log_delete_fail());
+		}
+	}
+
 	// Load initial data
 	$effect(() => {
 		fetchTableData(currentParams);
@@ -171,5 +200,43 @@
 		onEndDateChange={handleEndDateChange}
 		{handleDelete}
 		onRowClick={handleViewMember}
+		{handleClearLog}
 	/>
+	<Dialog.Root open={deleteDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{m.entry_log_delete()}</Dialog.Title>
+				<Dialog.Description>
+					{m.entry_log_delete_desc()}
+				</Dialog.Description>
+			</Dialog.Header>
+			<div class="flex items-center justify-center w-full">
+				<Label class="mr-4">{m.save_last()}:</Label>
+				<Select.Root type="single" bind:value={selectedPeriod}>
+					<Select.Trigger class="w-fit">
+						{selectedPeriod
+							? `${selectedPeriod} ${Number(selectedPeriod) > 1 ? m.months() : m.month()}`
+							: m.select_period()}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Group>
+							<Select.Item value="1" label={'1 ' + m.months()}></Select.Item>
+							<Select.Item value="3" label={'3 ' + m.monthsa()}></Select.Item>
+							<Select.Item value="6" label={'6 ' + m.months()}></Select.Item>
+							<Select.Item value="12" label={'12 ' + m.months()}></Select.Item>
+							<Select.Item value="24" label={'24 ' + m.months()}></Select.Item>
+							<Select.Item value="36" label={'36 ' + m.months()}></Select.Item>
+						</Select.Group>
+					</Select.Content>
+				</Select.Root>
+			</div>
+
+			<div class="flex gap-20 justify-around">
+				<Button variant="outline" onclick={() => (deleteDialogOpen = false)} class="w-full"
+					>{m.cancel()}</Button
+				>
+				<Button onclick={handleDeleteLogs} class="w-full">{m.confirm()}</Button>
+			</div>
+		</Dialog.Content>
+	</Dialog.Root>
 </div>

@@ -303,5 +303,13 @@
 	"from_end_date": "Od datuma isteka",
 	"from_now": "Od sada",
 
-	"one_time_entry": "Pojedinačni trening"
+	"one_time_entry": "Pojedinačni trening",
+
+	"clear_entry_log": "Obriši dnevnik",
+	"entry_log_delete": "Izaberi koje podatke želite obrisati",
+	"entry_log_delete_desc": "Ova akcija će nepovratno obrisati izabrane podatke iz dnevnika i analitike!",
+	"save_last": "Sačuvaj poslednjih",
+	"month": "mjesec",
+	"months": "mjeseci",
+	"monthsa": "mjeseca"
 }

@@ -891,6 +891,47 @@ pub async fn get_entry_logs_stats(
 }
 
 #[tauri::command]
+pub async fn delete_entry_logs(
+    period: Option<i64>, // number ofa recent months of logs to keep
+    state: State<'_, AppState>,
+) -> AppResult<()> {
+    let mut conn = state.db_pool.acquire().await?;
+    if period.is_none() {
+        return Err(AppError::Validation("Period must be specified".to_string()));
+    }
+    let period = period.unwrap();
+
+    // If period is 0  delete all logs
+    if period == 0 {
+        sqlx::query!("DELETE FROM entry_logs")
+            .execute(&mut *conn)
+            .await?;
+        return Ok(());
+    }
+    if period < 0 || period > 60 {
+        return Err(AppError::Validation(
+            "Period must be between 0 and 60 months".to_string(),
+        ));
+    }
+
+    // Calculate the date threshold
+    let threshold_date = Utc::now()
+        .naive_utc()
+        .checked_sub_signed(chrono::Duration::days(period * 30))
+        .ok_or(AppError::Validation("Invalid period".to_string()))?;
+
+    // Delete logs older than the threshold date
+    sqlx::query!(
+        "DELETE FROM entry_logs WHERE entry_time < ?",
+        threshold_date
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn delete_entry_log(entry_log_id: i64, state: State<'_, AppState>) -> AppResult<()> {
     let mut conn = state.db_pool.acquire().await?;
 

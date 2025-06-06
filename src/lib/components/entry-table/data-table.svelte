@@ -64,6 +64,7 @@
 		onStartDateChange?: (value: DateValue | undefined) => void;
 		onEndDateChange?: (value: DateValue | undefined) => void;
 		onRowClick?: (memberId: number | null) => void;
+		handleClearLog?: () => void;
 	}
 
 	let {
@@ -77,7 +78,8 @@
 		handleDelete = () => {},
 		onStartDateChange = () => {},
 		onEndDateChange = () => {},
-		onRowClick = () => {}
+		onRowClick = () => {},
+		handleClearLog = () => {}
 	}: Props = $props();
 
 	// Local state for UI only
@@ -557,7 +559,7 @@
 {/snippet}
 
 <div class="space-y-4">
-	<DataTableToolbar {table} {onSearchChange} {onStartDateChange} {onEndDateChange} />
+	<DataTableToolbar {table} {onSearchChange} {onStartDateChange} {onEndDateChange} {handleClearLog} />
 	<div class="rounded-md border shadow bg-card">
 		<Table.Root>
 			<Table.Header>

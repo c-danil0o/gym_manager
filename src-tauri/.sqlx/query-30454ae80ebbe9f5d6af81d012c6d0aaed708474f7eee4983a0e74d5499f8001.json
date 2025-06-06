@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM entry_logs",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "30454ae80ebbe9f5d6af81d012c6d0aaed708474f7eee4983a0e74d5499f8001"
+}

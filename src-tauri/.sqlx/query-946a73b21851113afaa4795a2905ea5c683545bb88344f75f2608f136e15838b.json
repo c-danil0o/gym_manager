@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM entry_logs WHERE entry_time < ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "946a73b21851113afaa4795a2905ea5c683545bb88344f75f2608f136e15838b"
+}

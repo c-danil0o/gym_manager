@@ -108,6 +108,7 @@ fn main() {
             commands::entry_log_commands::get_entry_logs,
             commands::entry_log_commands::delete_entry_log,
             commands::entry_log_commands::get_member_entry_logs,
+            commands::entry_log_commands::delete_entry_logs,
             commands::analytics_commands::get_membership_type_distribution,
             commands::analytics_commands::get_revenue_by_membership_type,
             commands::analytics_commands::get_daily_hourly_visit_count,

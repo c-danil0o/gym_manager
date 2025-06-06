@@ -136,7 +136,7 @@
 	"select_year": "Select Year",
 	"failed_to_fetch_entry_log": "Failed to fetch entry log data",
 	"entry_log_delete_success": "Entry log deleted successfully.",
-	"entry_log_delete_fail": "Failed to entry log.",
+	"entry_log_delete_fail": "Failed to delete entry log.",
 	"failed_to_fetch_members": "Failed to fetch members data",
 	"new_member_add_success": "New member added successfully!",
 	"add_new_member": "Add New Member",
@@ -305,5 +305,14 @@
 
 	"from_end_date": "From end date",
 	"from_now": "From now",
-	"one_time_entry": "One-time Entry"
+	"one_time_entry": "One-time Entry",
+	"clear_entry_log": "Clear Entry Log",
+	"entry_log_delete": "Choose which data to delete",
+	"entry_log_delete_desc": "This action will delete chosen entry log data",
+	"save_last": "Save Last",
+	"month": "month",
+	"months": "months",
+	"monthsa": "months"
+
+
 }
