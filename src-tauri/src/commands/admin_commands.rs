@@ -21,6 +21,7 @@ pub struct LoginResponse {
     success: bool,
     message: String,
     username: Option<String>,
+    role: Option<String>,
 }
 
 #[tauri::command]
@@ -29,7 +30,7 @@ pub async fn login(payload: LoginPayload, state: State<'_, AppState>) -> AppResu
 
     let user = sqlx::query_as!(
         User,
-        "SELECT id as `id!`, username, password_hash, created_at, updated_at FROM users WHERE username = ?",
+        "SELECT id as `id!`, username, role, password_hash, created_at, updated_at FROM users WHERE username = ?",
         payload.username
     )
     .fetch_optional(&state.db_pool)
@@ -43,6 +44,7 @@ pub async fn login(payload: LoginPayload, state: State<'_, AppState>) -> AppResu
                     success: true,
                     message: "Login successful".to_string(),
                     username: Some(u.username),
+                    role: Some(u.role),
                 })
             }
             Ok(false) => {
@@ -51,6 +53,7 @@ pub async fn login(payload: LoginPayload, state: State<'_, AppState>) -> AppResu
                     success: false,
                     message: "Invalid username or password".to_string(),
                     username: None,
+                    role: None,
                 })
             }
             Err(e) => {
@@ -68,6 +71,7 @@ pub async fn login(payload: LoginPayload, state: State<'_, AppState>) -> AppResu
                 success: false,
                 message: "Invalid username or password".to_string(),
                 username: None,
+                role: None,
             })
         }
     }

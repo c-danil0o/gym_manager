@@ -344,5 +344,6 @@
 	"new_password": "New password",
 	"change": "Change",
 	"password_changed_success": "Password changed successfully!",
-	"password_change_fail": "Failed to change password"
+	"password_change_fail": "Failed to change password",
+	"update": "Update"
 }

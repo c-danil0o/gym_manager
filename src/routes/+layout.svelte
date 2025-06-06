@@ -32,6 +32,7 @@
 	import { isLocale, setLocale, getLocale } from '$lib/paraglide/runtime.js';
 	import { listen } from '@tauri-apps/api/event';
 	import { m } from '$lib/paraglide/messages';
+	import { translateRole } from '$lib/utils';
 
 	let { children } = $props();
 	$effect(() => {
@@ -317,8 +318,11 @@
 						</Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
+					<div class="pl-2 text-sm">{$auth.username}</div>
+					<div class='pl-2 text-xs text-muted-foreground'>{translateRole($auth.role)}</div>
+					<DropdownMenu.Separator />
 						<DropdownMenu.Item onclick={() => goto('/settings')}>{m['common.settings']()}</DropdownMenu.Item>
-						<DropdownMenu.Item>Update</DropdownMenu.Item>
+						<DropdownMenu.Item>{m.update()}</DropdownMenu.Item>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item onclick={handleLogout}>{m['common.logout']()}</DropdownMenu.Item>
 					</DropdownMenu.Content>

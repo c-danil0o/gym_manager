@@ -343,5 +343,6 @@
 	"new_password": "Nova loznika",
 	"change": "Promijeni",
 	"password_change_success": "Lozinka uspješno promijenjena!",
-	"password_change_fail": "Neuspješno mijenjanje lozinke!"
+	"password_change_fail": "Neuspješno mijenjanje lozinke!",
+	"update": "Ažuriraj"
 }

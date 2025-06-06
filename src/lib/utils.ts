@@ -3,6 +3,9 @@ import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
 import { m } from './paraglide/messages';
+import { goto } from '$app/navigation';
+import { browser } from '$app/environment';
+import { auth } from './stores/auth';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -112,7 +115,7 @@ export function translateRole(role: string | null): string {
 		case 'admin':
 			return m.admin();
 		default:
-		  return '-';
+			return '-';
 	}
 }
 export function translateErrorCode(errorCode: string, params: any) {
@@ -132,8 +135,8 @@ export function translateErrorCode(errorCode: string, params: any) {
 				? m.error_overlapping_membership({ id: params?.id })
 				: m.error_overlapping_membership({ id: '' });
 
-    case 'error.username_already_exists':
-      return m.username_already_exists();
+		case 'error.username_already_exists':
+			return m.username_already_exists();
 
 		default:
 			return m.error_unknown_error();

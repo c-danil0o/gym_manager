@@ -4,13 +4,15 @@ interface LoginResponse {
 	username: string;
 	message: string;
 	success: boolean;
+	role: string;
 }
 
 function createAuthStore() {
 	const { subscribe, set, update } = writable({
 		isAuthenticated: false,
 		username: null as string | null,
-		error: null as string | null
+		error: null as string | null,
+		role: null as string | null
 	});
 
 	return {
@@ -23,9 +25,14 @@ function createAuthStore() {
 				});
 
 				if (response.success) {
-					set({ isAuthenticated: true, username: response.username, error: null });
+					set({
+						isAuthenticated: true,
+						username: response.username,
+						role: response.role,
+						error: null
+					});
 				} else {
-					set({ isAuthenticated: false, username: null, error: response.message });
+					set({ isAuthenticated: false, username: null, role: null, error: response.message });
 					return false;
 				}
 				return true;
@@ -34,13 +41,14 @@ function createAuthStore() {
 				set({
 					isAuthenticated: false,
 					username: null,
-					error: e.message || 'An unexpected error occurred.'
+					error: e.message || 'An unexpected error occurred.',
+					role: null
 				});
 				return false;
 			}
 		},
 		logout: () => {
-			set({ isAuthenticated: false, username: null, error: null });
+			set({ isAuthenticated: false, role: null, username: null, error: null });
 		},
 		clearError: () => {
 			update((state) => ({ ...state, error: null }));

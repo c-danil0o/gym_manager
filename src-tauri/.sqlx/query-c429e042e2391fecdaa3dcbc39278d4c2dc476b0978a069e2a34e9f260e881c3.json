@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id as `id!`, username, password_hash, created_at, updated_at FROM users WHERE username = ?",
+  "query": "SELECT id as `id!`, username, role, password_hash, created_at, updated_at FROM users WHERE username = ?",
   "describe": {
     "columns": [
       {
@@ -14,18 +14,23 @@
         "type_info": "Text"
       },
       {
-        "name": "password_hash",
+        "name": "role",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "created_at",
+        "name": "password_hash",
         "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
         "type_info": "Datetime"
       },
       {
         "name": "updated_at",
-        "ordinal": 4,
+        "ordinal": 5,
         "type_info": "Datetime"
       }
     ],
@@ -37,8 +42,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "72b549bd5fcbc505c1414b6797967629d4d6e55bb7808ca10d39f51507dc1f7b"
+  "hash": "c429e042e2391fecdaa3dcbc39278d4c2dc476b0978a069e2a34e9f260e881c3"
 }
