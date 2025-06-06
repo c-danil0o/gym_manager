@@ -104,6 +104,17 @@ export function translateStatus(status: string | null): string {
 			return m.inactive();
 	}
 }
+
+export function translateRole(role: string | null): string {
+	switch (role?.toLowerCase()) {
+		case 'user':
+			return m.user();
+		case 'admin':
+			return m.admin();
+		default:
+		  return '-';
+	}
+}
 export function translateErrorCode(errorCode: string, params: any) {
 	switch (errorCode) {
 		case 'error.card_already_exists':
@@ -120,6 +131,9 @@ export function translateErrorCode(errorCode: string, params: any) {
 			return params?.id
 				? m.error_overlapping_membership({ id: params?.id })
 				: m.error_overlapping_membership({ id: '' });
+
+    case 'error.username_already_exists':
+      return m.username_already_exists();
 
 		default:
 			return m.error_unknown_error();

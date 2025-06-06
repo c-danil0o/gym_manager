@@ -84,9 +84,14 @@ fn main() {
     // --- Register Commands and Run ---
     final_builder
         .invoke_handler(tauri::generate_handler![
-            commands::admin_commands::login_admin,
+            commands::admin_commands::login,
             commands::admin_commands::get_app_settings,
             commands::admin_commands::update_app_settings,
+            commands::admin_commands::get_all_users,
+            commands::admin_commands::get_user_by_id,
+            commands::admin_commands::change_user_password,
+            commands::admin_commands::delete_user,
+            commands::admin_commands::save_user,
             commands::membership_type_commands::add_membership_type,
             commands::membership_type_commands::get_all_membership_types,
             commands::membership_type_commands::get_membership_type_by_id,

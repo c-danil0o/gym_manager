@@ -254,3 +254,20 @@ impl Default for EntryLogQueryParams {
         }
     }
 }
+
+#[derive(Debug, serde::Serialize, Clone, FromRow)]
+pub struct UserDisplay {
+    pub id: i64,
+    pub username: Option<String>,
+    pub role: Option<String>,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct UserPayload {
+    pub id: Option<i64>, // Optional ID for updates, required for new users
+    pub username: String,
+    pub role: String,
+    pub password: Option<String>, // Optional for updates, required for new users
+}

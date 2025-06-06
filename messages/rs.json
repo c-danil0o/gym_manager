@@ -49,7 +49,8 @@
 		"visit_plural": "posjeta",
 		"unlimited": "bez ograničenja",
 		"are_you_sure": "Jeste li sigurni?",
-		"visit_limit": "Ograničenje posjeta"
+		"visit_limit": "Ograničenje posjeta",
+		"users": "Korisnici"
 	},
 	"login": {
 		"title": "Prijava",
@@ -311,5 +312,36 @@
 	"save_last": "Sačuvaj poslednjih",
 	"month": "mjesec",
 	"months": "mjeseci",
-	"monthsa": "mjeseca"
+	"monthsa": "mjeseca",
+
+	"no_users_found": "Nema pronađenih korisnika",
+	"no_user_found": "Korisnik nije pronađen",
+	"username": "Korisničko ime",
+	"role": "Uloga",
+	"select_role": "Odaberite ulogu",
+	"toast_failed_fetch_users": "Neuspješno učitavanje korisnika",
+	"users": "Korisnici",
+	"user": "Korisnik",
+	"admin": "Administrator",
+	"add_new_user": "Dodaj novog korisnika",
+	"update_user": "Ažuriraj korisnika",
+	"edit_user": "Uredi korisnika",
+	"user_delete_success": "Korisnik uspješno obrisan.",
+	"user_update_success": "Korisnik uspješno ažuriran!",
+	"user_delete_fail": "Neuspješno brisanje korisnika!",
+	"user_delete_desc": "Ova akcija se ne može poništiti. Ovo će trajno obrisati korisnika iz sistema!",
+	"new_user_add_success": "Novi korisnik uspješno dodan!",
+	"username_required": "Korisničko ime je obavezno",
+	"role_required": "Uloga je obavezna",
+	"password_required": "Lozinka je obavezna",
+	"password_min_length": "Lozinka mora imati najmanje 6 znakova",
+
+	"username_already_exists": "Korisničko ime već postoji!",
+	"toast_error_new_user_fail": "Neuspješno dodavanje novog korisnika",
+	"toast_error_update_user_fail": "Neuspješno ažuriranje korisnika",
+	"change_password": "Promijeni lozinku",
+	"new_password": "Nova loznika",
+	"change": "Promijeni",
+	"password_change_success": "Lozinka uspješno promijenjena!",
+	"password_change_fail": "Neuspješno mijenjanje lozinke!"
 }

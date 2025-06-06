@@ -49,7 +49,8 @@
 		"visit_plural": "visits",
 		"unlimited": "no limit",
 		"are_you_sure": "Are you sure?",
-		"visit_limit": "Visit limit"
+		"visit_limit": "Visit limit",
+		"users": "Users"
 	},
 	"login": {
 		"title": "Login",
@@ -312,7 +313,36 @@
 	"save_last": "Save Last",
 	"month": "month",
 	"months": "months",
-	"monthsa": "months"
+	"monthsa": "months",
 
-
+	"no_users_found": "No users found",
+	"no_user_found": "No user found",
+	"username": "Username",
+	"role": "Role",
+	"select_role": "Select role",
+	"toast_failed_fetch_users": "Failed to load users",
+	"users": "Users",
+	"user": "User",
+	"admin": "Admin",
+	"add_new_user": "Add new user",
+	"update_user": "Update User",
+	"edit_user": "Edit user",
+	"user_delete_success": "User successfully deleted.",
+	"user_delete_fail": "Failed to delete user!",
+	"user_delete_desc": "This action cannot be undone. This will permanently delete the user from the system!",
+	"new_user_add_success": "New user successfully added!",
+	"user_update_success": "User successfully updated!",
+	"username_required": "Username is required",
+	"role_required": "Role is required",
+	"password_required": "Password is required",
+	"password_min_length": "Password must be at least 6 characters long",
+	"invalid_password_format": "Invalid password format, must contain letters and numbers",
+	"username_already_exists": "Username already exists!",
+	"toast_error_new_user_fail": "Failed to add new user",
+	"toast_error_update_user_fail": "Failed to update user",
+	"change_password": "Change password",
+	"new_password": "New password",
+	"change": "Change",
+	"password_changed_success": "Password changed successfully!",
+	"password_change_fail": "Failed to change password"
 }

@@ -18,7 +18,7 @@ function createAuthStore() {
 		login: async (username: string, password: string) => {
 			const { invoke } = await import('@tauri-apps/api/core');
 			try {
-				const response: LoginResponse = await invoke('login_admin', {
+				const response: LoginResponse = await invoke('login', {
 					payload: { username, password }
 				});
 

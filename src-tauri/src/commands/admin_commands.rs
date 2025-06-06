@@ -1,6 +1,7 @@
 use crate::{
     config::{parse_backup_url, save_settings, AppSettings},
-    error::Result as AppResult,
+    dto::{UserDisplay, UserPayload},
+    error::{ErrorCodes, Result as AppResult, TranslatableError},
     models::User,
     state::AppState,
     utils, AppError,
@@ -23,10 +24,7 @@ pub struct LoginResponse {
 }
 
 #[tauri::command]
-pub async fn login_admin(
-    payload: LoginPayload,
-    state: State<'_, AppState>,
-) -> AppResult<LoginResponse> {
+pub async fn login(payload: LoginPayload, state: State<'_, AppState>) -> AppResult<LoginResponse> {
     tracing::info!("Login attempt for user: {}", payload.username);
 
     let user = sqlx::query_as!(
@@ -73,6 +71,168 @@ pub async fn login_admin(
             })
         }
     }
+}
+
+#[tauri::command]
+pub async fn get_all_users(app_state: tauri::State<'_, AppState>) -> AppResult<Vec<UserDisplay>> {
+    let users = sqlx::query_as!(
+        UserDisplay,
+        "SELECT id as `id!`, username, role, created_at, updated_at FROM users"
+    )
+    .fetch_all(&app_state.db_pool)
+    .await?;
+
+    Ok(users)
+}
+
+#[tauri::command]
+pub async fn get_user_by_id(
+    app_state: tauri::State<'_, AppState>,
+    user_id: i64,
+) -> AppResult<Option<UserDisplay>> {
+    let user = sqlx::query_as!(
+        UserDisplay,
+        "SELECT id as `id!`, username, role, created_at, updated_at FROM users WHERE id = ?",
+        user_id
+    )
+    .fetch_optional(&app_state.db_pool)
+    .await?;
+
+    Ok(user)
+}
+
+#[tauri::command]
+pub async fn save_user(
+    app_state: tauri::State<'_, AppState>,
+    payload: UserPayload,
+) -> AppResult<UserDisplay> {
+    if payload.username.is_empty() {
+        return Err(AppError::Validation("Username cannot be empty".to_string()));
+    }
+    if payload.role != "admin" && payload.role != "user" {
+        return Err(AppError::Validation(
+            "Role must be 'admin' or 'user'".to_string(),
+        ));
+    }
+    match payload.id {
+        Some(id) => {
+            // check if username already exists
+            let existing_user = sqlx::query_as!(
+                UserDisplay,
+                "SELECT id as `id!`, username, role, created_at, updated_at FROM users WHERE username = ? AND id != ?",
+                payload.username,
+                id
+            )
+            .fetch_optional(&app_state.db_pool)
+            .await?;
+            if existing_user.is_some() {
+                return Err(AppError::Translatable(TranslatableError::new(
+                    ErrorCodes::USERNAME_ALREADY_EXISTS,
+                    "Username already exists",
+                )));
+            }
+            // update existing user
+            let query = sqlx::query!(
+                "UPDATE users SET username = ?, role = ? WHERE id = ?",
+                payload.username,
+                payload.role,
+                id
+            )
+            .execute(&app_state.db_pool)
+            .await?;
+            if query.rows_affected() == 0 {
+                return Err(AppError::NotFound("User not found".to_string()));
+            }
+            let updated_user = get_user_by_id(app_state, id).await?;
+
+            if let Some(user) = updated_user {
+                Ok(user)
+            } else {
+                Err(AppError::NotFound(
+                    "User not found after update".to_string(),
+                ))
+            }
+        }
+        None => {
+            // Create new user
+            if payload.password.is_none() || payload.password.as_ref().unwrap().is_empty() {
+                return Err(AppError::Validation(
+                    "Password is required for new users".to_string(),
+                ));
+            }
+
+            let hashed_password = utils::hash_password(&payload.password.unwrap_or_default())?;
+            let user = sqlx::query_as!(
+                UserDisplay,
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?) RETURNING id as `id!`, username, role, created_at, updated_at",
+                payload.username,
+                hashed_password,
+                payload.role
+            )
+            .fetch_one(&app_state.db_pool)
+            .await?;
+            Ok(user)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn change_user_password(
+    app_state: tauri::State<'_, AppState>,
+    user_id: i64,
+    new_password: String,
+) -> AppResult<()> {
+    if new_password.is_empty() {
+        return Err(AppError::Validation(
+            "New password cannot be empty".to_string(),
+        ));
+    }
+
+    // Check if user exists
+    let user_exists = sqlx::query!("SELECT COUNT(*) as count FROM users WHERE id = ?", user_id)
+        .fetch_one(&app_state.db_pool)
+        .await?
+        .count
+        > 0;
+
+    if !user_exists {
+        return Err(AppError::NotFound("User not found".to_string()));
+    }
+
+    // Hash the new password
+    let hashed_password = utils::hash_password(&new_password)?;
+
+    // Update the user's password
+    sqlx::query!(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        hashed_password,
+        user_id
+    )
+    .execute(&app_state.db_pool)
+    .await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_user(app_state: tauri::State<'_, AppState>, user_id: i64) -> AppResult<()> {
+    // Check if user exists
+    let user_exists = sqlx::query!("SELECT COUNT(*) as count FROM users WHERE id = ?", user_id)
+        .fetch_one(&app_state.db_pool)
+        .await?
+        .count
+        > 0;
+
+    if !user_exists {
+        return Err(AppError::NotFound("User not found".to_string()));
+    }
+
+    // Delete the user
+    sqlx::query!("DELETE FROM users WHERE id = ?", user_id)
+        .execute(&app_state.db_pool)
+        .await?;
+
+    Ok(())
 }
 
 #[tauri::command]

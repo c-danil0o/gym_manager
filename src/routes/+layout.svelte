@@ -26,7 +26,7 @@
 	import { ModeWatcher, setMode } from 'mode-watcher';
 	import { Firework } from 'svelte-loading-spinners';
 	import LightSwitch from '$lib/components/light-switch/light-switch.svelte';
-	import { User } from 'lucide-svelte';
+	import { ShieldUser, User } from 'lucide-svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { toast } from 'svelte-sonner';
 	import { isLocale, setLocale, getLocale } from '$lib/paraglide/runtime.js';
@@ -175,6 +175,15 @@
 							<ChartLine class="h-4 w-4" />
 							{m['common.analytics']()}
 						</a>
+						<a
+							href="/users"
+							class="{page.url.pathname.startsWith('/users')
+								? 'bg-background/60 border shadow-sm text-foreground'
+								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
+						>
+							<ShieldUser class="h-4 w-4" />
+							{m['common.users']()}
+						</a>
 					</nav>
 				</div>
 				<div class="mt-auto p-4 shrink-0">
@@ -258,6 +267,15 @@
 							>
 								<ChartLine class="h-5 w-5" />
 								{m['common.analytics']()}
+							</a>
+							<a
+								href="/users"
+								class="{page.url.pathname.startsWith('/users')
+									? 'bg-background/60 border shadow-sm text-foreground'
+									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+							>
+								<ShieldUser class="h-5 w-5" />
+								{m['common.users']()}
 							</a>
 						</nav>
 						<div class="mt-auto">

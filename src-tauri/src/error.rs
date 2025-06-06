@@ -98,6 +98,7 @@ impl ErrorCodes {
     pub const MEMBERSHIP_TYPE_NAME_EXISTS: &'static str = "error.membership_type_name_exists";
     pub const CARD_ALREADY_EXISTS: &'static str = "error.card_already_exists";
     pub const OVERLAPPING_MEMBERSHIP: &'static str = "error.overlapping_membership";
+    pub const USERNAME_ALREADY_EXISTS: &'static str = "error.username_already_exists";
 }
 
 impl std::error::Error for TranslatableError {}

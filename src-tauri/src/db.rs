@@ -100,11 +100,12 @@ async fn create_default_admin_user_if_not_exists(pool: &SqlitePool) -> Result<()
 
     sqlx::query!(
         r#"
-        INSERT INTO users (username, password_hash, created_at, updated_at)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (username, password_hash, role, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
         "#,
         default_username,
         password_hash,
+        "admin",
         now,
         now
     )
