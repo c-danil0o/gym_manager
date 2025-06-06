@@ -103,6 +103,7 @@ fn main() {
             commands::membership_commands::delete_membership,
             commands::membership_commands::get_membership_by_id,
             commands::entry_log_commands::process_scan,
+            commands::entry_log_commands::process_scan_single,
             commands::entry_log_commands::get_recent_entry_logs,
             commands::entry_log_commands::get_entry_logs,
             commands::entry_log_commands::delete_entry_log,

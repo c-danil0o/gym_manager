@@ -72,10 +72,12 @@
 		"title": "Skener",
 		"scan_card_title": "ID kartice",
 		"description": "Skeniraj karticu ili unesi ID i pritisni ENTER",
+		"single": "Skeniraj karticu ili unesi ime i prezime i pritisni ENTER",
 		"processing": "Obrađuje se...",
 		"scan_card_button": "Potvrdi",
 		"toast_empty_card_id": "Molimo unesite ili skenirajte ID kartice",
 		"toast_error_fetching_recent": "Greška pri učitavanju nedavnih ulaza",
+		"toast_please_provide_card_id_or_name": "Molimo unesite ID kartice ili ime i prezime člana",
 		"error_unknown": "Došlo je do nepoznate greške",
 		"recent": "Nedavni ulasci",
 		"no_recent": "Nema nedavnih ulazaka",
@@ -98,7 +100,8 @@
 		"after_hours": "Ulazak nije dozvoljen nakon {hour}:00",
 		"already_checked": "Član se već prijavio danas",
 		"error": "Došlo je do greške prilikom obrade kartice",
-		"allowed": "Ulazak odobren"
+		"allowed": "Važeća članarina. Ulazak dozvoljen",
+		"allowed_single": "Ulazak odobren za pojedinačni trening"
 	},
 	"settings_updated": "Podešavanja uspješno ažurirana!",
 	"settings_update_failed": "Neuspješno ažuriranje podešavanja!",
@@ -283,6 +286,7 @@
 	"locale_code": "bs-BA",
 	"locale_currency": "BAM",
 	"allowed": "dozvoljeno",
+	"allowed_single": "dozvoljeno_pojedinačni_trening",
 	"denied_member_not_found": "odbijeno_član_nije_pronađen",
 	"denied_no_membership": "odbijeno_nema_članarine",
 	"denied_no_visits_left": "odbijeno_nema_preostalih_posjeta",
@@ -297,5 +301,7 @@
 	"error": "greška",
 
 	"from_end_date": "Od datuma isteka",
-	"from_now": "Od sada"
+	"from_now": "Od sada",
+
+	"one_time_entry": "Pojedinačni trening"
 }

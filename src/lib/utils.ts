@@ -47,6 +47,8 @@ export function translateEntryMessage(message: string): string {
 			return m['scan_message.error']();
 		case 'allowed':
 			return m['scan_message.allowed']();
+		case 'allowed_single':
+			return m['scan_message.allowed_single']();
 		default:
 			return message; // fallback if key isn't known
 	}
@@ -57,6 +59,8 @@ export function translateAccessStatus(status: string | null): string {
 	switch (status) {
 		case 'allowed':
 			return m.allowed();
+		case 'allowed_single':
+			return m.allowed_single();
 		case 'denied_member_not_found':
 			return m.denied_member_not_found();
 		case 'denied_no_membership':

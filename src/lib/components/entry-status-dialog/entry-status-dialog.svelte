@@ -70,6 +70,7 @@
 	} {
 		switch (status) {
 			case 'Allowed':
+			case 'AllowedSingle':
 				return {
 					icon: CheckCircle2,
 					colorClass: 'text-green-500',

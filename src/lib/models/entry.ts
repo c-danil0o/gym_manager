@@ -1,5 +1,6 @@
 export type EntryStatus =
 	| 'Allowed'
+	| 'AllowedSingle'
 	| 'DeniedNoMembership'
 	| 'DeniedMembershipExpired'
 	| 'DeniedNoVisitsLeft'
@@ -27,6 +28,7 @@ export interface EntryLog {
 	membership_id: number | null;
 	member_name: string | null;
 	membership_type_name: string | null;
+	visits_left: number | null;
 	card_id: string | null;
 	entry_time: string;
 	status: string;

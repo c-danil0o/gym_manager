@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            el.id as 'id!',\n            el.member_id,\n            el.membership_id,\n            (m.first_name || ' ' || m.last_name) as member_name,\n            mt.name as membership_type_name,\n            el.card_id,\n            el.entry_time,\n            el.status,\n            el.notes\n        FROM entry_logs el\n        LEFT JOIN members m ON el.member_id = m.id\n        LEFT JOIN memberships ms ON el.membership_id = ms.id\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id\n        WHERE el.member_id = ?\n        ORDER BY el.entry_time DESC\n        LIMIT ?\n        ",
+  "query": "\n        SELECT\n            el.id as 'id!',\n            el.member_id,\n            el.membership_id,\n            el.member_name,\n            ms.remaining_visits as visits_left,\n            mt.name as membership_type_name,\n            el.card_id,\n            el.entry_time,\n            el.status,\n            el.notes\n        FROM entry_logs el\n        LEFT JOIN memberships ms ON el.membership_id = ms.id\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id\n        WHERE el.member_id = ?\n        ORDER BY el.entry_time DESC\n        LIMIT ?\n        ",
   "describe": {
     "columns": [
       {
@@ -24,28 +24,33 @@
         "type_info": "Text"
       },
       {
-        "name": "membership_type_name",
+        "name": "visits_left",
         "ordinal": 4,
-        "type_info": "Text"
+        "type_info": "Int64"
       },
       {
-        "name": "card_id",
+        "name": "membership_type_name",
         "ordinal": 5,
         "type_info": "Text"
       },
       {
-        "name": "entry_time",
+        "name": "card_id",
         "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "entry_time",
+        "ordinal": 7,
         "type_info": "Datetime"
       },
       {
         "name": "status",
-        "ordinal": 7,
+        "ordinal": 8,
         "type_info": "Text"
       },
       {
         "name": "notes",
-        "ordinal": 8,
+        "ordinal": 9,
         "type_info": "Text"
       }
     ],
@@ -58,11 +63,12 @@
       true,
       true,
       true,
-      false,
+      true,
+      true,
       false,
       false,
       true
     ]
   },
-  "hash": "7221d124a881da5c007dfe99223cea7d369436104df8505c32f03ca6a37dd7f4"
+  "hash": "de9f0d6d5caffbb6a78bf661a533e49c4104c5d757829f3e53e35c216e6bfe91"
 }

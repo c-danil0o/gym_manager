@@ -63,6 +63,7 @@
 		handleDelete?: (logId: number) => void;
 		onStartDateChange?: (value: DateValue | undefined) => void;
 		onEndDateChange?: (value: DateValue | undefined) => void;
+		onRowClick?: (memberId: number | null) => void;
 	}
 
 	let {
@@ -75,7 +76,8 @@
 		onFilterChange,
 		handleDelete = () => {},
 		onStartDateChange = () => {},
-		onEndDateChange = () => {}
+		onEndDateChange = () => {},
+		onRowClick = () => {}
 	}: Props = $props();
 
 	// Local state for UI only
@@ -387,7 +389,11 @@
 	{@const status = statuses.find((status) => status.value === value)}
 	{#if status}
 		<div class="flex items-center">
-			<Badge variant={status.value === 'allowed' ? 'default' : 'destructive'}>
+			<Badge
+				variant={status.value === 'allowed' || status.value === 'allowed_single'
+					? 'default'
+					: 'destructive'}
+			>
 				{translateAccessStatus(status.label)}
 			</Badge>
 		</div>
@@ -438,7 +444,7 @@
 {#snippet Pagination({ table }: { table: TableType<EntryLog> })}
 	<div class="flex items-center justify-between px-2">
 		<div class="text-muted-foreground flex-1 text-sm">
-			{m.showing_rows_table({row: serverData?.data?.length || 0, total: serverData?.total || 0 })}
+			{m.showing_rows_table({ row: serverData?.data?.length || 0, total: serverData?.total || 0 })}
 		</div>
 		<div class="flex items-center space-x-6 lg:space-x-8">
 			<div class="flex items-center space-x-2">
@@ -466,7 +472,10 @@
 			<div
 				class="flex w-[100px] items-center justify-center text-sm font-medium text-muted-foreground"
 			>
-				{m.page_of_total({page: pagination?.pageIndex + 1 || 1, total: serverData.total_pages || 1})}
+				{m.page_of_total({
+					page: pagination?.pageIndex + 1 || 1,
+					total: serverData.total_pages || 1
+				})}
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button
@@ -579,11 +588,16 @@
 					</Table.Row>
 				{:else if serverData.data?.length === 0}
 					<Table.Row>
-						<Table.Cell colspan={columns.length} class="h-24 text-center">{m.no_results()}.</Table.Cell>
+						<Table.Cell colspan={columns.length} class="h-24 text-center"
+							>{m.no_results()}.</Table.Cell
+						>
 					</Table.Row>
 				{:else}
 					{#each table.getRowModel().rows as row (row.id)}
-						<Table.Row data-state={row.getIsSelected() && 'selected'}>
+						<Table.Row
+							data-state={row.getIsSelected() && 'selected'}
+							onclick={() => onRowClick(row.original.member_id || null)}
+						>
 							{#each row.getVisibleCells() as cell (cell.id)}
 								<Table.Cell>
 									<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />

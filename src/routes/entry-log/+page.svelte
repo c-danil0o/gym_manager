@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { EntryLogDataTable } from '$lib/components/entry-table';
 	import type { EntryLog } from '$lib/models/entry';
 	import type { FilterField, QueryRequest, QueryResponse } from '$lib/models/table-state';
@@ -61,11 +62,15 @@
 			tableData = response;
 		} catch (error) {
 			console.error('Failed to fetch entry log data:', error);
-			toast.error(m.failed_to_fetch_entry_log())
+			toast.error(m.failed_to_fetch_entry_log());
 		} finally {
 			loading = false;
 			setLoading(false);
 		}
+	}
+	function handleViewMember(id: number | null) {
+		if (!id) return;
+		goto(`/members/${id}`);
 	}
 
 	// Event handlers
@@ -165,5 +170,6 @@
 		onStartDateChange={handleStartDateChange}
 		onEndDateChange={handleEndDateChange}
 		{handleDelete}
+		onRowClick={handleViewMember}
 	/>
 </div>

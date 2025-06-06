@@ -72,10 +72,12 @@
 		"title": "Scanner",
 		"scan_card_title": "Card ID",
 		"description": "Scan a member's card or enter ID and press ENTER",
+		"single": "Scan a member's card or enter data and press ENTER",
 		"processing": "Processing...",
 		"scan_card_button": "Submit",
 		"toast_empty_card_id": "Please enter or scan Card ID",
 		"toast_error_fetching_recent": "Error fetching recent entries",
+		"toast_please_provide_card_id_or_name": "Please provide Card ID or Member name",
 		"error_unknown": "An unknown error occurred",
 		"recent": "Recent entries",
 		"no_recent": "No recent entries",
@@ -98,7 +100,8 @@
 		"after_hours": "Entry now alowed after {hour}:00",
 		"already_checked": "Member has already checked in today",
 		"error": "An error occurred while processing the card",
-		"allowed": "Entry granted"
+		"allowed": "Entry granted",
+		"allowed_single": "Entry granted(one-time entry)"
 	},
 	"settings_updated": "Settings updated successfully!",
 	"settings_update_failed": "Failed update settings!",
@@ -286,6 +289,7 @@
 	"locale_currency": "USD",
 
 	"allowed": "allowed",
+	"allowed_single": "allowed_single",
 	"denied_member_not_found": "denied_member_not_found",
 	"denied_no_membership": "denied_no_membership",
 	"denied_no_visits_left": "denied_no_visits_left",
@@ -300,5 +304,6 @@
 	"error": "error",
 
 	"from_end_date": "From end date",
-	"from_now": "From now"
+	"from_now": "From now",
+	"one_time_entry": "One-time Entry"
 }

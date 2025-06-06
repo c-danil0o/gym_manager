@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            el.id as 'id!',\n            el.member_id,\n            el.membership_id,\n            CASE\n                WHEN m.id IS NOT NULL THEN (m.first_name || ' ' || m.last_name)\n                ELSE NULL\n            END as member_name,\n            mt.name as membership_type_name,\n            el.card_id,\n            el.entry_time,\n            el.status,\n            el.notes\n        FROM entry_logs el\n        LEFT JOIN members m ON el.member_id = m.id\n        LEFT JOIN memberships ms ON el.membership_id = ms.id\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id\n        ORDER BY el.entry_time DESC\n        LIMIT ?\n        ",
+  "query": "\n        SELECT\n            el.id as 'id!',\n            el.member_id,\n            el.membership_id,\n            el.member_name,\n            mt.name as membership_type_name,\n            ms.remaining_visits as visits_left,\n            el.card_id,\n            el.entry_time,\n            el.status,\n            el.notes\n        FROM entry_logs el\n        LEFT JOIN memberships ms ON el.membership_id = ms.id\n        LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id\n        ORDER BY el.entry_time DESC\n        LIMIT ?\n        ",
   "describe": {
     "columns": [
       {
@@ -29,23 +29,28 @@
         "type_info": "Text"
       },
       {
-        "name": "card_id",
+        "name": "visits_left",
         "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "card_id",
+        "ordinal": 6,
         "type_info": "Text"
       },
       {
         "name": "entry_time",
-        "ordinal": 6,
+        "ordinal": 7,
         "type_info": "Datetime"
       },
       {
         "name": "status",
-        "ordinal": 7,
+        "ordinal": 8,
         "type_info": "Text"
       },
       {
         "name": "notes",
-        "ordinal": 8,
+        "ordinal": 9,
         "type_info": "Text"
       }
     ],
@@ -58,11 +63,12 @@
       true,
       true,
       true,
-      false,
+      true,
+      true,
       false,
       false,
       true
     ]
   },
-  "hash": "a713524a3794024ebbc09fc584a62f7c6596204d3791717af95d55900f1afa64"
+  "hash": "6b23662e80c7485b46e53b0d8fc072bc6abd21ddda0d2b958cc0a0ef6d390c95"
 }

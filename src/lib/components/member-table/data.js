@@ -1,22 +1,24 @@
+import { m } from "$lib/paraglide/messages";
+
 export const statuses = [
 	{
 		value: "inactive",
-		label: "Inactive",
+		label: m.inactive(),
 	},
 	{
 		value: "expired",
-		label: "Expired",
+		label: m.expired(),
 	},
 	{
 		value: "active",
-		label: "Active",
+		label: m.active(),
 	},
 	{
 		value: "pending",
-		label: "Pending",
+		label: m.pending(),
 	},
 	{
 		value: "suspended",
-		label: "Suspended",
+		label: m.suspended(),
 	},
 ];

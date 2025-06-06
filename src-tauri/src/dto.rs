@@ -176,6 +176,7 @@ pub struct MembershipInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum EntryStatus {
     Allowed,
+    AllowedSingle,
     DeniedNoMembership,
     DeniedMembershipExpired,
     DeniedNoVisitsLeft,
@@ -204,6 +205,13 @@ pub struct ScanPayload {
     pub card_id: String,
 }
 
+#[derive(Deserialize)]
+pub struct ScanPayloadSingle {
+    pub card_id: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+}
+
 #[derive(Debug, serde::Deserialize)]
 pub struct EntryLogQueryParams {
     pub date_from: Option<NaiveDate>, // Start date (inclusive)
@@ -224,6 +232,7 @@ pub struct EntryLogDisplay {
     pub member_id: Option<i64>,
     pub membership_id: Option<i64>,
     pub member_name: Option<String>,
+    pub visits_left: Option<i64>,
     pub membership_type_name: Option<String>,
     pub card_id: Option<String>,
     pub entry_time: NaiveDateTime,

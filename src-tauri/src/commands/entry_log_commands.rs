@@ -1,6 +1,7 @@
 use crate::{
     dto::{
-        EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse, ScanPayload, ScanProcessingResult
+        EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse,
+        ScanPayload, ScanPayloadSingle, ScanProcessingResult,
     },
     error::Result as AppResult,
     models::Member,
@@ -72,15 +73,24 @@ async fn deny_entry(
     status: EntryStatus,
     log_status: &str,
     message: &str,
-    member_name: Option<String>,
+    member_name: Option<&String>,
     membership: Option<&MembershipInfo>,
 ) -> AppResult<ScanProcessingResult> {
-    log_entry_attempt(conn, member_id, membership_id, card_id, log_status, message).await?;
+    log_entry_attempt(
+        conn,
+        member_id,
+        member_name.as_deref(),
+        membership_id,
+        card_id,
+        log_status,
+        message,
+    )
+    .await?;
 
     Ok(ScanProcessingResult {
         status,
         message: message.to_string(),
-        member_name,
+        member_name: member_name.cloned(),
         card_id: Some(card_id.to_string()),
         membership_type_name: membership.and_then(|m| m.membership_type_name.clone()),
         membership_end_date: membership.and_then(|m| m.membership_end_date),
@@ -191,7 +201,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedNoMembership,
                 "denied_no_membership",
                 "no_membership",
-                Some(member_full_name),
+                Some(&member_full_name),
                 None,
             )
             .await;
@@ -214,7 +224,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedNoMembership,
                 "denied_no_membership",
                 "invalid_membership",
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -246,10 +256,7 @@ pub async fn process_scan(
                     (
                         EntryStatus::DeniedMembershipExpired,
                         "denied_membership_expired",
-                        format!(
-                            "expired_on|{:?}",
-                            membership.membership_end_date
-                        ),
+                        format!("expired_on|{:?}", membership.membership_end_date),
                     )
                 };
             return deny_entry(
@@ -260,7 +267,7 @@ pub async fn process_scan(
                 status,
                 log_status,
                 message.as_str(),
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -274,7 +281,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedMembershipNotActiveYet,
                 "denied_membership_not_active_yet",
                 &format!("pending|{:?}.", start_date),
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -288,7 +295,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedNoMembership,
                 "denied_membership_inactive",
                 "incative",
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -302,7 +309,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedMembershipSuspended,
                 "denied_membership_suspended",
                 "suspended",
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -319,7 +326,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedNoMembership,
                 "invalid_status",
                 &format!("Membership is currently {:?}.", membership_status),
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -347,7 +354,7 @@ pub async fn process_scan(
                 EntryStatus::DeniedAfterHours,
                 "denied_after_hours",
                 &format!("after_hours|{}", enter_by_hours),
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -374,7 +381,7 @@ pub async fn process_scan(
             EntryStatus::DeniedAlreadyCheckedIn,
             "denied_already_checked_in",
             "Member has already checked in today.",
-            Some(member_full_name),
+            Some(&member_full_name),
             Some(&membership),
         )
         .await;
@@ -412,7 +419,7 @@ pub async fn process_scan(
                 EntryStatus::Error,
                 "error",
                 "error",
-                Some(member_full_name),
+                Some(&member_full_name),
                 Some(&membership),
             )
             .await;
@@ -423,10 +430,11 @@ pub async fn process_scan(
     log_entry_attempt(
         &mut conn,
         Some(member.id),
+        Some(&member_full_name),
         Some(membership_id),
         scanned_card_id,
         "allowed",
-        "Entry granted.",
+        "allowed",
     )
     .await?;
 
@@ -441,10 +449,108 @@ pub async fn process_scan(
     })
 }
 
+#[tauri::command]
+pub async fn process_scan_single(
+    payload: ScanPayloadSingle,
+    state: State<'_, AppState>,
+) -> AppResult<ScanProcessingResult> {
+    let mut conn = state.db_pool.acquire().await?;
+    match payload.card_id {
+        Some(card_id) if !card_id.is_empty() => {
+            let member = match sqlx::query_as!(
+              Member,
+              "SELECT * FROM members WHERE (card_id = ?1 OR short_card_id = ?1) AND is_deleted = FALSE",
+              card_id
+          )
+          .fetch_optional(&mut *conn)
+          .await?
+          {
+              Some(member) => member,
+              None => {
+                  return deny_entry(
+                      &mut conn,
+                      None,
+                      None,
+                      card_id.as_str(),
+                      EntryStatus::DeniedMemberNotFound,
+                      "denied_member_not_found",
+                      "member_not_found",
+                      None,
+                      None,
+                  )
+                  .await;
+              }
+          };
+            let card_id = member.card_id.as_deref().unwrap_or(&card_id);
+            let member_full_name = format!("{} {}", member.first_name, member.last_name);
+
+            log_entry_attempt(
+                &mut conn,
+                Some(member.id),
+                Some(&member_full_name),
+                None,
+                card_id,
+                "allowed_single",
+                "allowed_single",
+            )
+            .await?;
+
+            Ok(ScanProcessingResult {
+                status: EntryStatus::AllowedSingle,
+                message: "allowed_single".to_string(),
+                member_name: Some(member_full_name),
+                card_id: Some(card_id.to_string()),
+                membership_type_name: None,
+                membership_end_date: None,
+                remaining_visits: None,
+            })
+        }
+
+        _ => {
+            if payload.first_name.is_none() && payload.last_name.is_none() {
+                return Ok(ScanProcessingResult {
+                    status: EntryStatus::Error,
+                    message: "card_invalid".to_string(),
+                    member_name: None,
+                    card_id: None,
+                    membership_type_name: None,
+                    membership_end_date: None,
+                    remaining_visits: None,
+                });
+            }
+            let member_full_name = format!(
+                "{} {}",
+                payload.first_name.as_deref().unwrap_or(""),
+                payload.last_name.as_deref().unwrap_or("")
+            );
+            log_entry_attempt(
+                &mut conn,
+                None,
+                Some(&member_full_name),
+                None,
+                "",
+                "allowed_single",
+                "allowed_single",
+            )
+            .await?;
+            Ok(ScanProcessingResult {
+                status: EntryStatus::AllowedSingle,
+                message: "allowed_single".to_string(),
+                member_name: Some(member_full_name),
+                card_id: None,
+                membership_type_name: None,
+                membership_end_date: None,
+                remaining_visits: None,
+            })
+        }
+    }
+}
+
 // Helper to log entry attempts
 async fn log_entry_attempt(
     conn: &mut SqliteConnection,
     member_id: Option<i64>,
+    member_name: Option<&String>,
     membership_id: Option<i64>,
     card_id_scanned: &str,
     status: &str,
@@ -453,11 +559,12 @@ async fn log_entry_attempt(
     let now = Utc::now().naive_utc();
     sqlx::query!(
         r#"
-        INSERT INTO entry_logs (member_id, membership_id, card_id, entry_time, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO entry_logs (member_id, membership_id, member_name, card_id, entry_time, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
         member_id,
         membership_id,
+        member_name,
         card_id_scanned,
         now,
         status,
@@ -480,7 +587,10 @@ fn build_where_clause_and_params(params: &EntryLogQueryParams) -> (String, Vec<S
 
     if let Some(term) = &search_term {
         let like_pattern = format!("'%{}%'", term);
-        let search_query = format!("(LOWER(m.first_name) LIKE {val} OR LOWER(m.last_name) LIKE {val} OR LOWER(m.first_name || ' ' || m.last_name) LIKE {val}) OR m.card_id LIKE {val}", val = like_pattern);
+        let search_query = format!(
+            "LOWER(el.member_name) LIKE {val} OR el.card_id LIKE {val}",
+            val = like_pattern
+        );
         where_conditions.push(search_query);
     }
 
@@ -537,7 +647,7 @@ fn build_order_clause(params: &EntryLogQueryParams) -> String {
     let valid_order_fields = ["entry_time", "member_name", "status", "card_id"];
     let order_field = if valid_order_fields.contains(&order_by) {
         match order_by {
-            "member_name" => "(m.first_name || ' ' || m.last_name)",
+            "member_name" => "el.member_name",
             "entry_time" => "el.entry_time",
             "status" => "el.status",
             "card_id" => "el.card_id",
@@ -565,7 +675,6 @@ async fn get_total_count(
         r#"
         SELECT COUNT(*) as total
         FROM entry_logs el
-        LEFT JOIN members m ON el.member_id = m.id
         LEFT JOIN memberships ms ON el.membership_id = ms.id
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
         WHERE {}
@@ -608,17 +717,14 @@ pub async fn get_entry_logs(
             el.id,
             el.member_id,
             el.membership_id,
-            CASE
-                WHEN m.id IS NOT NULL THEN (m.first_name || ' ' || m.last_name)
-                ELSE NULL
-            END as member_name,
+            el.member_name,
             mt.name as membership_type_name,
+            ms.remaining_visits as visits_left,
             el.card_id,
             el.entry_time,
             el.status,
             el.notes
         FROM entry_logs el
-        LEFT JOIN members m ON el.member_id = m.id
         LEFT JOIN memberships ms ON el.membership_id = ms.id
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
         WHERE {}
@@ -662,17 +768,14 @@ pub async fn get_recent_entry_logs(
             el.id as 'id!',
             el.member_id,
             el.membership_id,
-            CASE
-                WHEN m.id IS NOT NULL THEN (m.first_name || ' ' || m.last_name)
-                ELSE NULL
-            END as member_name,
+            el.member_name,
             mt.name as membership_type_name,
+            ms.remaining_visits as visits_left,
             el.card_id,
             el.entry_time,
             el.status,
             el.notes
         FROM entry_logs el
-        LEFT JOIN members m ON el.member_id = m.id
         LEFT JOIN memberships ms ON el.membership_id = ms.id
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
         ORDER BY el.entry_time DESC
@@ -703,14 +806,14 @@ pub async fn get_member_entry_logs(
             el.id as 'id!',
             el.member_id,
             el.membership_id,
-            (m.first_name || ' ' || m.last_name) as member_name,
+            el.member_name,
+            ms.remaining_visits as visits_left,
             mt.name as membership_type_name,
             el.card_id,
             el.entry_time,
             el.status,
             el.notes
         FROM entry_logs el
-        LEFT JOIN members m ON el.member_id = m.id
         LEFT JOIN memberships ms ON el.membership_id = ms.id
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id
         WHERE el.member_id = ?
@@ -788,18 +891,12 @@ pub async fn get_entry_logs_stats(
 }
 
 #[tauri::command]
-pub async fn delete_entry_log(
-    entry_log_id: i64,
-    state: State<'_, AppState>,
-) -> AppResult<()> {
+pub async fn delete_entry_log(entry_log_id: i64, state: State<'_, AppState>) -> AppResult<()> {
     let mut conn = state.db_pool.acquire().await?;
 
-    sqlx::query!(
-        "DELETE FROM entry_logs WHERE id = ?",
-        entry_log_id
-    )
-    .execute(&mut *conn)
-    .await?;
+    sqlx::query!("DELETE FROM entry_logs WHERE id = ?", entry_log_id)
+        .execute(&mut *conn)
+        .await?;
 
     Ok(())
 }
