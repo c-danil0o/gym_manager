@@ -6,11 +6,10 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import DateField from '$lib/components/date-field/date-field.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import { parseDate, type DateValue } from '@internationalized/date';
+	import { parseDate, today, type DateValue, getLocalTimeZone } from '@internationalized/date';
 	import { onMount } from 'svelte';
 	import { editMemberSchema, type EditMemberTypeSchema } from '$lib/schemas/edit_member_schema';
 	import type { Member } from '$lib/models/member';
@@ -19,6 +18,7 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
+	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -109,6 +109,7 @@
 	}
 
 	let date_of_birth = $state<DateValue | undefined>();
+	const todayDate = today(getLocalTimeZone());
 
 	$effect(() => {
 		date_of_birth = $formData.date_of_birth ? parseDate($formData.date_of_birth) : undefined;
@@ -183,11 +184,12 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-								<DateField
+								<DatePicker
 									{...props}
 									value={date_of_birth}
 									onValueChange={handleDobChange}
 									locale={locale}
+									maxValue={todayDate}
 								/>
 								<Form.FieldErrors />
 								<Form.Description class="text-xs">{m.optional()}</Form.Description>

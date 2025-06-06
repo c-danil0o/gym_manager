@@ -6,9 +6,6 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import * as Card from '$lib/components/ui/card';
@@ -24,8 +21,7 @@
 	import type { MembershipType } from '$lib/models/membership_type';
 	import { onMount } from 'svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { CalendarIcon } from 'lucide-svelte';
-	import { cn, getSubtleStatusClasses, translateErrorCode, translateStatus } from '$lib/utils';
+	import { getSubtleStatusClasses, translateErrorCode, translateStatus } from '$lib/utils';
 	import { membershipSchema, type MembershipSchemaType } from '$lib/schemas/membership_schema';
 	import type { Member } from '$lib/models/member';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
@@ -34,6 +30,7 @@
 	import { preventDefault } from '$lib';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
+	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -357,27 +354,14 @@
 							<Form.Control>
 								{#snippet children({ props })}
 									<Form.Label class="font-semibold">{m.start_date()}</Form.Label>
-									<Popover.Root>
-										<Popover.Trigger
-											class={cn(
-												buttonVariants({ variant: 'outline' }),
-												'w-full justify-start pl-4 text-left font-normal',
-												!start_date && 'text-muted-foreground'
-											)}
-										>
-											{start_date
-												? df.format(start_date.toDate(getLocalTimeZone()))
-												: m.pick_date()}
-											<CalendarIcon class="ml-auto size-4 opacity-50" />
-										</Popover.Trigger>
-										<Popover.Content class="w-auto p-0" side="top">
-											<Calendar
-												type="single"
-												value={start_date}
-												onValueChange={onChangeStartDate}
-											/>
-										</Popover.Content>
-									</Popover.Root>
+									<DatePicker
+										{...props}
+										value={start_date}
+										height="h-9 py-1.5"
+										onValueChange={onChangeStartDate}
+										{locale}
+										minValue={today(getLocalTimeZone())}
+									/>
 									<Form.FieldErrors />
 								{/snippet}
 							</Form.Control>
@@ -387,21 +371,14 @@
 							<Form.Control>
 								{#snippet children({ props })}
 									<Form.Label class="font-semibold">{m.end_date()}</Form.Label>
-									<Popover.Root>
-										<Popover.Trigger
-											class={cn(
-												buttonVariants({ variant: 'outline' }),
-												'w-full justify-start pl-4 text-left font-normal',
-												!end_date && 'text-muted-foreground'
-											)}
-										>
-											{end_date ? df.format(end_date.toDate(getLocalTimeZone())) : m.pick_date()}
-											<CalendarIcon class="ml-auto size-4 opacity-50" />
-										</Popover.Trigger>
-										<Popover.Content class="w-auto p-0" side="top">
-											<Calendar type="single" value={end_date} onValueChange={onChangeEndDate} />
-										</Popover.Content>
-									</Popover.Root>
+									<DatePicker
+										{...props}
+										value={end_date}
+										onValueChange={onChangeEndDate}
+										height="h-9 py-1.5"
+										{locale}
+										minValue={start_date?.add({ days: selectedMembershipType?.duration_days || 0 })}
+									/>
 									<Form.FieldErrors />
 								{/snippet}
 							</Form.Control>

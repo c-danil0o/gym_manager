@@ -7,7 +7,6 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import DateField from '$lib/components/date-field/date-field.svelte';
 
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -19,6 +18,7 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
+	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
@@ -157,7 +157,8 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-							<DateField {...props} {placeholder} onValueChange={handleDateChange} locale={locale} />
+							<DatePicker {...props} {placeholder} onValueChange={handleDateChange} {locale} weekStartsOn={1} />
+
 							<Form.FieldErrors />
 							<Form.Description class="text-xs">{m.optional()}</Form.Description>
 						{/snippet}
