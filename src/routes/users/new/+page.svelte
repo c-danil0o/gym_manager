@@ -17,6 +17,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
 	import { newUserSchema, type NewUserSchemaType } from '$lib/schemas/user_schema';
+	import { requireRole } from '../../guards';
 
 	const initialValues: z.infer<NewUserSchemaType> = {
 		username: '',
@@ -69,6 +70,7 @@
 		await goto('/users');
 	}
 	onMount(() => {
+		requireRole('admin');
 		setHeader({
 			title: m.add_new_user(),
 			showBackButton: true
@@ -101,7 +103,7 @@
 								<Select.Trigger {...props}>
 									{$formData?.role
 										? roles.find((role) => role.value === $formData.role)?.label
-										: m.select_role() }
+										: m.select_role()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>

@@ -16,6 +16,7 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { enabledForRole } from '../guards';
 
 	let membershipTypes: MembershipType[] = [];
 	let filteredMembershipTypes: MembershipType[] = [];
@@ -85,7 +86,7 @@
 			}}
 			class="h-8 w-[150px] lg:w-[250px]"
 		/>
-		<Button onclick={handleAddNew} class="h-8 text-xs">
+		<Button onclick={handleAddNew} class="h-8 text-xs" disabled={enabledForRole('admin')}>
 			<PlusCircle class="mr-2 h-4 w-4" />
 			{m['common.add']()}
 		</Button>
@@ -140,21 +141,31 @@
 									? `${type.visit_limit} ${type.visit_limit === 1 ? m['common.visit_single']() : m['common.visit_plural']()}`
 									: m['common.unlimited']()}</Table.Cell
 							>
-							<Table.Cell>{type.enter_by ? `${type.enter_by}:00 h` : m['common.unlimited']()}</Table.Cell>
+							<Table.Cell
+								>{type.enter_by ? `${type.enter_by}:00 h` : m['common.unlimited']()}</Table.Cell
+							>
 							<Table.Cell>{type.description ? `${type.description}` : ''}</Table.Cell>
-							<Table.Cell class="text-right">{type.price.toFixed(2)} {m.locale_currency()}</Table.Cell>
+							<Table.Cell class="text-right"
+								>{type.price.toFixed(2)} {m.locale_currency()}</Table.Cell
+							>
 							<Table.Cell class="text-right pr-8 space-x-2">
 								<Button
 									onclick={() => handleEdit(type.id)}
 									variant="outline"
 									size="icon"
+									disabled={enabledForRole('admin')}
 									title={m['common.edit']()}
 								>
 									<Pencil class="h-4 w-4" />
 								</Button>
 								<AlertDialog.Root>
 									<AlertDialog.Trigger>
-										<Button variant="destructive" size="icon" title={m['common.delete']()}>
+										<Button
+											variant="destructive"
+											size="icon"
+											disabled={enabledForRole('admin')}
+											title={m['common.delete']()}
+										>
 											<Trash2 class="h-4 w-4" />
 										</Button>
 									</AlertDialog.Trigger>

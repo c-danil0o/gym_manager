@@ -158,6 +158,7 @@
 							<Package class="h-4 w-4" />
 							{m['common.memberships']()}
 						</a>
+						{#if $auth.role === 'admin'}
 						<a
 							href="/entry-log"
 							class="{page.url.pathname.startsWith('/entry-log')
@@ -185,6 +186,7 @@
 							<ShieldUser class="h-4 w-4" />
 							{m['common.users']()}
 						</a>
+						{/if}
 					</nav>
 				</div>
 				<div class="mt-auto p-4 shrink-0">
@@ -251,6 +253,7 @@
 								<Package class="h-5 w-5" />
 								{m['common.memberships']()}
 							</a>
+							{#if $auth.role === 'admin'}
 							<a
 								href="/entry-log"
 								class="{page.url.pathname.startsWith('/members')
@@ -278,6 +281,7 @@
 								<ShieldUser class="h-5 w-5" />
 								{m['common.users']()}
 							</a>
+							{/if}
 						</nav>
 						<div class="mt-auto">
 							<Card.Root>
@@ -321,9 +325,11 @@
 					<div class="pl-2 text-sm">{$auth.username}</div>
 					<div class='pl-2 text-xs text-muted-foreground'>{translateRole($auth.role)}</div>
 					<DropdownMenu.Separator />
+					  {#if $auth.role === 'admin'}
 						<DropdownMenu.Item onclick={() => goto('/settings')}>{m['common.settings']()}</DropdownMenu.Item>
 						<DropdownMenu.Item>{m.update()}</DropdownMenu.Item>
 						<DropdownMenu.Separator />
+						{/if}
 						<DropdownMenu.Item onclick={handleLogout}>{m['common.logout']()}</DropdownMenu.Item>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>

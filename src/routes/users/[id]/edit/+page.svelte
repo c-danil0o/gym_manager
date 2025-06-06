@@ -9,7 +9,6 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Select from '$lib/components/ui/select';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
@@ -25,6 +24,7 @@
 	import type { User } from '$lib/models/user';
 	import { page } from '$app/state';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
+	import { requireRole } from '../../../guards';
 
 	const userId = $derived(page.params.id);
 	const initialValues: z.infer<UpdateUserSchemaType> = {
@@ -135,6 +135,7 @@
 		await goto('/users');
 	}
 	onMount(() => {
+		requireRole('admin');
 		setLoading(true);
 		setHeader({
 			title: m.update_user(),

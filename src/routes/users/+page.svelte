@@ -17,6 +17,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import type { User } from '$lib/models/user';
 	import { translateRole } from '$lib/utils';
+	import { requireRole } from '../guards';
 
 	let users: User[] = [];
 	let filteredUsers: User[] = [];
@@ -36,6 +37,7 @@
 	}
 
 	onMount(async () => {
+		requireRole('admin');
 		setHeader({
 			title: m['common.users'](),
 			showBackButton: false
@@ -126,7 +128,7 @@
 				<Table.Body>
 					{#each filteredUsers as type (type.id)}
 						<Table.Row>
-						<Table.Cell class="font-medium">{type.id}</Table.Cell>
+							<Table.Cell class="font-medium">{type.id}</Table.Cell>
 							<Table.Cell class="font-medium">{type.username}</Table.Cell>
 							<Table.Cell class="font-medium">{translateRole(type.role)}</Table.Cell>
 							<Table.Cell class="text-right pr-8 space-x-2">

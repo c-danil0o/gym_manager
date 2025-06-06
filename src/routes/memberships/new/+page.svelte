@@ -20,6 +20,7 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
+	import { requireRole } from '../../guards';
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
@@ -71,6 +72,7 @@
 		await goto('/memberships');
 	}
 	onMount(() => {
+		requireRole('admin');
 		setHeader({
 			title: m.new_membership_type(),
 			showBackButton: true
@@ -100,12 +102,7 @@
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m['common.duration']()}</Form.Label>
 							<div class="relative flex">
-								<Input
-									{...props}
-									type="text"
-									bind:value={$formData.duration_days}
-									class="pr-15"
-								/>
+								<Input {...props} type="text" bind:value={$formData.duration_days} class="pr-15" />
 								<span
 									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
 								>
@@ -121,11 +118,7 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m['common.visit_limit']()}</Form.Label>
-							<Input
-								{...props}
-								type="text"
-								bind:value={$formData.visit_limit}
-							/>
+							<Input {...props} type="text" bind:value={$formData.visit_limit} />
 							<Form.Description class="text-sm text-muted-foreground">
 								{m.visit_limit_desc()}
 							</Form.Description>
@@ -151,7 +144,7 @@
 								<span
 									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
 								>
-								h
+									h
 								</span>
 							</div>
 							<Form.FieldErrors />

@@ -13,7 +13,9 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import { requireRole } from '../guards';
 	onMount(() => {
+		requireRole('admin');
 		setLoading(true);
 		setHeader({
 			title: 'Entry Log',

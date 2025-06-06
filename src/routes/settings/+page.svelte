@@ -17,6 +17,7 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import { type SettingsSchemaType, settingsSchema } from '$lib/schemas/settings_schema';
 	import { m } from '$lib/paraglide/messages';
+	import { requireRole } from '../guards';
 
 	const languages = [
 		{ id: 'en', name: 'English' },
@@ -51,7 +52,7 @@
 			formData.set(settings);
 		} catch (error) {
 			console.error('Failed to load settings:', error);
-			toast.error(m['main.toast_failed_settings']() );
+			toast.error(m['main.toast_failed_settings']());
 		}
 	}
 
@@ -78,6 +79,7 @@
 		await goto('/');
 	}
 	onMount(async () => {
+		requireRole('admin');
 		setHeader({
 			title: 'Settings'
 		});
@@ -180,7 +182,9 @@
 								}}
 							>
 								<Select.Trigger {...props}>
-									{$formData?.backup_period_hours ? $formData.backup_period_hours + 'h': m.select_period()}
+									{$formData?.backup_period_hours
+										? $formData.backup_period_hours + 'h'
+										: m.select_period()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>
@@ -197,7 +201,9 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around mt-10">
-					<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
+					<Button variant="outline" onclick={handleCancel} class="w-full"
+						>{m['common.cancel']()}</Button
+					>
 					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
 				</div>
 			</form>

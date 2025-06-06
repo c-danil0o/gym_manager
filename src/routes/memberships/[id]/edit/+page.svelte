@@ -22,6 +22,7 @@
 	import { page } from '$app/state';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
+	import { requireRole } from '../../../guards';
 
 	let error: string | null = $state(null);
 
@@ -112,6 +113,7 @@
 	}
 
 	onMount(async () => {
+		requireRole('admin');
 		setHeader({
 			title: m.update_membership_type(),
 			showBackButton: true

@@ -18,6 +18,7 @@
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { requireRole } from '../guards';
 
 	let chartDataDist = $state<{ type: string; value: number; color: string }[]>([]);
 	const chartConfigDist = $state<{
@@ -189,6 +190,7 @@
 	}
 
 	onMount(async () => {
+		requireRole('admin');
 		setHeader({
 			title: 'Analytics',
 			showBackButton: false

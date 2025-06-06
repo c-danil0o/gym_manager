@@ -10,3 +10,7 @@ export function requireRole(requiredRole: UserRole) {
 		goto('/unauthorized');
 	}
 }
+export function enabledForRole(requiredRole: UserRole): boolean {
+	const authState = get(auth);
+	return authState.role !== requiredRole;
+}
