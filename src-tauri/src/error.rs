@@ -20,6 +20,9 @@ pub enum AppError {
     #[error("URL parsing error: {0}")]
     UrlParse(#[from] url::ParseError),
 
+    #[error("Base64 decode: {0}")]
+    Base64Decode(#[from] base64::DecodeError),
+
     #[error("Configuration error: {0}")]
     Config(String),
 

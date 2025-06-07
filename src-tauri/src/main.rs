@@ -101,6 +101,7 @@ fn main() {
             commands::admin_commands::get_remote_backup_metadata,
             commands::admin_commands::trigger_backup,
             commands::admin_commands::save_user,
+            backup::restore_from_backup,
             commands::membership_type_commands::add_membership_type,
             commands::membership_type_commands::get_all_membership_types,
             commands::membership_type_commands::get_membership_type_by_id,

@@ -353,7 +353,8 @@
 	"no_backup_found": "No backup found",
 	"failed_to_load_last_backup": "Failed to load last backup!",
 	"failed_to_trigger_backup": "Failed to trigger manual backup!",
+	"failed_to_restore_backup": "Failed to restore from backup! Reverting to previous state.",
 	"invalid_timezone": "Invalid timezone format!",
-	"invalid_backup_url": "Invalid backup URL format!"
-
+	"invalid_backup_url": "Invalid backup URL format!",
+	"restore_success": "Successfully restored! PLEASE RESTART APPLICATION!!!"
 }

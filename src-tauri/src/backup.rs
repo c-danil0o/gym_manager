@@ -1,10 +1,15 @@
 use crate::config::parse_backup_url;
 use crate::db::get_database_path;
-use crate::error::{AppError, Result as AppResult};
+use crate::error::{AppError, ErrorCodes, Result as AppResult, TranslatableError};
 use crate::models::CronCheck;
 use crate::AppState;
+use base64::engine::general_purpose;
+use base64::Engine;
 use chrono::Local;
 use reqwest::header::CONTENT_TYPE;
+use sqlx::sqlite::SqliteConnectOptions;
+use sqlx::ConnectOptions;
+use std::path::PathBuf;
 use std::time::Duration;
 use tauri::Manager;
 use tokio::time::interval;
@@ -31,6 +36,7 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
     let (backup_url, token) = url_data.unwrap();
 
     let db_path = get_database_path(app_handle)?;
+    let db_path = db_path.join("gym_data.sqlite");
     let db_file_bytes = tokio::fs::read(&db_path).await.map_err(|e| {
         tracing::error!("Failed to read database file: {}", e);
         AppError::Io(e)
@@ -186,6 +192,145 @@ pub fn spawn_backup_check_task(app_handle: tauri::AppHandle) {
     });
 }
 
-pub async fn manual_trigger_backup(app_handle: tauri::AppHandle) -> AppResult<()>{
-  return perform_backup(&app_handle).await;
+pub async fn manual_trigger_backup(app_handle: tauri::AppHandle) -> AppResult<()> {
+    return perform_backup(&app_handle).await;
+}
+async fn restore_local_backup(backup_path: &std::path::PathBuf, db_path: &std::path::PathBuf) {
+    if backup_path.exists() {
+        tracing::info!(
+            "Restoring local backup from {:?} to {:?}",
+            backup_path,
+            db_path
+        );
+        if let Err(e) = tokio::fs::rename(backup_path, db_path).await {
+            tracing::error!("CRITICAL FAILURE: Could not restore local backup. The database file might be missing. Error: {}", e);
+        }
+    }
+}
+
+pub async fn check_db_integrity(db_path: &PathBuf) -> AppResult<()> {
+    tracing::info!("Performing integrity check on: {:?}", db_path);
+
+    if !db_path.exists() {
+        tracing::info!("Database file does not exist, creating it...");
+        return Err(AppError::Config(format!(
+            "Database file does not exist at: {:?}",
+            db_path
+        )));
+    }
+
+    let options = SqliteConnectOptions::new()
+        .filename(db_path)
+        .create_if_missing(false)
+        .read_only(true);
+
+    let mut conn = options
+        .connect()
+        .await
+        .map_err(|e| AppError::Config(format!("Failed to connect to database: {}", e)))?;
+
+    // The PRAGMA returns a single row with the text 'ok' if the DB is not corrupt.
+    let result: (String,) = sqlx::query_as("PRAGMA integrity_check;")
+        .fetch_one(&mut conn)
+        .await
+        .map_err(|e| AppError::Sqlx(e))?;
+
+    if result.0.to_lowercase() == "ok" {
+        tracing::info!("Integrity check passed for: {:?}", db_path);
+        Ok(())
+    } else {
+        tracing::error!(
+            "Integrity check failed for {:?}. Result: {}",
+            db_path,
+            result.0
+        );
+        Err(AppError::RestoreFailed(result.0))
+    }
+}
+
+#[tauri::command]
+pub async fn restore_from_backup(app_handle: tauri::AppHandle) -> AppResult<String> {
+    tracing::info!("Starting database restore process...");
+
+    let app_state = app_handle.state::<AppState>();
+    let backup_url = app_state.settings.read().await.backup_url.clone();
+
+    if backup_url.is_none() {
+        tracing::warn!("Backup URL is not configured, skipping backup.");
+        return Err(AppError::Translatable(TranslatableError::new(
+            ErrorCodes::BACKUP_URL_NOT_SET,
+            "Backup URL is not set. Please configure it in the settings.",
+        )));
+    }
+    let url_data = parse_backup_url(backup_url.unwrap().as_str());
+    if url_data.is_err() {
+        tracing::error!("Invalid backup URL format: {}", url_data.unwrap_err());
+        return Err(AppError::Translatable(TranslatableError::new(
+            ErrorCodes::INVALID_BACKUP_URL,
+            "Invalid backup URL format",
+        )));
+    }
+    let (backup_url, token) = url_data.unwrap();
+    let download_url = format!("{}/backup", backup_url);
+
+    app_state.db_pool.close().await;
+    tracing::info!("Database connection pool closed.");
+
+    // Download the file
+    let client = reqwest::Client::new();
+    let res = client
+        .get(&download_url)
+        .header("X-Api-Key", token)
+        .send()
+        .await;
+
+    let response = match res {
+        Ok(response) => response,
+        Err(e) => {
+            tracing::error!("Failed to download backup file: {:?}", e);
+            return Err(AppError::Reqwest(e));
+        }
+    };
+
+    // The body is base64 encoded by our Lambda
+    let encoded_body = response.text().await;
+    let body = match encoded_body {
+        Ok(body) => body,
+        Err(e) => {
+            tracing::error!("Failed to read response body: {:?}", e);
+            return Err(AppError::Reqwest(e));
+        }
+    };
+
+    let db_bytes = general_purpose::STANDARD.decode(body).map_err(|e| {
+        tracing::error!("Failed to decode base64 response body: {:?}", e);
+        AppError::Base64Decode(e)
+    })?;
+
+    let db_path = get_database_path(&app_handle)?;
+    let db_path = db_path.join("gym_data.sqlite");
+    let backup_path = db_path.with_file_name("gym_data_backup.sqlite");
+
+
+    std::fs::copy(&db_path, &backup_path)?;
+
+    // Overwrite the local database file
+    tokio::fs::write(&db_path, &db_bytes).await.map_err(|e| {
+        tracing::error!("Failed to write new database file: {:?}", e);
+        AppError::Io(e)
+    })?;
+    tracing::info!("Database file successfully overwritten from backup.");
+
+    match check_db_integrity(&db_path).await {
+        Ok(_) => tracing::info!("Database integrity check passed after restore."),
+        Err(e) => {
+            tracing::error!("Database integrity check failed after restore: {:?}", e);
+            tracing::error!("Restoring to latest working database");
+            restore_local_backup(&backup_path, &db_path).await;
+            return Err(AppError::RestoreFailed(
+                "Database integrity check failed after restore".to_string(),
+            ));
+        }
+    }
+    Ok("Restore successful. Please restart the application.".to_string())
 }

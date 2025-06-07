@@ -353,5 +353,7 @@
 	"failed_to_load_last_backup": "Neuspješno učitavanje poslednje rezervne kopije!",
 	"failed_to_trigger_backup": "Neuspješno pokretanje ručne rezervne kopije!",
 	"invalid_timezone": "Neispravan format vremenske zone",
-	"invalid_backup_url": "Neispravan format bekap URL"
+	"invalid_backup_url": "Neispravan format bekap URL",
+	"failed_to_restore_backup": "Neuspješno vraćanje rezervne kopije! Molimo provjerite URL i pokušajte ponovo.",
+	"restore_success": "Uspješno vraćena rezervna kopija! RESTARTUJTE APLIKACIJU!!!"
 }

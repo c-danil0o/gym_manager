@@ -9,6 +9,8 @@ static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
     let db_path = get_database_path(app_handle)?;
 
+    let db_path = db_path.join("gym_data.sqlite");
+
     // Ensure the directory exists before connecting
     if let Some(parent_dir) = db_path.parent() {
         std::fs::create_dir_all(parent_dir)?;
@@ -24,9 +26,12 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
     }
 
     // Use file:// prefix for SQLite and ensure absolute path
-    let db_url = format!("sqlite://{}", db_path.to_str().ok_or_else(|| {
-        AppError::Config("Invalid database path string".to_string())
-    })?);
+    let db_url = format!(
+        "sqlite://{}",
+        db_path
+            .to_str()
+            .ok_or_else(|| { AppError::Config("Invalid database path string".to_string()) })?
+    );
 
     tracing::info!("Connecting to database at: {}", db_url);
 
@@ -39,11 +44,17 @@ pub async fn init_db(app_handle: &AppHandle) -> Result<SqlitePool> {
         .map_err(|e| AppError::Config(format!("Failed to connect to database: {}", e)))?;
 
     // Execute pragmas for better SQLite behavior
-    sqlx::query("PRAGMA journal_mode = WAL").execute(&pool).await
+    sqlx::query("PRAGMA journal_mode = WAL")
+        .execute(&pool)
+        .await
         .map_err(|e| AppError::Config(format!("Failed to set journal mode: {}", e)))?;
-    sqlx::query("PRAGMA synchronous = NORMAL").execute(&pool).await
+    sqlx::query("PRAGMA synchronous = NORMAL")
+        .execute(&pool)
+        .await
         .map_err(|e| AppError::Config(format!("Failed to set synchronous mode: {}", e)))?;
-    sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&pool)
+        .await
         .map_err(|e| AppError::Config(format!("Failed to enable foreign keys: {}", e)))?;
 
     // Run migrations
@@ -65,12 +76,10 @@ pub fn get_database_path(app_handle: &AppHandle) -> Result<PathBuf> {
         std::fs::create_dir_all(&app_dir)?;
     }
 
-    let db_path = app_dir.join("gym_data.sqlite");
-
     // Log the actual path for debugging
-    tracing::debug!("Database will be stored at: {:?}", db_path);
+    tracing::debug!("Database will be stored at: {:?}", app_dir);
 
-    Ok(db_path)
+    Ok(app_dir)
 }
 
 async fn create_default_admin_user_if_not_exists(pool: &SqlitePool) -> Result<()> {
@@ -79,14 +88,17 @@ async fn create_default_admin_user_if_not_exists(pool: &SqlitePool) -> Result<()
 
     // Check if the admin user already exists
     let admin_exists: Option<bool> = sqlx::query_scalar!(
-          r#"SELECT EXISTS(SELECT 1 FROM users WHERE username = ?1 LIMIT 1) as "exists: bool""#,
+        r#"SELECT EXISTS(SELECT 1 FROM users WHERE username = ?1 LIMIT 1) as "exists: bool""#,
         default_username
     )
     .fetch_one(pool)
     .await?;
 
     if admin_exists.unwrap_or(false) {
-        tracing::info!("Default admin user '{}' already exists. Skipping creation.", default_username);
+        tracing::info!(
+            "Default admin user '{}' already exists. Skipping creation.",
+            default_username
+        );
         return Ok(());
     }
 
@@ -115,6 +127,9 @@ async fn create_default_admin_user_if_not_exists(pool: &SqlitePool) -> Result<()
     // Commit the transaction
     tx.commit().await?;
 
-    tracing::info!("Default admin user '{}' created successfully.", default_username);
+    tracing::info!(
+        "Default admin user '{}' created successfully.",
+        default_username
+    );
     Ok(())
 }

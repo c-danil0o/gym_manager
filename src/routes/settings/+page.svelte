@@ -128,7 +128,24 @@
 		}
 	}
 
-	async function triggerRestore() {}
+	async function triggerRestore() {
+		setLoading(true);
+		try {
+			await invoke('restore_from_backup');
+			setLoading(false);
+			toast.warning(m.restore_success())
+
+		} catch (error: any) {
+			console.log(error);
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.failed_to_restore_backup());
+			}
+			setLoading(false);
+		}
+	}
 	onMount(async () => {
 		requireRole('admin');
 		setHeader({
