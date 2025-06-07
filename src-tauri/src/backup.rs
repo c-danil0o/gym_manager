@@ -158,7 +158,7 @@ pub fn spawn_backup_check_task(app_handle: tauri::AppHandle) {
     );
 
     tokio::spawn(async move {
-        let check_interval_duration = Duration::from_secs(BACKUP_CHECK_INTERVAL_MINUTES * 4);
+        let check_interval_duration = Duration::from_secs(BACKUP_CHECK_INTERVAL_MINUTES * 60);
         let mut check_timer = interval(check_interval_duration);
         check_timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
 
@@ -184,4 +184,8 @@ pub fn spawn_backup_check_task(app_handle: tauri::AppHandle) {
             }
         }
     });
+}
+
+pub async fn manual_trigger_backup(app_handle: tauri::AppHandle) -> AppResult<()>{
+  return perform_backup(&app_handle).await;
 }

@@ -109,6 +109,9 @@ impl ErrorCodes {
     pub const CARD_ALREADY_EXISTS: &'static str = "error.card_already_exists";
     pub const OVERLAPPING_MEMBERSHIP: &'static str = "error.overlapping_membership";
     pub const USERNAME_ALREADY_EXISTS: &'static str = "error.username_already_exists";
+    pub const BACKUP_URL_NOT_SET: &'static str = "error.backup_url_not_set";
+    pub const INVALID_TIMEZONE: &'static str = "error.invalid_timezone";
+    pub const INVALID_BACKUP_URL: &'static str = "error.invalid_backup_url";
 }
 
 impl std::error::Error for TranslatableError {}

@@ -271,3 +271,10 @@ pub struct UserPayload {
     pub role: String,
     pub password: Option<String>, // Optional for updates, required for new users
 }
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BackupMetadata {
+    last_modified: String,
+    size_bytes: u64,
+}

@@ -138,6 +138,12 @@ export function translateErrorCode(errorCode: string, params: any) {
 		case 'error.username_already_exists':
 			return m.username_already_exists();
 
+		case 'error.backup_url_not_set':
+			return m.backup_url_not_set();
+
+		case 'error.invalid_timezone': return m.invalid_timezone();
+		case 'error.invalid_backup_url': return m.invalid_backup_url();
+
 		default:
 			return m.error_unknown_error();
 	}

@@ -18,11 +18,22 @@
 	import { type SettingsSchemaType, settingsSchema } from '$lib/schemas/settings_schema';
 	import { m } from '$lib/paraglide/messages';
 	import { requireRole } from '../guards';
+	import type { BackupMetadata } from '$lib/models/backup_metadata';
+	import { translateErrorCode } from '$lib/utils';
+	import { DateFormatter, parseDate } from '@internationalized/date';
+	import Label from '$lib/components/ui/label/label.svelte';
 
 	const languages = [
 		{ id: 'en', name: 'English' },
 		{ id: 'rs', name: 'Srpski' }
 	];
+
+	const locale = m.locale_code() || 'bs-BA';
+
+	const df = new DateFormatter(locale, {
+		dateStyle: 'short',
+		timeStyle: 'short'
+	});
 
 	const initialValues: z.infer<SettingsSchemaType> = {
 		language: 'en',
@@ -43,6 +54,7 @@
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}
 	});
+	let lastBackup = $state<BackupMetadata | null>(null);
 
 	const { form: formData, enhance } = form;
 
@@ -53,6 +65,25 @@
 		} catch (error) {
 			console.error('Failed to load settings:', error);
 			toast.error(m['main.toast_failed_settings']());
+		}
+	}
+
+	async function loadLastBackup() {
+		try {
+			const backup = await invoke<BackupMetadata>('get_remote_backup_metadata');
+			if (backup) {
+				lastBackup = backup;
+			} else {
+				lastBackup = null;
+			}
+		} catch (error) {
+			console.error('Failed to get last backup:', error);
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.failed_to_load_last_backup());
+			}
 		}
 	}
 
@@ -78,6 +109,26 @@
 	async function handleCancel() {
 		await goto('/');
 	}
+
+	async function triggerBackup() {
+		setLoading(true);
+		try {
+			await invoke('trigger_backup');
+			setLoading(false);
+			loadLastBackup();
+		} catch (error: any) {
+			console.log(error);
+			const errorMessage = error as ErrorResponse;
+			if (errorMessage?.error_code && errorMessage?.params) {
+				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
+			} else {
+				toast.error(m.failed_to_trigger_backup());
+			}
+			setLoading(false);
+		}
+	}
+
+	async function triggerRestore() {}
 	onMount(async () => {
 		requireRole('admin');
 		setHeader({
@@ -85,6 +136,7 @@
 		});
 		setLoading(true);
 		await loadSettings();
+		await loadLastBackup();
 		setLoading(false);
 	});
 </script>
@@ -199,6 +251,27 @@
 						{/snippet}
 					</Form.Control>
 				</Form.Field>
+
+				<div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center">
+					<div class="w-1/2 space-y-2">
+						<Label class="font-semibold">{m.last_successfull_backup()}</Label>
+						<Input
+							type="text"
+							readonly
+							value={lastBackup?.last_modified
+								? df.format(new Date(lastBackup.last_modified))
+								: m.no_backup_found()}
+						/>
+					</div>
+					<div class="w-1/2">
+						<Button class="w-full m-2" variant="secondary" onclick={triggerBackup}
+							>{m.trigger_backup()}</Button
+						>
+						<Button class="w-full m-2" variant="destructive" onclick={triggerRestore}
+							>{m.restore_backup()}</Button
+						>
+					</div>
+				</div>
 
 				<div class="flex gap-20 justify-around mt-10">
 					<Button variant="outline" onclick={handleCancel} class="w-full"

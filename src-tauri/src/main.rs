@@ -98,6 +98,8 @@ fn main() {
             commands::admin_commands::get_user_by_id,
             commands::admin_commands::change_user_password,
             commands::admin_commands::delete_user,
+            commands::admin_commands::get_remote_backup_metadata,
+            commands::admin_commands::trigger_backup,
             commands::admin_commands::save_user,
             commands::membership_type_commands::add_membership_type,
             commands::membership_type_commands::get_all_membership_types,

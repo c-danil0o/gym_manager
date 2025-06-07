@@ -1,6 +1,7 @@
 use crate::{
+    backup::manual_trigger_backup,
     config::{parse_backup_url, save_settings, AppSettings},
-    dto::{UserDisplay, UserPayload},
+    dto::{BackupMetadata, UserDisplay, UserPayload},
     error::{ErrorCodes, Result as AppResult, TranslatableError},
     models::User,
     state::AppState,
@@ -273,7 +274,10 @@ pub async fn update_app_settings(
     if let Some(tz) = payload.timezone {
         let _gym_tz: Tz = tz.parse().map_err(|e| {
             tracing::error!("Failed to parse timezone from settings: {}", e);
-            return AppError::Config("Invalid gym timezone configuration.".to_string());
+            return AppError::Translatable(TranslatableError::new(
+                ErrorCodes::INVALID_TIMEZONE,
+                "Invalid timezone configuration!",
+            ));
         })?;
         settings.timezone = tz;
         changed = true;
@@ -288,7 +292,10 @@ pub async fn update_app_settings(
             }
             Err(e) => {
                 tracing::error!("Invalid backup URL format: {}", e);
-                return Err(AppError::Config("Invalid backup URL format".to_string()));
+                return Err(AppError::Translatable(TranslatableError::new(
+                    ErrorCodes::INVALID_BACKUP_URL,
+                    "Invalid backup URL format!",
+                )));
             }
         }
     }
@@ -306,4 +313,73 @@ pub async fn update_app_settings(
             });
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_remote_backup_metadata(
+    app_state: tauri::State<'_, AppState>,
+) -> AppResult<BackupMetadata> {
+    let backup_url = app_state.settings.read().await.backup_url.clone();
+
+    if backup_url.is_none() {
+        tracing::warn!("Backup URL is not configured!.");
+        return Err(AppError::Translatable(TranslatableError::new(
+            ErrorCodes::BACKUP_URL_NOT_SET,
+            "Backup URL is not configured!",
+        )));
+    }
+    let url_data = parse_backup_url(backup_url.unwrap().as_str());
+    if url_data.is_err() {
+        tracing::error!("Invalid backup URL format: {}", url_data.unwrap_err());
+        return Err(AppError::BackupFailed(
+            "Invalid backup URL format".to_string(),
+        ));
+    }
+    let (base_url, token) = url_data.unwrap();
+    let metadata_url = format!("{}/backup/metadata", base_url);
+
+    let client = reqwest::Client::new();
+    let res = client
+        .get(&metadata_url)
+        .header("X-Api-Key", token) // <-- Add this header
+        .send()
+        .await;
+
+    let response = match res {
+        Ok(response) => response,
+        Err(e) => {
+            tracing::error!("Failed to send request to backup metadata endpoint: {}", e);
+            return Err(AppError::BackupFailed(
+                "Failed to get metadata!".to_string(),
+            ));
+        }
+    };
+
+    if response.status().is_success() {
+        response.json::<BackupMetadata>().await.map_err(|e| {
+            tracing::error!("Failed to parse backup metadata response: {}", e);
+            AppError::BackupFailed("Failed to parse metadata response".to_string())
+        })
+    } else {
+        Err(AppError::BackupFailed(format!(
+            "Failed to get metadata! Status: {}",
+            response.status()
+        )))
+    }
+}
+
+#[tauri::command]
+pub async fn trigger_backup(app_handle: tauri::AppHandle) -> AppResult<()> {
+    tracing::info!("Triggering manual backup!");
+    let result = manual_trigger_backup(app_handle).await;
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            tracing::info!("Manual backup failed");
+            return Err(AppError::BackupFailed(format!(
+                "Manual backup failed with error: {:?}",
+                e
+            )));
+        }
+    }
 }

@@ -344,5 +344,14 @@
 	"change": "Promijeni",
 	"password_change_success": "Lozinka uspješno promijenjena!",
 	"password_change_fail": "Neuspješno mijenjanje lozinke!",
-	"update": "Ažuriraj"
+	"update": "Ažuriraj",
+	"backup_url_not_set": "URL za rezervnu kopiju nije podešen!",
+	"last_successfull_backup": "Posljednja uspješna rezervna kopija",
+	"trigger_backup": "Pokreni rezervnu kopiju",
+	"restore_backup": "Vrati rezervnu kopiju",
+	"no_backup_found": "Nije pronađena",
+	"failed_to_load_last_backup": "Neuspješno učitavanje poslednje rezervne kopije!",
+	"failed_to_trigger_backup": "Neuspješno pokretanje ručne rezervne kopije!",
+	"invalid_timezone": "Neispravan format vremenske zone",
+	"invalid_backup_url": "Neispravan format bekap URL"
 }

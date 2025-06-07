@@ -345,5 +345,15 @@
 	"change": "Change",
 	"password_changed_success": "Password changed successfully!",
 	"password_change_fail": "Failed to change password",
-	"update": "Update"
+	"update": "Update",
+	"backup_url_not_set": "Backup URL is not set!",
+	"last_successfull_backup": "Last successful backup",
+	"trigger_backup": "Trigger backup",
+	"restore_backup": "Restore backup",
+	"no_backup_found": "No backup found",
+	"failed_to_load_last_backup": "Failed to load last backup!",
+	"failed_to_trigger_backup": "Failed to trigger manual backup!",
+	"invalid_timezone": "Invalid timezone format!",
+	"invalid_backup_url": "Invalid backup URL format!"
+
 }
