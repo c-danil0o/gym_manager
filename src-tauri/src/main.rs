@@ -1,6 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use gym_manager_lib::{commands, config, db, utils, AppState};
+use gym_manager_lib::{backup, commands, config, db, utils, AppState};
 use tauri::Manager;
 
 fn main() {
@@ -74,8 +74,14 @@ fn main() {
 
 
         // --- Spawn Background Tasks ---
+        let handle_for_membership_check = app_handle.clone();
         tauri::async_runtime::spawn(async move {
-            utils::spawn_membership_check_task(app_handle.clone());
+            utils::spawn_membership_check_task(handle_for_membership_check);
+        });
+
+        let handle_for_backup_check = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            backup::spawn_backup_check_task(handle_for_backup_check);
         });
         tracing::info!("Background task(s) spawned.");
 

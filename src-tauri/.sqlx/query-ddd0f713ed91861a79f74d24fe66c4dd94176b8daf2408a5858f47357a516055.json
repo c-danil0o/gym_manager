@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id as `id!`, last_check_time, check_type, status, created_at, updated_at FROM cron_checks WHERE check_type = 'backup' AND status='success' ORDER BY last_check_time DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "last_check_time",
+        "ordinal": 1,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "check_type",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "status",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 5,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ddd0f713ed91861a79f74d24fe66c4dd94176b8daf2408a5858f47357a516055"
+}

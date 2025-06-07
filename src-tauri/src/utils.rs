@@ -178,6 +178,7 @@ pub fn spawn_membership_check_task(app_handle: tauri::AppHandle) {
     tokio::spawn(async move {
         let check_interval_duration = Duration::from_secs(MEMBERSHIP_CHECK_INTERVAL_MINUTES * 60);
         let mut check_timer = interval(check_interval_duration);
+        check_timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         loop {
             check_timer.tick().await;
             tracing::debug!("Running periodic membership status check...");
