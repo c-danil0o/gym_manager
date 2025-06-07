@@ -72,26 +72,11 @@ fn main() {
         app.manage(app_state); // Register the state with Tauri
         tracing::info!("Application state created and managed.");
 
-        // --- Initial membership status update check (update pending->active and active->expired for today) ---
-        match rt.block_on(utils::check_membership_statuses(
-            &app.handle().state::<AppState>(),
-        )) {
-            Ok(_) => {
-                tracing::info!("Membership statuses checked successfully.");
-            }
-            Err(e) => {
-                tracing::error!("Error checking membership statuses: {:?}", e);
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Initial membership status check failed {:?}", e),
-                )));
-            }
-        };
 
-        // // --- Spawn Background Tasks ---
-        // tauri::async_runtime::spawn(async move {
-        //     backup::spawn_backup_check_task(pool.clone(), app_handle.clone());
-        // });
+        // --- Spawn Background Tasks ---
+        tauri::async_runtime::spawn(async move {
+            utils::spawn_membership_check_task(app_handle.clone());
+        });
         tracing::info!("Background task(s) spawned.");
 
         Ok(())

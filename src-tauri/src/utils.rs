@@ -1,13 +1,20 @@
+use std::time::Duration;
+
 use crate::{
     error::{AppError, Result as AppResult},
     models::CronCheck,
     AppState,
 };
+
+const MEMBERSHIP_CHECK_INTERVAL_MINUTES: u64 = 15;
+
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
 use chrono::Local;
+use tauri::Manager;
+use tokio::time::interval;
 
 /// Hashes a password using Argon2.
 pub fn hash_password(password: &str) -> AppResult<String> {
@@ -161,4 +168,25 @@ pub async fn check_membership_statuses(app_state: &tauri::State<'_, AppState>) -
     }
 
     Ok(())
+}
+
+pub fn spawn_membership_check_task(app_handle: tauri::AppHandle) {
+    tracing::info!(
+        "Spawning periodic check task for membership status update (Interval: {} minutes)",
+        MEMBERSHIP_CHECK_INTERVAL_MINUTES,
+    );
+    tokio::spawn(async move {
+        let check_interval_duration = Duration::from_secs(MEMBERSHIP_CHECK_INTERVAL_MINUTES * 60);
+        let mut check_timer = interval(check_interval_duration);
+        loop {
+            check_timer.tick().await;
+            tracing::debug!("Running periodic membership status check...");
+
+            // Get the state inside the task
+            let app_state = app_handle.state::<AppState>();
+            if let Err(e) = check_membership_statuses(&app_state).await {
+                tracing::error!("Error in periodic membership check: {:?}", e);
+            }
+        }
+    });
 }
