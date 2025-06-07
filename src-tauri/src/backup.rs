@@ -26,55 +26,55 @@ struct BackupStatus {
 }
 
 /// Checks if data in monitored tables has changed since the last successful backup.
-async fn needs_backup(pool: &SqlitePool) -> Result<Option<NaiveDateTime>> {
-    let last_success = sqlx::query_as!(
-        BackupStatus,
-        "SELECT id, last_successful_upload_time FROM backup_status WHERE status = 'upload_success' ORDER BY created_at DESC LIMIT 1"
-    )
-    .fetch_optional(pool)
-    .await?;
+// async fn needs_backup(pool: &SqlitePool) -> Result<Option<NaiveDateTime>> {
+//     let last_success = sqlx::query_as!(
+//         BackupStatus,
+//         "SELECT id, last_successful_upload_time FROM backup_status WHERE status = 'upload_success' ORDER BY created_at DESC LIMIT 1"
+//     )
+//     .fetch_optional(pool)
+//     .await?;
 
-    let last_success_time = last_success.and_then(|s| s.last_successful_upload_time);
-    tracing::info!("Last successful backup time: {:?}", last_success_time);
+//     let last_success_time = last_success.and_then(|s| s.last_successful_upload_time);
+//     tracing::info!("Last successful backup time: {:?}", last_success_time);
 
-    let max_updated_at = sqlx::query_scalar!(
-        r#"
-        SELECT MAX(max_updated) as "max_updated_at: Option<NaiveDateTime>"
-        FROM (
-            SELECT MAX(updated_at) as max_updated FROM members WHERE is_deleted = FALSE
-            UNION ALL
-            SELECT MAX(updated_at) as max_updated FROM memberships WHERE is_deleted = FALSE
-            UNION ALL
-            SELECT MAX(updated_at) as max_updated FROM membership_types WHERE is_deleted = FALSE
-        )
-        WHERE max_updated IS NOT NULL
-        "#
-    )
-    .fetch_one(pool) // Keep fetch_one as it returns Result<T, Error> which is often desired
-    .await?;
+//     let max_updated_at = sqlx::query_scalar!(
+//         r#"
+//         SELECT MAX(max_updated) as "max_updated_at: Option<NaiveDateTime>"
+//         FROM (
+//             SELECT MAX(updated_at) as max_updated FROM members WHERE is_deleted = FALSE
+//             UNION ALL
+//             SELECT MAX(updated_at) as max_updated FROM memberships WHERE is_deleted = FALSE
+//             UNION ALL
+//             SELECT MAX(updated_at) as max_updated FROM membership_types WHERE is_deleted = FALSE
+//         )
+//         WHERE max_updated IS NOT NULL
+//         "#
+//     )
+//     .fetch_one(pool) // Keep fetch_one as it returns Result<T, Error> which is often desired
+//     .await?;
 
-    tracing::info!("Most recent data modification time: {:?}", max_updated_at);
+//     tracing::info!("Most recent data modification time: {:?}", max_updated_at);
 
-    match (max_updated_at, Option::from(last_success_time)) {
-        (Some(current_max_update), Some(last_backup)) => {
-            if current_max_update > last_backup {
-                tracing::info!("Changes detected since last backup.");
-                Ok(current_max_update) // Changes detected, return the timestamp of the data to be backed up
-            } else {
-                tracing::info!("No changes detected since last backup.");
-                Ok(None) // No changes
-            }
-        }
-        (Some(current_max_update), None) => {
-             tracing::info!("No previous successful backup found. Backup needed.");
-            Ok(current_max_update) // First backup needed
-        }
-        (None, _) => {
-            tracing::info!("No data found in monitored tables. No backup needed.");
-            Ok(None) // No data to back up
-        }
-    }
-}
+//     match (max_updated_at, Option::from(last_success_time)) {
+//         (Some(current_max_update), Some(last_backup)) => {
+//             if current_max_update > last_backup {
+//                 tracing::info!("Changes detected since last backup.");
+//                 Ok(current_max_update) // Changes detected, return the timestamp of the data to be backed up
+//             } else {
+//                 tracing::info!("No changes detected since last backup.");
+//                 Ok(None) // No changes
+//             }
+//         }
+//         (Some(current_max_update), None) => {
+//              tracing::info!("No previous successful backup found. Backup needed.");
+//             Ok(current_max_update) // First backup needed
+//         }
+//         (None, _) => {
+//             tracing::info!("No data found in monitored tables. No backup needed.");
+//             Ok(None) // No data to back up
+//         }
+//     }
+// }
 
 /// Gathers data from the specified tables.
 async fn gather_backup_data(pool: &SqlitePool) -> Result<BackupPayload> {
@@ -166,27 +166,27 @@ async fn send_backup_to_api(
 }
 
 /// Records the status of the backup check/attempt.
-async fn log_backup_status(
-    pool: &SqlitePool,
-    status: &str, // 'checked_no_changes', 'upload_success', 'upload_failed'
-    upload_time: Option<NaiveDateTime>, // The timestamp of the data successfully uploaded
-    error_message: Option<String>,
-) -> Result<()> {
-    let check_time = chrono::Utc::now().naive_utc();
-    sqlx::query!(
-        r#"
-        INSERT INTO backup_status (last_check_time, last_successful_upload_time, status, error_message)
-        VALUES (?, ?, ?, ?)
-        "#,
-        check_time,
-        upload_time,
-        status,
-        error_message
-    )
-    .execute(pool)
-    .await?;
-    Ok(())
-}
+// async fn log_backup_status(
+//     pool: &SqlitePool,
+//     status: &str, // 'checked_no_changes', 'upload_success', 'upload_failed'
+//     upload_time: Option<NaiveDateTime>, // The timestamp of the data successfully uploaded
+//     error_message: Option<String>,
+// ) -> Result<()> {
+//     let check_time = chrono::Utc::now().naive_utc();
+//     sqlx::query!(
+//         r#"
+//         INSERT INTO backup_status (last_check_time, last_successful_upload_time, status, error_message)
+//         VALUES (?, ?, ?, ?)
+//         "#,
+//         check_time,
+//         upload_time,
+//         status,
+//         error_message
+//     )
+//     .execute(pool)
+//     .await?;
+//     Ok(())
+// }
 
 /// The main function for the periodic backup check task.
 pub async fn check_and_backup_if_needed(pool: &SqlitePool, settings: &AppSettings) {

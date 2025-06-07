@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO cron_checks (last_check_time, check_type, status, created_at) VALUES (?, 'membership', ?, CURRENT_TIMESTAMP)\n         ON CONFLICT(check_type) DO UPDATE SET last_check_time = excluded.last_check_time, status = excluded.status, updated_at = CURRENT_TIMESTAMP",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "35be75a2372221710e69358bddaeb88caf3a7a965b87aa2780b6ddc5c42d3ecb"
+}

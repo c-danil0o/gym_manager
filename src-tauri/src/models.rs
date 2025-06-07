@@ -69,13 +69,13 @@ pub struct EntryLog {
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct BackupStatus {
+pub struct CronCheck {
     pub id: i64,
     pub last_check_time: NaiveDateTime,
-    pub last_successful_upload_time: Option<NaiveDateTime>,
     pub status: String,
-    pub error_message: Option<String>,
     pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub check_type: String,
 }
 
 // --- API / Command Payloads ---

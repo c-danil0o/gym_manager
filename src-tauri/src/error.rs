@@ -1,4 +1,4 @@
-use std::{error, fmt};
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -22,6 +22,9 @@ pub enum AppError {
 
     #[error("Configuration error: {0}")]
     Config(String),
+
+    #[error("Membership check failed: {0}")]
+    MembershipCheckFailed(String),
     #[error("Backup failed: {0}")]
     BackupFailed(String),
     #[error("Restore failed: {0}")]
@@ -36,31 +39,34 @@ pub enum AppError {
     Translatable(#[from] TranslatableError),
 }
 
-impl Serialize for AppError {fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    #[derive(Serialize)]
-    struct ErrorMessage {
-        message: String,
-        error_code: Option<String>,
-        params: Option<serde_json::Value>,
+impl Serialize for AppError {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct ErrorMessage {
+            message: String,
+            error_code: Option<String>,
+            params: Option<serde_json::Value>,
+        }
+
+        let error_message = ErrorMessage {
+            message: self.to_string(),
+            error_code: match self {
+                AppError::Translatable(translatable_error) => {
+                    Some(translatable_error.error_code.clone())
+                }
+                _ => None,
+            },
+            params: match self {
+                AppError::Translatable(translatable_error) => translatable_error.params.clone(),
+                _ => None,
+            },
+        };
+
+        error_message.serialize(serializer)
     }
-
-    let error_message = ErrorMessage {
-        message: self.to_string(),
-        error_code: match self {
-            AppError::Translatable(translatable_error) => Some(translatable_error.error_code.clone()),
-            _ => None,
-        },
-        params: match self {
-            AppError::Translatable(translatable_error) => translatable_error.params.clone(),
-            _ => None,
-        },
-    };
-
-    error_message.serialize(serializer)
-}
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TranslatableError {
@@ -78,7 +84,11 @@ impl TranslatableError {
         }
     }
 
-    pub fn with_params(error_code: &str, params: serde_json::Value, fallback_message: &str) -> Self {
+    pub fn with_params(
+        error_code: &str,
+        params: serde_json::Value,
+        fallback_message: &str,
+    ) -> Self {
         Self {
             error_code: error_code.to_string(),
             params: Some(params),

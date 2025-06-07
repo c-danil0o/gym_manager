@@ -2,11 +2,7 @@ use crate::{
     dto::{
         EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse,
         ScanPayload, ScanPayloadSingle, ScanProcessingResult,
-    },
-    error::Result as AppResult,
-    models::Member,
-    state::AppState,
-    AppError,
+    }, error::Result as AppResult, models::Member, state::AppState, utils, AppError
 };
 use chrono::{NaiveDate, Timelike, Utc};
 use chrono_tz::Tz;
@@ -153,6 +149,7 @@ pub async fn process_scan(
     } else {
         tracing::warn!("Member {} has no card ID assigned.", member_full_name);
     }
+    utils::check_membership_statuses(&state).await?;
 
     // Get membership information
     let membership = match sqlx::query_as!(

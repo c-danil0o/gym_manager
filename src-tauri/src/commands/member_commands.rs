@@ -3,6 +3,7 @@ use crate::dto::{
     MemberWithMembership, PaginatedResponse,
 };
 use crate::error::{ErrorCodes, TranslatableError};
+use crate::utils;
 use crate::{
     error::{AppError, Result as AppResult},
     models::Member,
@@ -297,6 +298,8 @@ pub async fn get_member_by_id_with_membership(
         "Fetching member with membership details for member_id: {}",
         member_id
     );
+
+    utils::check_membership_statuses(&state).await?;
     let query_result = sqlx::query_as!(
       MemberWithMembership,
       r#"

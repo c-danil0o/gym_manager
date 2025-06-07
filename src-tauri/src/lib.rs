@@ -4,7 +4,7 @@ pub mod utils;
 pub mod models;
 pub mod state;
 pub mod config;
-pub mod backup;
+// pub mod backup;
 pub mod commands;
 pub mod dto;
 

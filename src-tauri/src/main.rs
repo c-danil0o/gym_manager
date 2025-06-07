@@ -1,6 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use gym_manager_lib::{backup, commands, config, db, AppState};
+use gym_manager_lib::{commands, config, db, utils, AppState};
 use tauri::Manager;
 
 fn main() {
@@ -72,10 +72,26 @@ fn main() {
         app.manage(app_state); // Register the state with Tauri
         tracing::info!("Application state created and managed.");
 
-        // --- Spawn Background Tasks ---
-        tauri::async_runtime::spawn(async move {
-            backup::spawn_backup_check_task(pool.clone(), app_handle.clone());
-        });
+        // --- Initial membership status update check (update pending->active and active->expired for today) ---
+        match rt.block_on(utils::check_membership_statuses(
+            &app.handle().state::<AppState>(),
+        )) {
+            Ok(_) => {
+                tracing::info!("Membership statuses checked successfully.");
+            }
+            Err(e) => {
+                tracing::error!("Error checking membership statuses: {:?}", e);
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Initial membership status check failed {:?}", e),
+                )));
+            }
+        };
+
+        // // --- Spawn Background Tasks ---
+        // tauri::async_runtime::spawn(async move {
+        //     backup::spawn_backup_check_task(pool.clone(), app_handle.clone());
+        // });
         tracing::info!("Background task(s) spawned.");
 
         Ok(())
@@ -118,8 +134,6 @@ fn main() {
             commands::analytics_commands::get_revenue_by_membership_type,
             commands::analytics_commands::get_daily_hourly_visit_count,
             commands::analytics_commands::get_active_memberships_over_time,
-
-
         ])
         // --- Optional: Add Plugins ---
         // .plugin(tauri_plugin_store::Builder::default().build()) // Example
