@@ -216,12 +216,12 @@
 			</Select.Content>
 		</Select.Root>
 	</div>
-	<div class="flex xl:flex-row flex-col gap-10 w-full">
+	<div class="flex 2xl:flex-row flex-col gap-10 w-full justify-center items-center">
 		<MembershipTypeCount chartData={chartDataDist} chartConfig={chartConfigDist} />
 		<EntryHeatmap data={chartDataHeatmap} />
 	</div>
 
-	<div class="flex xl:flex-row flex-col gap-10 w-full">
+	<div class="flex 2xl:flex-row flex-col gap-10 w-full justify-center items-center">
 		<ActiveMembershipOT data={chartDataActiveOT} />
 		<MembershipRevenue chartData={chartDataRevenue} chartConfig={chartConfigRevenue} />
 	</div>

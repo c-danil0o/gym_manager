@@ -17,12 +17,12 @@
 	});
 </script>
 
-<Card.Root class="flex flex-col w-[500px] h-[500px] shrink-0">
+<Card.Root class="flex flex-col 2xl:w-1/3 w-full h-[500px] shrink-0">
 	<Card.Header class="items-center">
 		<Card.Title>{m.membership_type_distribution()}</Card.Title>
 		<Card.Description>{m.membership_type_dist_desc()}</Card.Description>
 	</Card.Header>
-	<Card.Content class="flex-1 flex items-center">
+	<Card.Content class="flex items-center justify-center">
 		<Chart.Container config={chartConfig} class="mx-auto aspect-square h-[300px] ">
 			<PieChart
 				data={chartData}

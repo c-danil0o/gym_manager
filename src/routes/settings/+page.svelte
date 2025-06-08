@@ -170,7 +170,7 @@
 	onMount(async () => {
 		requireRole('admin');
 		setHeader({
-			title: 'Settings'
+			title: m['common.settings'](),
 		});
 		setLoading(true);
 		await loadSettings();
