@@ -7,8 +7,8 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use chrono::Local;
 use reqwest::header::CONTENT_TYPE;
-use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::pool::PoolConnection;
+use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::{ConnectOptions, Sqlite};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -39,6 +39,7 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
 
     let app_state = app_handle.state::<AppState>();
     let backup_url = app_state.settings.read().await.backup_url.clone();
+    let gym_code = app_state.settings.read().await.gym_code.clone();
 
     if backup_url.is_none() {
         tracing::warn!("Backup URL is not configured, skipping backup.");
@@ -91,6 +92,7 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
         .post(&upload_endpoint)
         .header(CONTENT_TYPE, "application/octet-stream")
         .header("X-Api-Key", token)
+        .header("X-Gym-Code", gym_code)
         .body(db_file_bytes)
         .send()
         .await;
@@ -320,6 +322,7 @@ async fn download_and_verify_backup(
     temp_path: &PathBuf,
     download_url: String,
     token: String,
+    gym_code: String
 ) -> AppResult<()> {
     tracing::info!("Downloading backup file to: {:?}", temp_path);
 
@@ -328,6 +331,7 @@ async fn download_and_verify_backup(
     let res = client
         .get(&download_url)
         .header("X-Api-Key", token)
+        .header("X-Gym-Code", gym_code)
         .send()
         .await;
 
@@ -392,6 +396,7 @@ pub async fn restore_from_backup(
 
     let app_state = app_handle.state::<AppState>();
     let backup_url = app_state.settings.read().await.backup_url.clone();
+    let gym_code = app_state.settings.read().await.gym_code.clone();
 
     if backup_url.is_none() {
         tracing::warn!("Backup URL is not configured, skipping backup.");
@@ -437,7 +442,7 @@ pub async fn restore_from_backup(
         return Err(AppError::Io(e));
     }
 
-    match download_and_verify_backup(&temp_path, download_url, token).await {
+    match download_and_verify_backup(&temp_path, download_url, token, gym_code).await {
         Ok(_) => {
             tracing::info!(
                 "Verification successful. Replacing current database with downloaded version."

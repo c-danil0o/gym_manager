@@ -14,7 +14,8 @@ pub struct AppSettings {
     pub theme: String,
     pub timezone: String,
     pub backup_enabled: bool,
-    pub gym_name: String
+    pub gym_name: String,
+    pub gym_code: String,
 }
 impl Default for AppSettings {
     fn default() -> Self {
@@ -26,6 +27,14 @@ impl Default for AppSettings {
             backup_period_hours: Some(12),
             backup_enabled: false,
             gym_name: "Gym".to_string(),
+            gym_code: {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                let code: String = (0..10)
+                    .map(|_| rng.sample(rand::distributions::Alphanumeric) as char)
+                    .collect();
+                code
+            },
         }
     }
 }
@@ -44,14 +53,17 @@ fn get_config_path(app_handle: &AppHandle) -> Result<PathBuf> {
 pub async fn load_settings(app_handle: &AppHandle) -> Result<AppSettings> {
     let config_path = get_config_path(app_handle)?;
     if !config_path.exists() {
-           tracing::info!("Settings file not found at {:?}, creating with defaults.", config_path);
-           let default_settings = AppSettings::default();
-           save_settings(app_handle, &default_settings).await?;
-           return Ok(default_settings);
-       }
+        tracing::info!(
+            "Settings file not found at {:?}, creating with defaults.",
+            config_path
+        );
+        let default_settings = AppSettings::default();
+        save_settings(app_handle, &default_settings).await?;
+        return Ok(default_settings);
+    }
     let content = fs::read_to_string(config_path).await?;
-    let settings: AppSettings =
-        serde_json::from_str(&content).map_err(|e| AppError::Config(format!("Failed to parse settings file: {}", e)))?;
+    let settings: AppSettings = serde_json::from_str(&content)
+        .map_err(|e| AppError::Config(format!("Failed to parse settings file: {}", e)))?;
 
     Ok(settings)
 }
@@ -71,15 +83,18 @@ pub fn parse_backup_url(full_url: &str) -> Result<(String, String)> {
         .query_pairs()
         .find(|(key, _)| key == "token")
         .map(|(_, value)| value.into_owned())
-        .ok_or_else(|| AppError::Config("Backup URL must contain a 'token' query parameter".to_string()))?;
+        .ok_or_else(|| {
+            AppError::Config("Backup URL must contain a 'token' query parameter".to_string())
+        })?;
 
     let base_url = format!(
         "{}://{}/{}",
         parsed_url.scheme(),
-        parsed_url.host_str().ok_or(AppError::Config("URL missing host".to_string()))?,
+        parsed_url
+            .host_str()
+            .ok_or(AppError::Config("URL missing host".to_string()))?,
         parsed_url.path().trim_start_matches('/')
     );
-
 
     Ok((base_url, token))
 }

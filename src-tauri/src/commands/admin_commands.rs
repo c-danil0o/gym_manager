@@ -336,6 +336,7 @@ pub async fn get_remote_backup_metadata(
     app_state: tauri::State<'_, AppState>,
 ) -> AppResult<Vec<BackupMetadata>> {
     let backup_url = app_state.settings.read().await.backup_url.clone();
+    let gym_code = app_state.settings.read().await.gym_code.clone();
 
     if backup_url.is_none() {
         tracing::warn!("Backup URL is not configured!.");
@@ -357,7 +358,8 @@ pub async fn get_remote_backup_metadata(
     let client = reqwest::Client::new();
     let res = client
         .get(&metadata_url)
-        .header("X-Api-Key", token) // <-- Add this header
+        .header("X-Api-Key", token)
+        .header("X-Gym-Code", gym_code)
         .send()
         .await;
 

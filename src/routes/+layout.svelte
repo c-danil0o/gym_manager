@@ -107,6 +107,7 @@
 				if (event.payload.theme) {
 					setMode(event.payload.theme as 'light' | 'dark' | 'system');
 				}
+				if (event.payload.gym_name) gymName = event.payload.gym_name;
 			});
 			mounted = true;
 		}
@@ -340,7 +341,9 @@
 				</div>
 
 				{#if status}
-					<div class="text-sm px-3 py-1 bg-accent text-card-foreground border rounded transition-all animate-pulse">
+					<div
+						class="text-sm px-3 py-1 bg-accent text-card-foreground border rounded transition-all animate-pulse"
+					>
 						{translateAppStatus(status)}
 					</div>
 				{/if}
