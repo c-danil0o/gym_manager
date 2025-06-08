@@ -74,12 +74,12 @@ fn main() {
 
 
         // --- Spawn Background Tasks ---
-        let handle_for_membership_check = app_handle.clone();
+        let handle_for_membership_check = app.handle().clone();
         tauri::async_runtime::spawn(async move {
             utils::spawn_membership_check_task(handle_for_membership_check);
         });
 
-        let handle_for_backup_check = app_handle.clone();
+        let handle_for_backup_check = app.handle().clone();
         tauri::async_runtime::spawn(async move {
             backup::spawn_backup_check_task(handle_for_backup_check);
         });

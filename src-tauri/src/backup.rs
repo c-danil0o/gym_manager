@@ -14,7 +14,7 @@ use std::time::Duration;
 use tauri::Manager;
 use tokio::time::interval;
 
-const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 30;
+const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 1;
 
 async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
     tracing::info!("Starting database backup process...");
@@ -88,6 +88,7 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
 async fn load_last_backup_date(
     app_state: &tauri::State<'_, AppState>,
 ) -> AppResult<chrono::NaiveDateTime> {
+  println!("✅ ✅✅✅✅backup loading from DB");
     let check = sqlx::query_as!(
           CronCheck,
           "SELECT id as `id!`, last_check_time, check_type, status, created_at, updated_at FROM cron_checks WHERE check_type = 'backup' AND status='success' ORDER BY last_check_time DESC LIMIT 1",
@@ -132,11 +133,17 @@ pub async fn is_backup_needed(app_state: &tauri::State<'_, AppState>) -> AppResu
         return Ok(false);
     }
     let today = Local::now().naive_local();
-    let last_backup = app_state.last_backup.read().await;
-    let last_backup_time = last_backup
-        .clone()
-        .unwrap_or(load_last_backup_date(&app_state).await?);
-    drop(last_backup);
+    let last_backup_in_memory = *app_state.last_backup.read().await;
+
+    let last_backup: chrono::NaiveDateTime;
+    if let Some(in_memory_date) = last_backup_in_memory {
+        last_backup = in_memory_date;
+    } else {
+        last_backup = load_last_backup_date(app_state).await?;
+        if let Ok(mut last_backup_state) = app_state.last_backup.try_write() {
+            *last_backup_state = Some(last_backup);
+        }
+    }
     let backup_period = app_state.settings.read().await.backup_period_hours;
     let backup_period = match backup_period {
         Some(period) => {
@@ -150,7 +157,7 @@ pub async fn is_backup_needed(app_state: &tauri::State<'_, AppState>) -> AppResu
             return Ok(false);
         }
     };
-    let backup_threshold = last_backup_time
+    let backup_threshold = last_backup
         .checked_add_signed(chrono::Duration::hours(backup_period))
         .unwrap_or_else(|| chrono::NaiveDateTime::from_timestamp(0, 0));
 

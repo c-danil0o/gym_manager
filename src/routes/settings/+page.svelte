@@ -41,7 +41,7 @@
 
 	const initialValues: z.infer<SettingsSchemaType> = {
 		gym_name: 'Gym',
-		enable_backup: false,
+		backup_enabled: false,
 		language: 'en',
 		timezone: 'UTC',
 		theme: 'light',
@@ -262,7 +262,7 @@
 						{#snippet children({ props })}
 							<div class="space-x-3 flex items-center">
 								<Form.Label class="font-semibold">{m.enable_backup()}</Form.Label>
-								<Switch {...props} bind:checked={$formData.enable_backup} />
+								<Switch {...props} bind:checked={$formData.backup_enabled} />
 							</div>
 							<Form.FieldErrors />
 						{/snippet}

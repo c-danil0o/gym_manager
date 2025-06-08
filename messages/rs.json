@@ -360,7 +360,7 @@
 	"restore_success": "Uspješno vraćena rezervna kopija! RESTARTUJTE APLIKACIJU!!!",
 	"backup_success": "Uspješno kreirana rezervna kopija!",
 	"gym_name": "Ime teretane",
-	"enable_backup": "Omogući rezervnu kopiju",
+	"enable_backup": "Omogući automatsku rezervnu kopiju",
 	"select_backup": "Odaberite rezervnu kopiju",
 	"please_select_backup": "Molimo odaberite rezervnu kopiju",
 	"backups": "Rezervne kopije"

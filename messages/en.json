@@ -361,7 +361,7 @@
 	"restore_success": "Successfully restored! PLEASE RESTART APPLICATION!!!",
 	"backup_success": "Backup created successfully!",
 	"gym_name": "Gym Name",
-	"enable_backup": "Enable backup",
+	"enable_backup": "Enable automatic backup",
 	"select_backup": "Select backup",
 	"please_select_backup": "Please select backup",
 	"backups": "Backups"

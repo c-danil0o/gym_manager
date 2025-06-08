@@ -42,6 +42,7 @@ pub fn verify_password(password: &str, hash: &str) -> AppResult<bool> {
 async fn load_last_checked_membership_date(
     app_state: &tauri::State<'_, AppState>,
 ) -> AppResult<chrono::NaiveDateTime> {
+    println!("✅ ✅✅✅✅loading from DB");
     let check = sqlx::query_as!(
           CronCheck,
           "SELECT id as `id!`, last_check_time, check_type, status, created_at, updated_at FROM cron_checks WHERE check_type = 'membership' ORDER BY last_check_time DESC LIMIT 1",
@@ -137,11 +138,17 @@ async fn save_last_checked_membership_date(
 
 pub async fn check_membership_statuses(app_state: &tauri::State<'_, AppState>) -> AppResult<()> {
     let today = Local::now().naive_local();
-    let last_check = app_state.last_membership_check.read().await;
-    let last_checked = last_check
-        .clone()
-        .unwrap_or(load_last_checked_membership_date(&app_state).await?);
-    drop(last_check);
+    let last_check_in_memory = *app_state.last_membership_check.read().await;
+
+    let last_checked: chrono::NaiveDateTime;
+    if let Some(in_memory_date) = last_check_in_memory {
+        last_checked = in_memory_date;
+    } else {
+        last_checked = load_last_checked_membership_date(app_state).await?;
+        if let Ok(mut last_check) = app_state.last_membership_check.try_write() {
+            *last_check = Some(last_checked);
+        }
+    }
 
     if last_checked.date() < today.date() {
         let updated_count = update_membership_statuses(&app_state).await;
@@ -151,6 +158,7 @@ pub async fn check_membership_statuses(app_state: &tauri::State<'_, AppState>) -
                     save_last_checked_membership_date(&app_state, today, "success").await?;
                     println!("✅ Membership statuses updated successfully.");
                 } else {
+                    save_last_checked_membership_date(&app_state, today, "no_changes").await?;
                     println!("No membership statuses needed updating.");
                 }
             }
@@ -163,7 +171,6 @@ pub async fn check_membership_statuses(app_state: &tauri::State<'_, AppState>) -
             }
         }
     } else {
-        save_last_checked_membership_date(&app_state, today, "no_changes").await?;
         println!("Membership statuses already checked today.");
     }
 
