@@ -18,7 +18,7 @@
 		requireRole('admin');
 		setLoading(true);
 		setHeader({
-			title: 'Entry Log',
+			title:m['common.entry_log'](),
 			showBackButton: false
 		});
 	});

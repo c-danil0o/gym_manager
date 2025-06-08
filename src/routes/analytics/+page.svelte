@@ -192,7 +192,7 @@
 	onMount(async () => {
 		requireRole('admin');
 		setHeader({
-			title: 'Analytics',
+			title: m['common.analytics'](),
 			showBackButton: false
 		});
 		await loadAnalyticsData();
