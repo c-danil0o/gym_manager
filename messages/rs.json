@@ -363,5 +363,8 @@
 	"enable_backup": "Omogući automatsku rezervnu kopiju",
 	"select_backup": "Odaberite rezervnu kopiju",
 	"please_select_backup": "Molimo odaberite rezervnu kopiju",
-	"backups": "Rezervne kopije"
+	"backups": "Rezervne kopije",
+
+	"performing_backup": "Rezervna kopija u toku...",
+	"backup_failed": "Rezervna kopija neuspješna"
 }

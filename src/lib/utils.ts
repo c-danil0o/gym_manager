@@ -197,6 +197,14 @@ export function getMembershipStatusBadgeVariant(
 			return 'secondary';
 	}
 }
+export function translateAppStatus(status: string|null){
+  switch(status?.toLowerCase()){
+    case 'performing_backup':
+      return m.performing_backup();
+    case 'backup_failed':
+      return m.backup_failed();
+  }
+}
 
 export const flyAndScale = (
 	node: Element,

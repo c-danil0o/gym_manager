@@ -32,7 +32,7 @@
 	import { isLocale, setLocale, getLocale } from '$lib/paraglide/runtime.js';
 	import { listen } from '@tauri-apps/api/event';
 	import { m } from '$lib/paraglide/messages';
-	import { translateRole } from '$lib/utils';
+	import { translateAppStatus, translateRole } from '$lib/utils';
 
 	let { children } = $props();
 	$effect(() => {
@@ -51,6 +51,7 @@
 
 	let mounted = $state(false);
 	let gymName = $state('Gym');
+	let status = $state<string | null>(null);
 
 	function handleLogout() {
 		auth.logout();
@@ -93,6 +94,7 @@
 
 	onMount(() => {
 		let unlisten: () => void;
+		let unlistenStatus: () => void;
 		async function init() {
 			await loadAndApplySettings();
 
@@ -108,11 +110,27 @@
 			});
 			mounted = true;
 		}
+		async function listenForStatus() {
+			unlistenStatus = await listen<string>('status', (event) => {
+				console.log('Status change event received', event.payload);
+				if (event.payload) {
+					status = String(event.payload);
+					setTimeout(() => {
+						status = null;
+					}, 7000);
+				}
+			});
+			mounted = true;
+		}
 		init();
+		listenForStatus();
 
 		return () => {
 			if (unlisten) {
 				unlisten();
+			}
+			if (unlistenStatus) {
+				unlistenStatus();
 			}
 		};
 	});
@@ -321,6 +339,11 @@
 					<h1 class="text-lg font-semibold md:text-xl">{$headerState.title}</h1>
 				</div>
 
+				{#if status}
+					<div class="text-sm px-3 py-1 bg-accent text-card-foreground border rounded transition-all animate-pulse">
+						{translateAppStatus(status)}
+					</div>
+				{/if}
 				<LightSwitch />
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
@@ -356,3 +379,6 @@
 {/if}
 <Toaster richColors theme="light" />
 <ModeWatcher />
+
+<style>
+</style>

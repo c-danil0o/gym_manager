@@ -364,5 +364,7 @@
 	"enable_backup": "Enable automatic backup",
 	"select_backup": "Select backup",
 	"please_select_backup": "Please select backup",
-	"backups": "Backups"
+	"backups": "Backups",
+	"performing_backup": "Performing backup...",
+	"backup_failed": "Backup failed!"
 }

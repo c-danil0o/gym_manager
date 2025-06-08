@@ -11,7 +11,7 @@ use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::ConnectOptions;
 use std::path::PathBuf;
 use std::time::Duration;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tokio::time::interval;
 
 const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 1;
@@ -88,7 +88,7 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
 async fn load_last_backup_date(
     app_state: &tauri::State<'_, AppState>,
 ) -> AppResult<chrono::NaiveDateTime> {
-  println!("✅ ✅✅✅✅backup loading from DB");
+    println!("✅ ✅✅✅✅backup loading from DB");
     let check = sqlx::query_as!(
           CronCheck,
           "SELECT id as `id!`, last_check_time, check_type, status, created_at, updated_at FROM cron_checks WHERE check_type = 'backup' AND status='success' ORDER BY last_check_time DESC LIMIT 1",
@@ -189,10 +189,17 @@ pub fn spawn_backup_check_task(app_handle: tauri::AppHandle) {
             match is_backup_needed {
                 Ok(needed) => {
                     if needed {
+                        let mut message = "performing_backup";
                         tracing::info!("Backup is needed, performing backup...");
                         if let Err(e) = perform_backup(&app_handle).await {
                             tracing::error!("Backup failed: {:?}", e);
+                            message = "backup_failed";
                         }
+                        let _ = &app_handle
+                            .emit("status", message.to_string())
+                            .unwrap_or_else(|e| {
+                                tracing::warn!("Failed to emit status event: {}", e);
+                            });
                     } else {
                         tracing::info!("No backup needed at this time.");
                     }
@@ -289,10 +296,10 @@ pub async fn restore_from_backup(
     let (backup_url, token) = url_data.unwrap();
     let mut download_url = format!("{}/backup", backup_url);
     if let Some(vid) = version_id {
-          if !vid.is_empty() && vid != "null" {
-               download_url = format!("{}?versionId={}", download_url, vid);
-          }
-      }
+        if !vid.is_empty() && vid != "null" {
+            download_url = format!("{}?versionId={}", download_url, vid);
+        }
+    }
     println!("Download URL: {}", download_url);
 
     app_state.db_pool.close().await;
