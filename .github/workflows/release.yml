@@ -3,7 +3,8 @@ name: 'publish'
 on:
   push:
     tags:
-      - v*.*.*
+      - 'v*.*.*'
+      - 'v*.*.*-*'
   workflow_dispatch:
 
 concurrency:
