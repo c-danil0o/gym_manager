@@ -8,13 +8,31 @@ use base64::Engine;
 use chrono::Local;
 use reqwest::header::CONTENT_TYPE;
 use sqlx::sqlite::SqliteConnectOptions;
-use sqlx::ConnectOptions;
+use sqlx::pool::PoolConnection;
+use sqlx::{ConnectOptions, Sqlite};
 use std::path::PathBuf;
 use std::time::Duration;
 use tauri::{Emitter, Manager};
 use tokio::time::interval;
 
 const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 1;
+
+async fn execute_vacuum(
+    mut conn: PoolConnection<Sqlite>,
+    backup_path: &str,
+) -> Result<(), AppError> {
+    let query_string = format!("VACUUM INTO '{}'", backup_path);
+
+    sqlx::query(&query_string)
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to execute VACUUM command: {}", e);
+            AppError::Sqlx(e)
+        })?;
+
+    Ok(())
+}
 
 async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
     tracing::info!("Starting database backup process...");
@@ -36,9 +54,31 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
     let (backup_url, token) = url_data.unwrap();
 
     let db_path = get_database_path(app_handle)?;
-    let db_path = db_path.join("gym_data.sqlite");
-    let db_file_bytes = tokio::fs::read(&db_path).await.map_err(|e| {
+    let backup_path = db_path.join("backup.tmp.sqlite");
+    let backup_path_str = backup_path.to_str().ok_or_else(|| {
+        AppError::Config(format!(
+            "Failed to convert backup path to string: {:?}",
+            backup_path
+        ))
+    })?;
+
+    tracing::info!("Creating temporary backup file at: {:?}", backup_path);
+
+    let conn = app_state.db_pool.acquire().await.map_err(|e| {
+        tracing::error!("Failed to acquire database connection: {}", e);
+        AppError::Sqlx(e)
+    })?;
+
+    tracing::info!("Executing VACUUM INTO temporary file: {}", backup_path_str);
+    execute_vacuum(conn, backup_path_str).await?;
+
+    let db_file_bytes = tokio::fs::read(&backup_path).await.map_err(|e| {
         tracing::error!("Failed to read database file: {}", e);
+        AppError::Io(e)
+    })?;
+
+    tokio::fs::remove_file(&backup_path).await.map_err(|e| {
+        tracing::error!("Failed to remove temporary backup file: {}", e);
         AppError::Io(e)
     })?;
 
@@ -268,6 +308,73 @@ pub async fn check_db_integrity(db_path: &PathBuf) -> AppResult<()> {
     }
 }
 
+async fn download_and_verify_backup(
+    temp_path: &PathBuf,
+    download_url: String,
+    token: String,
+) -> AppResult<()> {
+    tracing::info!("Downloading backup file to: {:?}", temp_path);
+
+    // Download the file
+    let client = reqwest::Client::new();
+    let res = client
+        .get(&download_url)
+        .header("X-Api-Key", token)
+        .send()
+        .await;
+
+    let response = match res {
+        Ok(response) => {
+            if response.status().is_success() {
+                tracing::info!("Backup file downloaded successfully.");
+                response
+            } else {
+                let status = response.status();
+                let error_text = response
+                    .text()
+                    .await
+                    .unwrap_or_else(|_| "No error message".to_string());
+                tracing::error!(
+                    "Backup download failed with status {}: {}",
+                    status,
+                    error_text
+                );
+                return Err(AppError::RestoreFailed(format!(
+                    "Backup download failed with status {}: {}",
+                    status, error_text
+                )));
+            }
+        }
+        Err(e) => {
+            tracing::error!("Failed to download backup file: {:?}", e);
+            return Err(AppError::Reqwest(e));
+        }
+    };
+
+    // The body is base64 encoded by our Lambda
+    let encoded_body = response.text().await;
+    let body = match encoded_body {
+        Ok(body) => body,
+        Err(e) => {
+            tracing::error!("Failed to read response body: {:?}", e);
+            return Err(AppError::Reqwest(e));
+        }
+    };
+
+    let db_bytes = general_purpose::STANDARD.decode(body).map_err(|e| {
+        tracing::error!("Failed to decode base64 response body: {:?}", e);
+        AppError::Base64Decode(e)
+    })?;
+
+    tokio::fs::write(temp_path, db_bytes).await.map_err(|e| {
+        tracing::error!("Failed to write backup file: {:?}", e);
+        AppError::Io(e)
+    })?;
+    tracing::info!("Backup file downloaded successfully.");
+    check_db_integrity(temp_path).await?;
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn restore_from_backup(
     app_handle: tauri::AppHandle,
@@ -305,60 +412,57 @@ pub async fn restore_from_backup(
     app_state.db_pool.close().await;
     tracing::info!("Database connection pool closed.");
 
-    // Download the file
-    let client = reqwest::Client::new();
-    let res = client
-        .get(&download_url)
-        .header("X-Api-Key", token)
-        .send()
-        .await;
+    let db_folder = get_database_path(&app_handle)?;
+    let temp_path = db_folder.join("gym_data_tmp.sqlite");
+    let db_path = db_folder.join("gym_data.sqlite");
+    let backup_path = db_folder.join("gym_data_backup.sqlite");
+    let wal_path = db_folder.join("gym_data.sqlite-wal");
+    let shm_path = db_folder.join("gym_data.sqlite-shm");
 
-    let response = match res {
-        Ok(response) => response,
-        Err(e) => {
-            tracing::error!("Failed to download backup file: {:?}", e);
-            return Err(AppError::Reqwest(e));
+    tracing::info!("Backing up current database to: {:?}", backup_path);
+    if let Err(e) = tokio::fs::rename(&db_path, &backup_path).await {
+        let err_msg = format!(
+            "Failed to create local backup of current DB: {}. Please restart.",
+            e
+        );
+        tracing::error!("{}", err_msg);
+        return Err(AppError::Io(e));
+    }
+
+    match download_and_verify_backup(&temp_path, download_url, token).await {
+        Ok(_) => {
+            tracing::info!(
+                "Verification successful. Replacing current database with downloaded version."
+            );
+            if let Err(e) = tokio::fs::rename(&temp_path, &db_path).await {
+                restore_local_backup(&backup_path, &db_path).await;
+                return Err(AppError::RestoreFailed(format!("CRITICAL: Failed to replace database after verification. Local backup has been restored. Error: {}", e)));
+            }
+            if backup_path.exists() {
+                if let Err(e) = tokio::fs::remove_file(&backup_path).await {
+                    tracing::warn!(
+                        "Could not remove temporary backup file {:?}: {}",
+                        backup_path,
+                        e
+                    );
+                }
+            }
+            tracing::info!("Database file successfully overwritten from remote backup.");
         }
-    };
-
-    // The body is base64 encoded by our Lambda
-    let encoded_body = response.text().await;
-    let body = match encoded_body {
-        Ok(body) => body,
         Err(e) => {
-            tracing::error!("Failed to read response body: {:?}", e);
-            return Err(AppError::Reqwest(e));
-        }
-    };
-
-    let db_bytes = general_purpose::STANDARD.decode(body).map_err(|e| {
-        tracing::error!("Failed to decode base64 response body: {:?}", e);
-        AppError::Base64Decode(e)
-    })?;
-
-    let db_path = get_database_path(&app_handle)?;
-    let db_path = db_path.join("gym_data.sqlite");
-    let backup_path = db_path.with_file_name("gym_data_backup.sqlite");
-
-    std::fs::copy(&db_path, &backup_path)?;
-
-    // Overwrite the local database file
-    tokio::fs::write(&db_path, &db_bytes).await.map_err(|e| {
-        tracing::error!("Failed to write new database file: {:?}", e);
-        AppError::Io(e)
-    })?;
-    tracing::info!("Database file successfully overwritten from backup.");
-
-    match check_db_integrity(&db_path).await {
-        Ok(_) => tracing::info!("Database integrity check passed after restore."),
-        Err(e) => {
-            tracing::error!("Database integrity check failed after restore: {:?}", e);
-            tracing::error!("Restoring to latest working database");
+            tracing::error!("Restore failed: {}. Reverting to local backup.", e);
             restore_local_backup(&backup_path, &db_path).await;
-            return Err(AppError::RestoreFailed(
-                "Database integrity check failed after restore".to_string(),
-            ));
+
+            if temp_path.exists() {
+                let _ = tokio::fs::remove_file(&temp_path).await;
+            }
+
+            return Err(AppError::RestoreFailed(format!("Restore failed due to an error: {}. Your previous data has been restored. Please restart the application to reconnect.", e)));
         }
     }
+
+    tracing::info!("Deleting old WAL/SHM files if they exist...");
+    let _ = tokio::fs::remove_file(&wal_path).await;
+    let _ = tokio::fs::remove_file(&shm_path).await;
     Ok("Restore successful. Please restart the application.".to_string())
 }
