@@ -13,6 +13,8 @@ pub struct AppSettings {
     pub language: String,
     pub theme: String,
     pub timezone: String,
+    pub backup_enabled: bool,
+    pub gym_name: String
 }
 impl Default for AppSettings {
     fn default() -> Self {
@@ -22,6 +24,8 @@ impl Default for AppSettings {
             timezone: "Europe/Belgrade".to_string(),
             backup_url: None,
             backup_period_hours: Some(12),
+            backup_enabled: false,
+            gym_name: "Gym".to_string(),
         }
     }
 }

@@ -272,9 +272,17 @@ pub struct UserPayload {
     pub password: Option<String>, // Optional for updates, required for new users
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BackupMetadata {
+    #[serde(rename = "lastModified")]
     last_modified: String,
+
+    #[serde(rename = "sizeBytes")]
     size_bytes: u64,
+
+    #[serde(rename = "versionId")]
+    version_id: String,
+
+    #[serde(rename = "isLatest")]
+    is_latest: bool,
 }

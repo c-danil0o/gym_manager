@@ -125,6 +125,12 @@ async fn save_last_backup_date(
     Ok(())
 }
 pub async fn is_backup_needed(app_state: &tauri::State<'_, AppState>) -> AppResult<bool> {
+    tracing::info!("Checking if backup is needed...");
+    let backup_enabled = app_state.settings.read().await.backup_enabled;
+    if !backup_enabled {
+        tracing::info!("Backup is disabled, skipping backup check.");
+        return Ok(false);
+    }
     let today = Local::now().naive_local();
     let last_backup = app_state.last_backup.read().await;
     let last_backup_time = last_backup
@@ -249,7 +255,10 @@ pub async fn check_db_integrity(db_path: &PathBuf) -> AppResult<()> {
 }
 
 #[tauri::command]
-pub async fn restore_from_backup(app_handle: tauri::AppHandle) -> AppResult<String> {
+pub async fn restore_from_backup(
+    app_handle: tauri::AppHandle,
+    version_id: Option<String>,
+) -> AppResult<String> {
     tracing::info!("Starting database restore process...");
 
     let app_state = app_handle.state::<AppState>();
@@ -271,7 +280,13 @@ pub async fn restore_from_backup(app_handle: tauri::AppHandle) -> AppResult<Stri
         )));
     }
     let (backup_url, token) = url_data.unwrap();
-    let download_url = format!("{}/backup", backup_url);
+    let mut download_url = format!("{}/backup", backup_url);
+    if let Some(vid) = version_id {
+          if !vid.is_empty() && vid != "null" {
+               download_url = format!("{}?versionId={}", download_url, vid);
+          }
+      }
+    println!("Download URL: {}", download_url);
 
     app_state.db_pool.close().await;
     tracing::info!("Database connection pool closed.");
@@ -310,7 +325,6 @@ pub async fn restore_from_backup(app_handle: tauri::AppHandle) -> AppResult<Stri
     let db_path = get_database_path(&app_handle)?;
     let db_path = db_path.join("gym_data.sqlite");
     let backup_path = db_path.with_file_name("gym_data_backup.sqlite");
-
 
     std::fs::copy(&db_path, &backup_path)?;
 

@@ -347,6 +347,8 @@
 	"update": "Ažuriraj",
 	"backup_url_not_set": "URL za rezervnu kopiju nije podešen!",
 	"last_successfull_backup": "Posljednja uspješna rezervna kopija",
+	"trigger_backup_desc": "Ovo će pokrenuti ručnu rezervnu kopiju podataka. Molimo sačekajte dok se proces ne završi.",
+	"restore_backup_desc": "Ovo će vratiti rezervnu kopiju podataka sa unesenog URL-a. Svi lokalni podaci će biti izgubljeni.",
 	"trigger_backup": "Pokreni rezervnu kopiju",
 	"restore_backup": "Vrati rezervnu kopiju",
 	"no_backup_found": "Nije pronađena",
@@ -355,5 +357,11 @@
 	"invalid_timezone": "Neispravan format vremenske zone",
 	"invalid_backup_url": "Neispravan format bekap URL",
 	"failed_to_restore_backup": "Neuspješno vraćanje rezervne kopije! Molimo provjerite URL i pokušajte ponovo.",
-	"restore_success": "Uspješno vraćena rezervna kopija! RESTARTUJTE APLIKACIJU!!!"
+	"restore_success": "Uspješno vraćena rezervna kopija! RESTARTUJTE APLIKACIJU!!!",
+	"backup_success": "Uspješno kreirana rezervna kopija!",
+	"gym_name": "Ime teretane",
+	"enable_backup": "Omogući rezervnu kopiju",
+	"select_backup": "Odaberite rezervnu kopiju",
+	"please_select_backup": "Molimo odaberite rezervnu kopiju",
+	"backups": "Rezervne kopije"
 }

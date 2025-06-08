@@ -349,12 +349,20 @@
 	"backup_url_not_set": "Backup URL is not set!",
 	"last_successfull_backup": "Last successful backup",
 	"trigger_backup": "Trigger backup",
+	"trigger_backup_desc": "This will create a new backup of the current data and upload it to the specified URL.",
+	"restore_backup_desc": "This will restore the data from the last successful backup. All current data will be lost!",
 	"restore_backup": "Restore backup",
 	"no_backup_found": "No backup found",
-	"failed_to_load_last_backup": "Failed to load last backup!",
+	"failed_to_load_backups": "Failed to load backups!",
 	"failed_to_trigger_backup": "Failed to trigger manual backup!",
 	"failed_to_restore_backup": "Failed to restore from backup! Reverting to previous state.",
 	"invalid_timezone": "Invalid timezone format!",
 	"invalid_backup_url": "Invalid backup URL format!",
-	"restore_success": "Successfully restored! PLEASE RESTART APPLICATION!!!"
+	"restore_success": "Successfully restored! PLEASE RESTART APPLICATION!!!",
+	"backup_success": "Backup created successfully!",
+	"gym_name": "Gym Name",
+	"enable_backup": "Enable backup",
+	"select_backup": "Select backup",
+	"please_select_backup": "Please select backup",
+	"backups": "Backups"
 }

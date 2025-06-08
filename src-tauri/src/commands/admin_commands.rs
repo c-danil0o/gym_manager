@@ -252,6 +252,8 @@ pub struct UpdateAppSettingsPayload {
     pub timezone: Option<String>,
     pub backup_url: Option<String>, // Might be Some("") to clear
     pub backup_period_hours: Option<u64>,
+    pub backup_enabled: Option<bool>,
+    pub gym_name: Option<String>,
 }
 
 #[tauri::command]
@@ -271,6 +273,15 @@ pub async fn update_app_settings(
         settings.theme = theme;
         changed = true;
     }
+    if let Some(gym_name) = payload.gym_name {
+        settings.gym_name = gym_name;
+        changed = true;
+    }
+    if let Some(backup_enabled) = payload.backup_enabled {
+        settings.backup_enabled = backup_enabled;
+        changed = true;
+    }
+
     if let Some(tz) = payload.timezone {
         let _gym_tz: Tz = tz.parse().map_err(|e| {
             tracing::error!("Failed to parse timezone from settings: {}", e);
@@ -318,7 +329,7 @@ pub async fn update_app_settings(
 #[tauri::command]
 pub async fn get_remote_backup_metadata(
     app_state: tauri::State<'_, AppState>,
-) -> AppResult<BackupMetadata> {
+) -> AppResult<Vec<BackupMetadata>> {
     let backup_url = app_state.settings.read().await.backup_url.clone();
 
     if backup_url.is_none() {
@@ -354,16 +365,22 @@ pub async fn get_remote_backup_metadata(
             ));
         }
     };
+    let status = response.status();
+    let response_text = response.text().await.map_err(|e| {
+        tracing::error!("Failed to read response text: {}", e);
+        AppError::BackupFailed("Failed to read metadata response".to_string())
+    })?;
 
-    if response.status().is_success() {
-        response.json::<BackupMetadata>().await.map_err(|e| {
+    if status.is_success() {
+        // Parse the JSON from the string
+        serde_json::from_str::<Vec<BackupMetadata>>(&response_text).map_err(|e| {
             tracing::error!("Failed to parse backup metadata response: {}", e);
             AppError::BackupFailed("Failed to parse metadata response".to_string())
         })
     } else {
         Err(AppError::BackupFailed(format!(
             "Failed to get metadata! Status: {}",
-            response.status()
+            status
         )))
     }
 }

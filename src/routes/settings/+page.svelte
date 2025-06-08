@@ -8,6 +8,7 @@
 
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { setHeader, setLoading } from '$lib/stores/state';
@@ -20,8 +21,9 @@
 	import { requireRole } from '../guards';
 	import type { BackupMetadata } from '$lib/models/backup_metadata';
 	import { translateErrorCode } from '$lib/utils';
-	import { DateFormatter, parseDate } from '@internationalized/date';
+	import { DateFormatter } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
+	import Switch from '$lib/components/ui/switch/switch.svelte';
 
 	const languages = [
 		{ id: 'en', name: 'English' },
@@ -29,6 +31,8 @@
 	];
 
 	const locale = m.locale_code() || 'bs-BA';
+	let isBackupDialogOpen = $state(false);
+	let isRestoreDialogOpen = $state(false);
 
 	const df = new DateFormatter(locale, {
 		dateStyle: 'short',
@@ -36,6 +40,8 @@
 	});
 
 	const initialValues: z.infer<SettingsSchemaType> = {
+		gym_name: 'Gym',
+		enable_backup: false,
 		language: 'en',
 		timezone: 'UTC',
 		theme: 'light',
@@ -54,7 +60,8 @@
 			if (!currentForm.valid) console.log('Client errors:', currentForm.errors);
 		}
 	});
-	let lastBackup = $state<BackupMetadata | null>(null);
+	let backups = $state<BackupMetadata[] | []>([]);
+	let selectedBackup = $state<string | undefined>();
 
 	const { form: formData, enhance } = form;
 
@@ -68,21 +75,24 @@
 		}
 	}
 
-	async function loadLastBackup() {
+	async function loadBackups() {
 		try {
-			const backup = await invoke<BackupMetadata>('get_remote_backup_metadata');
-			if (backup) {
-				lastBackup = backup;
+			const backupsData = await invoke<BackupMetadata[]>('get_remote_backup_metadata');
+			if (backups) {
+				backups = backupsData.slice(0, 5);
+				for (const backup of backups) {
+          backup.label = df.format(new Date(backup.lastModified));
+        }
 			} else {
-				lastBackup = null;
+				backups = [];
 			}
 		} catch (error) {
-			console.error('Failed to get last backup:', error);
+			console.error('Failed to get backups:', error);
 			const errorMessage = error as ErrorResponse;
 			if (errorMessage?.error_code && errorMessage?.params) {
 				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
 			} else {
-				toast.error(m.failed_to_load_last_backup());
+				toast.error(m.failed_to_load_backups());
 			}
 		}
 	}
@@ -111,11 +121,13 @@
 	}
 
 	async function triggerBackup() {
+		isBackupDialogOpen = false;
 		setLoading(true);
 		try {
 			await invoke('trigger_backup');
 			setLoading(false);
-			loadLastBackup();
+			loadBackups();
+			toast.success(m.backup_success());
 		} catch (error: any) {
 			console.log(error);
 			const errorMessage = error as ErrorResponse;
@@ -129,12 +141,18 @@
 	}
 
 	async function triggerRestore() {
+		isRestoreDialogOpen = false;
 		setLoading(true);
+		console.log(selectedBackup)
+		if (!selectedBackup || selectedBackup === '') {
+      toast.error(m.please_select_backup());
+      setLoading(false);
+      return;
+    }
 		try {
-			await invoke('restore_from_backup');
+			await invoke('restore_from_backup', { versionId: selectedBackup });
 			setLoading(false);
-			toast.warning(m.restore_success())
-
+			toast.warning(m.restore_success());
 		} catch (error: any) {
 			console.log(error);
 			const errorMessage = error as ErrorResponse;
@@ -153,7 +171,7 @@
 		});
 		setLoading(true);
 		await loadSettings();
-		await loadLastBackup();
+		await loadBackups();
 		setLoading(false);
 	});
 </script>
@@ -161,7 +179,7 @@
 <div class="container mx-auto p-4 md:p-8 max-w-2xl">
 	<Card.Root>
 		<Card.Content>
-			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Card.Title class="text-xl">{m.locale()}</Card.Title>
 				<Form.Field {form} name="language">
 					<Form.Control>
@@ -207,6 +225,15 @@
 				<Separator />
 
 				<Card.Title class="text-xl">{m.appearance()}</Card.Title>
+				<Form.Field {form} name="gym_name">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.gym_name()}</Form.Label>
+							<Input {...props} type="text" bind:value={$formData.gym_name} />
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
 				<Form.Field {form} name="theme">
 					<Form.Control>
 						{#snippet children({ props })}
@@ -229,6 +256,16 @@
 				<Separator />
 
 				<Card.Title class="text-xl">{m.backup()}</Card.Title>
+
+				<Form.Field {form} name="enable_backup">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.enable_backup()}</Form.Label>
+							<Switch {...props} bind:checked={$formData.enable_backup} />
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
 				<Form.Field {form} name="backup_url">
 					<Form.Control>
 						{#snippet children({ props })}
@@ -269,24 +306,77 @@
 					</Form.Control>
 				</Form.Field>
 
-				<div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center">
+				<div class="w-full space-y-2">
+					<Label class="font-semibold">{m.last_successfull_backup()}</Label>
+					<Input
+						type="text"
+						readonly
+						value={backups
+							? backups[0]?.label || m.no_backup_found()
+							: m.no_backup_found()}
+					/>
+
+				<div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center pt-2">
 					<div class="w-1/2 space-y-2">
-						<Label class="font-semibold">{m.last_successfull_backup()}</Label>
-						<Input
-							type="text"
-							readonly
-							value={lastBackup?.last_modified
-								? df.format(new Date(lastBackup.last_modified))
-								: m.no_backup_found()}
-						/>
+						<Label class="font-semibold">{m.backups()}</Label>
+						<Select.Root type="single" bind:value={selectedBackup}>
+							<Select.Trigger>
+								{selectedBackup && backups
+									? backups.find((b) => b.versionId === selectedBackup)?.label
+									: m.select_backup()}
+							</Select.Trigger>
+							<Select.Content>
+								<Select.Group>
+									{#each backups as type (type.versionId)}
+										<Select.Item value={type.versionId} label={type.label}>{type.label}</Select.Item>
+									{/each}
+								</Select.Group>
+							</Select.Content>
+						</Select.Root>
 					</div>
-					<div class="w-1/2">
-						<Button class="w-full m-2" variant="secondary" onclick={triggerBackup}
-							>{m.trigger_backup()}</Button
-						>
-						<Button class="w-full m-2" variant="destructive" onclick={triggerRestore}
-							>{m.restore_backup()}</Button
-						>
+					<div class="w-1/2 space-y-2">
+						<AlertDialog.Root bind:open={isBackupDialogOpen}>
+							<AlertDialog.Trigger class="w-full" type="button">
+								<Button class="w-full" variant="secondary">{m.trigger_backup()}</Button>
+							</AlertDialog.Trigger>
+							<AlertDialog.Content>
+								<AlertDialog.Header>
+									<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
+									<AlertDialog.Description>
+										{m.trigger_backup_desc()}</AlertDialog.Description
+									>
+								</AlertDialog.Header>
+								<AlertDialog.Footer>
+									<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
+									<AlertDialog.Action
+										onclick={() => {
+											triggerBackup();
+										}}>{m.confirm()}</AlertDialog.Action
+									>
+								</AlertDialog.Footer>
+							</AlertDialog.Content>
+						</AlertDialog.Root>
+						<AlertDialog.Root bind:open={isRestoreDialogOpen}>
+							<AlertDialog.Trigger class="w-full" type="button">
+								<Button class="w-full" variant="destructive">{m.restore_backup()}</Button>
+							</AlertDialog.Trigger>
+							<AlertDialog.Content>
+								<AlertDialog.Header>
+									<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
+									<AlertDialog.Description>
+										{m.restore_backup_desc()}</AlertDialog.Description
+									>
+								</AlertDialog.Header>
+								<AlertDialog.Footer>
+									<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
+									<AlertDialog.Action
+										onclick={() => {
+											triggerRestore();
+										}}>{m.confirm()}</AlertDialog.Action
+									>
+								</AlertDialog.Footer>
+							</AlertDialog.Content>
+						</AlertDialog.Root>
 					</div>
 				</div>
 

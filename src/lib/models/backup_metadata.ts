@@ -1,4 +1,7 @@
 export interface BackupMetadata {
-	last_modified: string;
-	size_bytes: number;
+	lastModified: string;
+	sizeBytes: number;
+	versionId: string;
+	isLatest: boolean;
+	label: string;
 }
