@@ -15,7 +15,7 @@ use std::time::Duration;
 use tauri::{Emitter, Manager};
 use tokio::time::interval;
 
-const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 1;
+const BACKUP_CHECK_INTERVAL_MINUTES: u64 = 30;
 
 async fn execute_vacuum(
     mut conn: PoolConnection<Sqlite>,

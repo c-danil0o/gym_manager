@@ -77,6 +77,7 @@
 
 	async function loadBackups() {
 		try {
+			if (!$formData.backup_url) return;
 			const backupsData = await invoke<BackupMetadata[]>('get_remote_backup_metadata');
 			if (backups) {
 				backups = backupsData.slice(0, 5);
@@ -102,8 +103,10 @@
 		try {
 			const result = await form.validateForm();
 			if (result.valid) {
+				backups = [];
 				await invoke('update_app_settings', { payload: result.data });
 				toast.success(m.settings_updated());
+				loadBackups();
 			} else {
 				toast.error('Data is not valid!');
 			}

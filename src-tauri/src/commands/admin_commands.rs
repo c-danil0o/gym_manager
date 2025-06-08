@@ -295,18 +295,23 @@ pub async fn update_app_settings(
     }
     if payload.backup_url.is_some() {
         let full_url = payload.backup_url.as_deref().unwrap_or("");
-        let url = parse_backup_url(full_url);
-        match url {
-            Ok(_) => {
-                settings.backup_url = Some(full_url.to_string());
-                changed = true;
-            }
-            Err(e) => {
-                tracing::error!("Invalid backup URL format: {}", e);
-                return Err(AppError::Translatable(TranslatableError::new(
-                    ErrorCodes::INVALID_BACKUP_URL,
-                    "Invalid backup URL format!",
-                )));
+        if full_url.is_empty() && !payload.backup_enabled.unwrap_or(false) {
+            settings.backup_url = None;
+            changed = true;
+        } else {
+            let url = parse_backup_url(full_url);
+            match url {
+                Ok(_) => {
+                    settings.backup_url = Some(full_url.to_string());
+                    changed = true;
+                }
+                Err(e) => {
+                    tracing::error!("Invalid backup URL format: {}", e);
+                    return Err(AppError::Translatable(TranslatableError::new(
+                        ErrorCodes::INVALID_BACKUP_URL,
+                        "Invalid backup URL format!",
+                    )));
+                }
             }
         }
     }
