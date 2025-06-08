@@ -85,7 +85,7 @@
 					payload: result.data
 				});
 				toast.success(m.member_update_success());
-				fetchMember();
+				goto(`/members/${member.id}`);
 			} else {
 				toast.error(m['toast_error_invalid_data']());
 			}

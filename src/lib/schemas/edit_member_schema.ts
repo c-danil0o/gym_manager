@@ -9,7 +9,7 @@ export const editMemberSchema = z.object({
 		.string()
 		.min(8, m.id_must_8())
 		.max(8, m.id_must_8()),
-	email: z.string().email(m.invalid_email_format()).optional().nullable(),
+	email: z.string().email(m.invalid_email_format()).or(z.literal("")).optional().nullable(),
 	phone: z.string().optional().nullable(),
 	date_of_birth: z.string().optional().nullable()
 });
