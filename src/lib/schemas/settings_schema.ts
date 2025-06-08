@@ -5,7 +5,7 @@ export const settingsSchema = z.object({
 	timezone: z.string(),
 	theme: z.string(),
 	gym_name: z.string(),
-	enable_backup: z.boolean(),
+	backup_enabled: z.boolean(),
 	backup_url: z.string().optional().nullable(),
 	backup_period_hours: z.number().optional(),
 });

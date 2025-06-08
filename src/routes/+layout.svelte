@@ -50,6 +50,7 @@
 	}
 
 	let mounted = $state(false);
+	let gymName = $state('Gym');
 
 	function handleLogout() {
 		auth.logout();
@@ -62,6 +63,8 @@
 		timezone: string;
 		backup_url?: string | null;
 		backup_period_hours: number;
+		backup_enabled: boolean;
+		gym_name: string;
 	}
 
 	async function loadAndApplySettings() {
@@ -76,6 +79,11 @@
 			}
 			if (settings.theme === 'light' || settings.theme === 'dark') {
 				setMode(settings.theme as 'light' | 'dark');
+			}
+			if (settings.gym_name) {
+				gymName = settings.gym_name;
+			} else {
+				gymName = 'Gym';
 			}
 		} catch (e: any) {
 			console.log(e);
@@ -126,7 +134,7 @@
 				<div class="flex h-14 items-center mx-1.5 px-4 my-1.5 border-b lg:h-[60px] lg:px-6">
 					<a href="/" class="flex items-center gap-2 font-semibold">
 						<Dumbbell class="h-6 w-6" />
-						<span class="">Aka Gym</span>
+						<span class="">{gymName}</span>
 					</a>
 				</div>
 				<div class="flex-1 overflow-y-auto">
@@ -159,33 +167,33 @@
 							{m['common.memberships']()}
 						</a>
 						{#if $auth.role === 'admin'}
-						<a
-							href="/entry-log"
-							class="{page.url.pathname.startsWith('/entry-log')
-								? 'bg-background/60 border shadow-sm text-foreground'
-								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
-						>
-							<Log class="h-4 w-4" />
-							{m['common.entry_log']()}
-						</a>
-						<a
-							href="/analytics"
-							class="{page.url.pathname.startsWith('/analytics')
-								? 'bg-background/60 border shadow-sm text-foreground'
-								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
-						>
-							<ChartLine class="h-4 w-4" />
-							{m['common.analytics']()}
-						</a>
-						<a
-							href="/users"
-							class="{page.url.pathname.startsWith('/users')
-								? 'bg-background/60 border shadow-sm text-foreground'
-								: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
-						>
-							<ShieldUser class="h-4 w-4" />
-							{m['common.users']()}
-						</a>
+							<a
+								href="/entry-log"
+								class="{page.url.pathname.startsWith('/entry-log')
+									? 'bg-background/60 border shadow-sm text-foreground'
+									: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
+							>
+								<Log class="h-4 w-4" />
+								{m['common.entry_log']()}
+							</a>
+							<a
+								href="/analytics"
+								class="{page.url.pathname.startsWith('/analytics')
+									? 'bg-background/60 border shadow-sm text-foreground'
+									: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
+							>
+								<ChartLine class="h-4 w-4" />
+								{m['common.analytics']()}
+							</a>
+							<a
+								href="/users"
+								class="{page.url.pathname.startsWith('/users')
+									? 'bg-background/60 border shadow-sm text-foreground'
+									: ''} hover:bg-accent-foreground hover:text-accent flex items-center gap-3 rounded-xl px-3 py-2 transition-all"
+							>
+								<ShieldUser class="h-4 w-4" />
+								{m['common.users']()}
+							</a>
 						{/if}
 					</nav>
 				</div>
@@ -223,7 +231,7 @@
 						<nav class="grid gap-2 text-lg font-medium">
 							<a href="##" class="flex items-center gap-2 mb-3 text-lg font-semibold">
 								<Dumbbell class="h-6 w-6" />
-								<span>Aka Gym</span>
+								<span class="">{gymName}</span>
 							</a>
 							<a
 								href="/"
@@ -254,33 +262,33 @@
 								{m['common.memberships']()}
 							</a>
 							{#if $auth.role === 'admin'}
-							<a
-								href="/entry-log"
-								class="{page.url.pathname.startsWith('/members')
-									? 'bg-background/60 border shadow-sm text-foreground'
-									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
-							>
-								<Log class="h-5 w-5" />
-								{m['common.entry_log']()}
-							</a>
-							<a
-								href="/analytics"
-								class="{page.url.pathname.startsWith('/analytics')
-									? 'bg-background/60 border shadow-sm text-foreground'
-									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
-							>
-								<ChartLine class="h-5 w-5" />
-								{m['common.analytics']()}
-							</a>
-							<a
-								href="/users"
-								class="{page.url.pathname.startsWith('/users')
-									? 'bg-background/60 border shadow-sm text-foreground'
-									: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
-							>
-								<ShieldUser class="h-5 w-5" />
-								{m['common.users']()}
-							</a>
+								<a
+									href="/entry-log"
+									class="{page.url.pathname.startsWith('/members')
+										? 'bg-background/60 border shadow-sm text-foreground'
+										: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								>
+									<Log class="h-5 w-5" />
+									{m['common.entry_log']()}
+								</a>
+								<a
+									href="/analytics"
+									class="{page.url.pathname.startsWith('/analytics')
+										? 'bg-background/60 border shadow-sm text-foreground'
+										: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								>
+									<ChartLine class="h-5 w-5" />
+									{m['common.analytics']()}
+								</a>
+								<a
+									href="/users"
+									class="{page.url.pathname.startsWith('/users')
+										? 'bg-background/60 border shadow-sm text-foreground'
+										: ''} hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								>
+									<ShieldUser class="h-5 w-5" />
+									{m['common.users']()}
+								</a>
 							{/if}
 						</nav>
 						<div class="mt-auto">
@@ -322,13 +330,15 @@
 						</Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
-					<div class="pl-2 text-sm">{$auth.username}</div>
-					<div class='pl-2 text-xs text-muted-foreground'>{translateRole($auth.role)}</div>
-					<DropdownMenu.Separator />
-					  {#if $auth.role === 'admin'}
-						<DropdownMenu.Item onclick={() => goto('/settings')}>{m['common.settings']()}</DropdownMenu.Item>
-						<DropdownMenu.Item>{m.update()}</DropdownMenu.Item>
+						<div class="pl-2 text-sm">{$auth.username}</div>
+						<div class="pl-2 text-xs text-muted-foreground">{translateRole($auth.role)}</div>
 						<DropdownMenu.Separator />
+						{#if $auth.role === 'admin'}
+							<DropdownMenu.Item onclick={() => goto('/settings')}
+								>{m['common.settings']()}</DropdownMenu.Item
+							>
+							<DropdownMenu.Item>{m.update()}</DropdownMenu.Item>
+							<DropdownMenu.Separator />
 						{/if}
 						<DropdownMenu.Item onclick={handleLogout}>{m['common.logout']()}</DropdownMenu.Item>
 					</DropdownMenu.Content>

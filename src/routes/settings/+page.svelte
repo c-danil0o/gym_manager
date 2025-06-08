@@ -81,8 +81,8 @@
 			if (backups) {
 				backups = backupsData.slice(0, 5);
 				for (const backup of backups) {
-          backup.label = df.format(new Date(backup.lastModified));
-        }
+					backup.label = df.format(new Date(backup.lastModified));
+				}
 			} else {
 				backups = [];
 			}
@@ -143,12 +143,12 @@
 	async function triggerRestore() {
 		isRestoreDialogOpen = false;
 		setLoading(true);
-		console.log(selectedBackup)
+		console.log(selectedBackup);
 		if (!selectedBackup || selectedBackup === '') {
-      toast.error(m.please_select_backup());
-      setLoading(false);
-      return;
-    }
+			toast.error(m.please_select_backup());
+			setLoading(false);
+			return;
+		}
 		try {
 			await invoke('restore_from_backup', { versionId: selectedBackup });
 			setLoading(false);
@@ -257,11 +257,13 @@
 
 				<Card.Title class="text-xl">{m.backup()}</Card.Title>
 
-				<Form.Field {form} name="enable_backup">
+				<Form.Field {form} name="backup_enabled">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">{m.enable_backup()}</Form.Label>
-							<Switch {...props} bind:checked={$formData.enable_backup} />
+							<div class="space-x-3 flex items-center">
+								<Form.Label class="font-semibold">{m.enable_backup()}</Form.Label>
+								<Switch {...props} bind:checked={$formData.enable_backup} />
+							</div>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -311,80 +313,81 @@
 					<Input
 						type="text"
 						readonly
-						value={backups
-							? backups[0]?.label || m.no_backup_found()
-							: m.no_backup_found()}
+						value={backups ? backups[0]?.label || m.no_backup_found() : m.no_backup_found()}
 					/>
 
-				<div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center pt-2">
-					<div class="w-1/2 space-y-2">
-						<Label class="font-semibold">{m.backups()}</Label>
-						<Select.Root type="single" bind:value={selectedBackup}>
-							<Select.Trigger>
-								{selectedBackup && backups
-									? backups.find((b) => b.versionId === selectedBackup)?.label
-									: m.select_backup()}
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Group>
-									{#each backups as type (type.versionId)}
-										<Select.Item value={type.versionId} label={type.label}>{type.label}</Select.Item>
-									{/each}
-								</Select.Group>
-							</Select.Content>
-						</Select.Root>
+					<div class="flex flex-col md:flex-row gap-4 w-full justify-between items-center pt-2">
+						<div class="w-1/2 space-y-2">
+							<Label class="font-semibold">{m.backups()}</Label>
+							<Select.Root type="single" bind:value={selectedBackup}>
+								<Select.Trigger>
+									{selectedBackup && backups
+										? backups.find((b) => b.versionId === selectedBackup)?.label
+										: m.select_backup()}
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Group>
+										{#each backups as type (type.versionId)}
+											<Select.Item value={type.versionId} label={type.label}
+												>{type.label}</Select.Item
+											>
+										{/each}
+									</Select.Group>
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="w-1/2 space-y-2">
+							<AlertDialog.Root bind:open={isBackupDialogOpen}>
+								<AlertDialog.Trigger class="w-full" type="button">
+									<Button class="w-full" variant="secondary">{m.trigger_backup()}</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
+										<AlertDialog.Description>
+											{m.trigger_backup_desc()}</AlertDialog.Description
+										>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
+										<AlertDialog.Action
+											onclick={() => {
+												triggerBackup();
+											}}>{m.confirm()}</AlertDialog.Action
+										>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+							<AlertDialog.Root bind:open={isRestoreDialogOpen}>
+								<AlertDialog.Trigger class="w-full" type="button">
+									<Button class="w-full" variant="destructive">{m.restore_backup()}</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
+										<AlertDialog.Description>
+											{m.restore_backup_desc()}</AlertDialog.Description
+										>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
+										<AlertDialog.Action
+											onclick={() => {
+												triggerRestore();
+											}}>{m.confirm()}</AlertDialog.Action
+										>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						</div>
 					</div>
-					<div class="w-1/2 space-y-2">
-						<AlertDialog.Root bind:open={isBackupDialogOpen}>
-							<AlertDialog.Trigger class="w-full" type="button">
-								<Button class="w-full" variant="secondary">{m.trigger_backup()}</Button>
-							</AlertDialog.Trigger>
-							<AlertDialog.Content>
-								<AlertDialog.Header>
-									<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
-									<AlertDialog.Description>
-										{m.trigger_backup_desc()}</AlertDialog.Description
-									>
-								</AlertDialog.Header>
-								<AlertDialog.Footer>
-									<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
-									<AlertDialog.Action
-										onclick={() => {
-											triggerBackup();
-										}}>{m.confirm()}</AlertDialog.Action
-									>
-								</AlertDialog.Footer>
-							</AlertDialog.Content>
-						</AlertDialog.Root>
-						<AlertDialog.Root bind:open={isRestoreDialogOpen}>
-							<AlertDialog.Trigger class="w-full" type="button">
-								<Button class="w-full" variant="destructive">{m.restore_backup()}</Button>
-							</AlertDialog.Trigger>
-							<AlertDialog.Content>
-								<AlertDialog.Header>
-									<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
-									<AlertDialog.Description>
-										{m.restore_backup_desc()}</AlertDialog.Description
-									>
-								</AlertDialog.Header>
-								<AlertDialog.Footer>
-									<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
-									<AlertDialog.Action
-										onclick={() => {
-											triggerRestore();
-										}}>{m.confirm()}</AlertDialog.Action
-									>
-								</AlertDialog.Footer>
-							</AlertDialog.Content>
-						</AlertDialog.Root>
-					</div>
-				</div>
 
-				<div class="flex gap-20 justify-around mt-10">
-					<Button variant="outline" onclick={handleCancel} class="w-full"
-						>{m['common.cancel']()}</Button
-					>
-					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
+					<div class="flex gap-20 justify-around mt-10">
+						<Button variant="outline" onclick={handleCancel} class="w-full"
+							>{m['common.cancel']()}</Button
+						>
+						<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
+					</div>
 				</div>
 			</form>
 		</Card.Content>
