@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.0.0"
+version = "1.0.3"
 description = "Gym Manager Application"
 authors = ["Danilo Cvijetic"]
 license = "MIT"
