@@ -42,7 +42,9 @@ async fn perform_backup(app_handle: &tauri::AppHandle) -> AppResult<()> {
 
     if backup_url.is_none() {
         tracing::warn!("Backup URL is not configured, skipping backup.");
-        return Ok(());
+        return Err(AppError::BackupFailed(
+            "Backup URL not configured".to_string(),
+        ));
     }
     let url_data = parse_backup_url(backup_url.unwrap().as_str());
     if url_data.is_err() {
@@ -172,6 +174,12 @@ pub async fn is_backup_needed(app_state: &tauri::State<'_, AppState>) -> AppResu
         tracing::info!("Backup is disabled, skipping backup check.");
         return Ok(false);
     }
+    let backup_url = app_state.settings.read().await.backup_url.clone();
+    if backup_url.is_none() {
+        tracing::warn!("Backup URL is not configured, skipping backup check.");
+        return Ok(false);
+    }
+
     let today = Local::now().naive_local();
     let last_backup_in_memory = *app_state.last_backup.read().await;
 
