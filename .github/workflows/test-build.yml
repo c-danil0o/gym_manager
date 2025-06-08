@@ -11,6 +11,7 @@ on:
       - 'bun.lockb'
       - 'src-tauri/Cargo.lock'
       - '.github/workflows/test-build.yml'
+      - 'svelte.config.js'
   pull_request:
   workflow_dispatch:
 
