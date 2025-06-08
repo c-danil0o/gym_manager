@@ -300,12 +300,9 @@
 	"denied_after_hours": "odbijeno_posle_graničnih_sati",
 	"error_updating_membership": "greška_ažuriranje_članarine",
 	"error": "greška",
-
 	"from_end_date": "Od datuma isteka",
 	"from_now": "Od sada",
-
 	"one_time_entry": "Pojedinačni trening",
-
 	"clear_entry_log": "Obriši dnevnik",
 	"entry_log_delete": "Izaberi koje podatke želite obrisati",
 	"entry_log_delete_desc": "Ova akcija će nepovratno obrisati izabrane podatke iz dnevnika i analitike!",
@@ -313,7 +310,6 @@
 	"month": "mjesec",
 	"months": "mjeseci",
 	"monthsa": "mjeseca",
-
 	"no_users_found": "Nema pronađenih korisnika",
 	"no_user_found": "Korisnik nije pronađen",
 	"username": "Korisničko ime",
@@ -335,7 +331,6 @@
 	"role_required": "Uloga je obavezna",
 	"password_required": "Lozinka je obavezna",
 	"password_min_length": "Lozinka mora imati najmanje 6 znakova",
-
 	"username_already_exists": "Korisničko ime već postoji!",
 	"toast_error_new_user_fail": "Neuspješno dodavanje novog korisnika",
 	"toast_error_update_user_fail": "Neuspješno ažuriranje korisnika",
@@ -357,14 +352,27 @@
 	"invalid_timezone": "Neispravan format vremenske zone",
 	"invalid_backup_url": "Neispravan format bekap URL",
 	"failed_to_restore_backup": "Neuspješno vraćanje rezervne kopije! Molimo provjerite URL i pokušajte ponovo.",
-	"restore_success": "Uspješno vraćena rezervna kopija! RESTARTUJTE APLIKACIJU!!!",
+	"restore_success": "Uspješno vraćena rezervna kopija! Aplikacija će se restartovati za 10 sekundi",
 	"backup_success": "Uspješno kreirana rezervna kopija!",
 	"gym_name": "Ime teretane",
 	"enable_backup": "Omogući automatsku rezervnu kopiju",
 	"select_backup": "Odaberite rezervnu kopiju",
 	"please_select_backup": "Molimo odaberite rezervnu kopiju",
 	"backups": "Rezervne kopije",
-
 	"performing_backup": "Rezervna kopija u toku...",
-	"backup_failed": "Rezervna kopija neuspješna"
+	"backup_failed": "Rezervna kopija neuspješna",
+	"updater": "Ažuriranje",
+	"app_updater": "Ažuriranje aplikacije",
+"updater_description": "Održavajte svoju aplikaciju ažurnom sa najnovijim funkcijama i sigurnosnim poboljšanjima",
+"checking_for_updates": "Provjera ažuriranja...",
+"error_checking_updates": "Greška pri provjeri ažuriranja:",
+"try_again": "Pokušaj ponovo",
+"update_available": "Dostupno ažuriranje",
+"version": "Verzija",
+"release_notes": "Napomene o izdanju:",
+"installing_update": "Instaliranje ažuriranja...",
+"install_update_and_relaunch": "Instaliraj ažuriranje i pokreni ponovo",
+"up_to_date": "Imate najnoviju verziju!",
+"running_latest_version": "Vaša aplikacija koristi najnoviju verziju.",
+"check_again": "Provjeri ponovo"
 }

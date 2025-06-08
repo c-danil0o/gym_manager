@@ -12,7 +12,7 @@ fn main() {
     println!("=== Application starting ===");
 
     // Initialize the Tauri application builder
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default().plugin(tauri_plugin_process::init());
 
     // --- Run Application Setup ---
     let final_builder = builder.setup(|app| {
@@ -72,7 +72,6 @@ fn main() {
         app.manage(app_state); // Register the state with Tauri
         tracing::info!("Application state created and managed.");
 
-
         // --- Spawn Background Tasks ---
         let handle_for_membership_check = app.handle().clone();
         tauri::async_runtime::spawn(async move {
@@ -130,7 +129,7 @@ fn main() {
             commands::analytics_commands::get_active_memberships_over_time,
         ])
         // --- Optional: Add Plugins ---
-        // .plugin(tauri_plugin_store::Builder::default().build()) // Example
+        .plugin(tauri_plugin_updater::Builder::default().build())
         // --- Run the App ---
         .run(tauri::generate_context!())
         .expect("Error while running Tauri application"); // Use expect for fatal errors on startup

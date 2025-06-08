@@ -24,6 +24,7 @@
 	import { DateFormatter } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Switch from '$lib/components/ui/switch/switch.svelte';
+	import { relaunch } from '@tauri-apps/plugin-process';
 
 	const languages = [
 		{ id: 'en', name: 'English' },
@@ -156,6 +157,9 @@
 			await invoke('restore_from_backup', { versionId: selectedBackup });
 			setLoading(false);
 			toast.warning(m.restore_success());
+			setTimeout(async () => {
+				await relaunch();
+			}, 10000);
 		} catch (error: any) {
 			console.log(error);
 			const errorMessage = error as ErrorResponse;
@@ -170,7 +174,7 @@
 	onMount(async () => {
 		requireRole('admin');
 		setHeader({
-			title: m['common.settings'](),
+			title: m['common.settings']()
 		});
 		setLoading(true);
 		await loadSettings();

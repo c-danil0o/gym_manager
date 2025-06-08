@@ -322,7 +322,7 @@ async fn download_and_verify_backup(
     temp_path: &PathBuf,
     download_url: String,
     token: String,
-    gym_code: String
+    gym_code: String,
 ) -> AppResult<()> {
     tracing::info!("Downloading backup file to: {:?}", temp_path);
 

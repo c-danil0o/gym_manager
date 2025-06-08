@@ -267,7 +267,6 @@
 	"visit_limit_min": "Visit limit must be 0 or positive",
 	"visit_limit_max": "Visit limit must less than 366",
 	"entry_by_min_max": "Hours between 1 and 24",
-
 	"toast_error_new_member_fail": "Failed to add new member",
 	"toast_error_update_member_fail": "Failed to add new member",
 	"error_unknown_error": "An unknown error occurred",
@@ -285,10 +284,8 @@
 	"not_provided": "Not provided",
 	"previous": "Previous",
 	"next": "Next",
-
 	"locale_code": "en-US",
 	"locale_currency": "USD",
-
 	"allowed": "allowed",
 	"allowed_single": "allowed_single",
 	"denied_member_not_found": "denied_member_not_found",
@@ -303,7 +300,6 @@
 	"denied_after_hours": "denied_after_hours",
 	"error_updating_membership": "error_updating_membership",
 	"error": "error",
-
 	"from_end_date": "From end date",
 	"from_now": "From now",
 	"one_time_entry": "One-time Entry",
@@ -314,7 +310,6 @@
 	"month": "month",
 	"months": "months",
 	"monthsa": "months",
-
 	"no_users_found": "No users found",
 	"no_user_found": "No user found",
 	"username": "Username",
@@ -358,7 +353,7 @@
 	"failed_to_restore_backup": "Failed to restore from backup! Reverting to previous state.",
 	"invalid_timezone": "Invalid timezone format!",
 	"invalid_backup_url": "Invalid backup URL format!",
-	"restore_success": "Successfully restored! PLEASE RESTART APPLICATION!!!",
+	"restore_success": "Successfully restored! Applicaition will relaunch in 10 seconds.",
 	"backup_success": "Backup created successfully!",
 	"gym_name": "Gym Name",
 	"enable_backup": "Enable automatic backup",
@@ -366,5 +361,19 @@
 	"please_select_backup": "Please select backup",
 	"backups": "Backups",
 	"performing_backup": "Performing backup...",
-	"backup_failed": "Backup failed!"
+	"backup_failed": "Backup failed!",
+	"updater": "Updater",
+	"app_updater": "App Updater",
+	"updater_description": "Keep your application up to date with the latest features and security improvements",
+	"checking_for_updates": "Checking for updates...",
+	"error_checking_updates": "Error checking for updates:",
+	"try_again": "Try Again",
+	"update_available": "Update Available",
+	"version": "Version",
+	"release_notes": "Release Notes:",
+	"installing_update": "Installing Update...",
+	"install_update_and_relaunch": "Install Update and Relaunch",
+	"up_to_date": "You're up to date!",
+	"running_latest_version": "Your application is running the latest version.",
+	"check_again": "Check Again"
 }

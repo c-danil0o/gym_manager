@@ -33,3 +33,7 @@ base64 = "0.22"
 url = "2.4"
 argon2 = { version = "0.5" }
 rand = { version = "0.8" }
+tauri-plugin-process = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"

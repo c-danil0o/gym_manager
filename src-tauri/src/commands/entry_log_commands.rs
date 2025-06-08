@@ -2,7 +2,11 @@ use crate::{
     dto::{
         EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse,
         ScanPayload, ScanPayloadSingle, ScanProcessingResult,
-    }, error::Result as AppResult, models::Member, state::AppState, utils, AppError
+    },
+    error::Result as AppResult,
+    models::Member,
+    state::AppState,
+    utils, AppError,
 };
 use chrono::{NaiveDate, Timelike, Utc};
 use chrono_tz::Tz;

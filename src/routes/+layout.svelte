@@ -363,7 +363,7 @@
 							<DropdownMenu.Item onclick={() => goto('/settings')}
 								>{m['common.settings']()}</DropdownMenu.Item
 							>
-							<DropdownMenu.Item>{m.update()}</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={() => goto('/updater')}>{m.update()}</DropdownMenu.Item>
 							<DropdownMenu.Separator />
 						{/if}
 						<DropdownMenu.Item onclick={handleLogout}>{m['common.logout']()}</DropdownMenu.Item>

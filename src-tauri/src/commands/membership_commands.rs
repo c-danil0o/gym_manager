@@ -214,7 +214,7 @@ pub async fn save_membership(
             &payload.membership_start_date,
             &payload.membership_end_date,
             payload.membership_remaining_visits,
-            &gym_tz
+            &gym_tz,
         )
         .await?;
     }
@@ -276,11 +276,11 @@ pub async fn save_membership(
                     "Member with ID {} already has an overlapping membership.",
                     payload.member_id
                 );
-            return Err(AppError::Translatable(TranslatableError::with_params(
-                ErrorCodes::OVERLAPPING_MEMBERSHIP,
-                serde_json::json!({"id": payload.member_id}),
-                "failed to add membership:Member already has overlapping membership",
-            )))
+                return Err(AppError::Translatable(TranslatableError::with_params(
+                    ErrorCodes::OVERLAPPING_MEMBERSHIP,
+                    serde_json::json!({"id": payload.member_id}),
+                    "failed to add membership:Member already has overlapping membership",
+                )));
             }
             Ok(_) => {}
             Err(e) => {

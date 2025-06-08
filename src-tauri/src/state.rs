@@ -11,10 +11,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(
-        db_pool: SqlitePool,
-        settings: AppSettings,
-    ) -> Self {
+    pub fn new(db_pool: SqlitePool, settings: AppSettings) -> Self {
         Self {
             db_pool,
             settings: tokio::sync::RwLock::new(settings),

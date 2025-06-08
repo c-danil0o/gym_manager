@@ -1,12 +1,12 @@
-pub mod db;
-pub mod error;
-pub mod utils;
-pub mod models;
-pub mod state;
-pub mod config;
 pub mod backup;
 pub mod commands;
+pub mod config;
+pub mod db;
 pub mod dto;
+pub mod error;
+pub mod models;
+pub mod state;
+pub mod utils;
 
 pub use error::{AppError, Result};
 

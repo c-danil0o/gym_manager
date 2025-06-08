@@ -137,7 +137,7 @@ pub async fn update_membership_type(
                 ErrorCodes::MEMBERSHIP_TYPE_NAME_EXISTS,
                 serde_json::json!({"name": payload.name}),
                 "failed to update membership_type: name already exists!",
-            )))
+            )));
         }
         Err(e) => {
             tracing::error!("Failed to update membership type in database: {:?}", e);
@@ -246,7 +246,7 @@ pub async fn add_membership_type(
                 ErrorCodes::MEMBERSHIP_TYPE_NAME_EXISTS,
                 serde_json::json!({"name": payload.name}),
                 "failed to update membership_type: name already exists!",
-            )))
+            )));
         }
         Err(e) => {
             tracing::error!(
@@ -287,13 +287,13 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
 
     let now = chrono::Utc::now().naive_utc();
     let mut tx = state.db_pool.begin().await.map_err(AppError::Sqlx)?;
-     let current_record = sqlx::query!(
+    let current_record = sqlx::query!(
         "SELECT name FROM membership_types WHERE id = ? AND is_deleted = FALSE",
         id
     )
     .fetch_optional(&mut *tx)
     .await?;
-    
+
     let current_name = match current_record {
         Some(record) => record.name,
         None => {
@@ -304,9 +304,9 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
             )));
         }
     };
-    
+
     // Create unique deleted name using timestamp
-    let deleted_name = format!("{}_deleted_{}", current_name, now.and_utc().timestamp());   
+    let deleted_name = format!("{}_deleted_{}", current_name, now.and_utc().timestamp());
     let result = sqlx::query!(
         "UPDATE membership_types SET name = ?, is_deleted = TRUE, updated_at = ? WHERE id = ?",
         deleted_name,
