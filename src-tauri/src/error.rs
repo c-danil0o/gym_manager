@@ -26,6 +26,9 @@ pub enum AppError {
     #[error("Configuration error: {0}")]
     Config(String),
 
+    #[error("Database: {0}")]
+    Database(String),
+
     #[error("Membership check failed: {0}")]
     MembershipCheckFailed(String),
     #[error("Backup failed: {0}")]

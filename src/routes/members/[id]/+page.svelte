@@ -441,7 +441,7 @@
 											variant="outline"
 											size="icon"
 											disabled={item.membership_status !== 'active' &&
-												item.membership_status !== 'pending'}
+												item.membership_status !== 'pending' && item.membership_status !== 'expired'}
 											title={m.edit_membership()}
 										>
 											<Pencil class="h-4 w-4" />

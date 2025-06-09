@@ -92,7 +92,7 @@
 					newChartDataDist.push({
 						type: item.membership_type_name,
 						value: item.active_member_count,
-						color: `var(--color-${item.membership_type_name})`
+						color: `var(--chart-${i})`
 					});
 					newChartConfigDist[item.membership_type_name] = {
 						label: item.membership_type_name,
@@ -168,7 +168,7 @@
 						membership_type_name: item.membership_type_name,
 						total_revenue: item.total_revenue,
 						count: item.count,
-						color: `var(--color-${item.membership_type_name})`
+						color: `var(--chart-${i})`
 					});
 
 					newChartConfigRevenue[item.membership_type_name] = {

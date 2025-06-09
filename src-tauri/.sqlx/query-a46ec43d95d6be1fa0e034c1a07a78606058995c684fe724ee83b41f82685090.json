@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT COUNT(*) as count FROM entry_logs WHERE member_id = ? AND DATE(entry_time) = ? AND status = 'allowed'",
+  "query": "SELECT COUNT(*) as count FROM entry_logs WHERE member_id = ? AND local_date = ? AND status = 'allowed'",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       false
     ]
   },
-  "hash": "4fe06c76cf7cd0b5f8d5ac90becb7a4a945626603d2374c616574a26675a0dd6"
+  "hash": "a46ec43d95d6be1fa0e034c1a07a78606058995c684fe724ee83b41f82685090"
 }

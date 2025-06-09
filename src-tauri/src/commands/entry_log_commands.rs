@@ -10,63 +10,81 @@ use crate::{
 };
 use chrono::{NaiveDate, Timelike, Utc};
 use chrono_tz::Tz;
-use sqlx::{Row, SqliteConnection};
+use sqlx::{Acquire, Row, Sqlite, SqliteConnection, Transaction};
 use tauri::State;
 
 async fn calculate_and_update_membership_status_if_needed(
-    conn: &mut SqliteConnection,
+    tx: &mut Transaction<'_, Sqlite>,
     membership_id: i64,
     current_status: &str,
     start_date: NaiveDate,
-    end_date: Option<NaiveDate>,
-    remaining_visits: Option<i64>,
+    end_date: NaiveDate,
+    remaining_visits: i64,
+    tz: &Tz,
 ) -> AppResult<String> {
     // Don't change suspended memberships
     if current_status == "suspended" {
         return Ok(current_status.to_string());
     }
 
-    let now_date = Utc::now().date_naive();
+    let now_date = Utc::now().with_timezone(tz).date_naive();
     let mut new_status = current_status.to_string();
 
     // Check for expiration conditions first
-    if remaining_visits.map_or(false, |v| v <= 0) {
-        new_status = "expired".to_string();
-    } else if let Some(ed) = end_date {
-        if ed < now_date {
-            new_status = "expired".to_string();
-        }
-    } else if remaining_visits.is_none() && end_date.is_none() {
+    if remaining_visits <= 0 || end_date < now_date {
         new_status = "expired".to_string();
     }
 
     // Handle pending -> active transition
     if current_status == "pending" && start_date <= now_date && new_status != "expired" {
-        new_status = if end_date.is_some() {
-            "active"
-        } else {
-            "inactive"
-        }
-        .to_string();
+        new_status = "active".to_string();
     }
 
     // Update database if status changed
     if new_status != current_status {
-        sqlx::query!(
+        let result = sqlx::query!(
             "UPDATE memberships SET status = ?, updated_at = ? WHERE id = ?",
             new_status,
             now_date,
             membership_id
         )
-        .execute(conn)
-        .await?;
+        .execute(&mut **tx)
+        .await;
+        match result {
+            Ok(query_result) => {
+                if query_result.rows_affected() == 0 {
+                    tracing::error!(
+                        "No rows affected when updating membership {} status",
+                        membership_id
+                    );
+                    return Err(AppError::NotFound(
+                        "Failed to update membership status".to_string(),
+                    ));
+                }
+                tracing::info!(
+                    "Updated membership {} status from {} to {}",
+                    membership_id,
+                    current_status,
+                    new_status
+                );
+            }
+            Err(e) => {
+                tracing::error!(
+                    "Database error updating membership {} status: {}",
+                    membership_id,
+                    e
+                );
+                return Err(AppError::Sqlx(e));
+            }
+        }
     }
 
     Ok(new_status)
 }
 
 async fn deny_entry(
-    conn: &mut SqliteConnection,
+    tx: &mut Transaction<'_, Sqlite>,
+    tz: &Tz,
     member_id: Option<i64>,
     membership_id: Option<i64>,
     card_id: &str,
@@ -77,7 +95,8 @@ async fn deny_entry(
     membership: Option<&MembershipInfo>,
 ) -> AppResult<ScanProcessingResult> {
     log_entry_attempt(
-        conn,
+        tx,
+        tz,
         member_id,
         member_name.as_deref(),
         membership_id,
@@ -120,6 +139,15 @@ pub async fn process_scan(
     tracing::info!("Processing scan for card_id: {}", scanned_card_id);
 
     let mut conn = state.db_pool.acquire().await?;
+    let mut tx = conn.begin().await.map_err(|e| {
+        tracing::error!("Failed to start transaction: {}", e);
+        AppError::Sqlx(e)
+    })?;
+
+    let gym_tz: Tz = state.settings.read().await.timezone.parse().map_err(|e| {
+        tracing::error!("Failed to parse timezone from settings: {}", e);
+        AppError::Config("Invalid gym timezone configuration.".to_string())
+    })?;
 
     // Find Member by Card ID
     let member = match sqlx::query_as!(
@@ -127,13 +155,14 @@ pub async fn process_scan(
         "SELECT * FROM members WHERE (card_id = ?1 OR short_card_id = ?1) AND is_deleted = FALSE",
         scanned_card_id
     )
-    .fetch_optional(&mut *conn)
-    .await?
+    .fetch_optional(&mut *tx)
+    .await
     {
-        Some(member) => member,
-        None => {
-            return deny_entry(
-                &mut conn,
+        Ok(Some(member)) => member,
+        Ok(None) => {
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 None,
                 None,
                 scanned_card_id,
@@ -144,6 +173,17 @@ pub async fn process_scan(
                 None,
             )
             .await;
+            // Commit transaction even for denied entries to save the log
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
+        }
+        Err(e) => {
+            tracing::error!("Database error finding member: {}", e);
+            let _ = tx.rollback().await;
+            return Err(AppError::Sqlx(e));
         }
     };
 
@@ -189,13 +229,14 @@ pub async fn process_scan(
         "#,
         member.id
     )
-    .fetch_optional(&mut *conn)
-    .await?
+    .fetch_optional(&mut *tx)
+    .await
     {
-        Some(membership) => membership,
-        None => {
-            return deny_entry(
-                &mut conn,
+        Ok(Some(membership)) => membership,
+        Ok(None) => {
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 None,
                 scanned_card_id,
@@ -206,21 +247,40 @@ pub async fn process_scan(
                 None,
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
+        }
+        Err(e) => {
+            tracing::error!("Database error finding membership: {}", e);
+            let _ = tx.rollback().await;
+            return Err(AppError::Sqlx(e));
         }
     };
-
     // Validate membership data integrity
-    let (membership_id, current_status, start_date) = match (
+    let (membership_id, current_status, start_date, end_date, remaining_visits) = match (
         membership.membership_id,
         membership.membership_status.as_ref(),
         membership.membership_start_date,
+        membership.membership_end_date,
+        membership.membership_remaining_visits,
     ) {
-        (Some(id), Some(status), Some(date)) => (id, status, date),
+        (Some(id), Some(status), Some(s_date), Some(e_date), Some(rem_visits)) => {
+            (id, status, s_date, e_date, rem_visits)
+        }
         _ => {
-            return deny_entry(
-                &mut conn,
+            tracing::error!(
+                "Invalid membership data for member {}: missing required fields",
+                member_full_name
+            );
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
-                None,
+                membership.membership_id,
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
                 "denied_no_membership",
@@ -229,19 +289,33 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
     };
-
     // Calculate and update membership status
-    let membership_status = calculate_and_update_membership_status_if_needed(
-        &mut conn,
+    let membership_status = match calculate_and_update_membership_status_if_needed(
+        &mut tx,
         membership_id,
         current_status,
         start_date,
-        membership.membership_end_date,
-        membership.membership_remaining_visits,
+        end_date,
+        remaining_visits,
+        &gym_tz,
     )
-    .await?;
+    .await
+    {
+        Ok(status) => status,
+        Err(e) => {
+            tracing::error!("Failed to update membership status: {}", e);
+            let _ = tx.rollback().await;
+            return Err(e);
+        }
+    };
 
     // Check membership status and handle non-active cases
     match membership_status.as_str() {
@@ -257,11 +331,12 @@ pub async fn process_scan(
                     (
                         EntryStatus::DeniedMembershipExpired,
                         "denied_membership_expired",
-                        format!("expired_on|{:?}", membership.membership_end_date),
+                        format!("expired_on|{:?}", end_date),
                     )
                 };
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
@@ -272,10 +347,17 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
         "pending" => {
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
@@ -286,24 +368,38 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
         "inactive" => {
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
                 EntryStatus::DeniedNoMembership,
                 "denied_membership_inactive",
-                "incative",
+                "inactive",
                 Some(&member_full_name),
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
         "suspended" => {
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
@@ -314,13 +410,20 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
         "active" => {
             tracing::info!("Member {} has an active membership.", member_full_name);
         }
         _ => {
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
@@ -331,24 +434,23 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
     }
 
     if let Some(enter_by_hours) = membership.membership_type_enter_by {
-        // Check if entry is allowed based on enter_by_hours
-        let gym_tz: Tz = state.settings.read().await.timezone.parse().map_err(|e| {
-            tracing::error!("Failed to parse timezone from settings: {}", e);
-            AppError::Config("Invalid gym timezone configuration.".to_string())
-        })?;
-
         let now = Utc::now().with_timezone(&gym_tz);
-
-        // Get the current hour
         let current_hour = now.time().hour() as i64;
 
         if current_hour >= enter_by_hours {
-            return deny_entry(
-                &mut conn,
+            let result = deny_entry(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(membership_id),
                 scanned_card_id,
@@ -359,23 +461,38 @@ pub async fn process_scan(
                 Some(&membership),
             )
             .await;
+
+            if let Err(e) = tx.commit().await {
+                tracing::error!("Failed to commit transaction for denied entry: {}", e);
+            }
+
+            return result;
         }
-    }
-    // Check if member is already checked in today
-    let today = Utc::now().date_naive();
-    let already_checked_in = sqlx::query!(
-        "SELECT COUNT(*) as count FROM entry_logs WHERE member_id = ? AND DATE(entry_time) = ? AND status = 'allowed'",
+    } // Check if member is already checked in today
+
+    let now_local = Utc::now().with_timezone(&gym_tz);
+    let today_local = now_local.date_naive();
+
+    let already_checked_in = match sqlx::query!(
+        "SELECT COUNT(*) as count FROM entry_logs WHERE member_id = ? AND local_date = ? AND status = 'allowed'",
         member.id,
-        today
+        today_local
     )
-    .fetch_one(&mut *conn)
-    .await?
-    .count
-        > 0;
+    .fetch_one(&mut *tx)
+    .await
+    {
+      Ok(row) => row.count > 0,
+      Err(e) => {
+          tracing::error!("Database error checking existing entries: {}", e);
+          let _ = tx.rollback().await;
+          return Err(AppError::Sqlx(e));
+      }
+    };
 
     if already_checked_in {
-        return deny_entry(
-            &mut conn,
+        let result = deny_entry(
+            &mut tx,
+            &gym_tz,
             Some(member.id),
             Some(membership_id),
             scanned_card_id,
@@ -386,11 +503,15 @@ pub async fn process_scan(
             Some(&membership),
         )
         .await;
+        if let Err(e) = tx.commit().await {
+            tracing::error!("Failed to commit transaction for denied entry: {}", e);
+        }
+
+        return result;
     }
 
     // Handle active membership - update visits and allow entry
-    let current_visits = membership.membership_remaining_visits.unwrap_or(0);
-    let new_visits = current_visits - 1;
+    let new_visits = remaining_visits - 1;
     let new_status = if new_visits > 0 { "active" } else { "expired" };
     let now = Utc::now().naive_utc();
 
@@ -401,35 +522,40 @@ pub async fn process_scan(
         new_status,
         membership_id
     )
-    .execute(&mut *conn)
+    .execute(&mut *tx)
     .await;
 
     match update_result {
-        Ok(_) => tracing::info!(
-            "Updated membership {} visits to {}",
-            membership_id,
-            new_visits
-        ),
+        Ok(query_result) => {
+            if query_result.rows_affected() == 0 {
+                tracing::error!(
+                    "No rows affected when updating membership {} visits",
+                    membership_id
+                );
+                let _ = tx.rollback().await;
+                return Err(AppError::Database(
+                    "Failed to update membership visits".to_string(),
+                ));
+            }
+            tracing::info!(
+                "Updated membership {} visits to {}",
+                membership_id,
+                new_visits
+            );
+        }
         Err(e) => {
             tracing::error!("Failed to update membership {}: {}", membership_id, e);
-            return deny_entry(
-                &mut conn,
-                Some(member.id),
-                Some(membership_id),
-                scanned_card_id,
-                EntryStatus::Error,
-                "error",
-                "error",
-                Some(&member_full_name),
-                Some(&membership),
-            )
-            .await;
+            let _ = tx.rollback().await;
+            return Err(AppError::Database(format!(
+                "Failed to update membership: {}",
+                e
+            )));
         }
     }
-
     // Log successful entry
-    log_entry_attempt(
-        &mut conn,
+    if let Err(e) = log_entry_attempt(
+        &mut tx,
+        &gym_tz,
         Some(member.id),
         Some(&member_full_name),
         Some(membership_id),
@@ -437,8 +563,29 @@ pub async fn process_scan(
         "allowed",
         "allowed",
     )
-    .await?;
+    .await
+    {
+        tracing::error!("Failed to log successful entry: {}", e);
+        let _ = tx.rollback().await;
+        return Err(e);
+    }
 
+    // Commit transaction
+    match tx.commit().await {
+        Ok(_) => {
+            tracing::info!(
+                "Successfully processed entry for member: {}",
+                member_full_name
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to commit transaction: {}", e);
+            return Err(AppError::Database(format!(
+                "Failed to commit entry transaction: {}",
+                e
+            )));
+        }
+    }
     Ok(ScanProcessingResult {
         status: EntryStatus::Allowed,
         message: "allowed".to_string(),
@@ -456,6 +603,16 @@ pub async fn process_scan_single(
     state: State<'_, AppState>,
 ) -> AppResult<ScanProcessingResult> {
     let mut conn = state.db_pool.acquire().await?;
+    let mut tx = conn.begin().await.map_err(|e| {
+        tracing::error!("Failed to start transaction: {}", e);
+        AppError::Sqlx(e)
+    })?;
+
+    let gym_tz: Tz = state.settings.read().await.timezone.parse().map_err(|e| {
+        tracing::error!("Failed to parse timezone from settings: {}", e);
+        AppError::Config("Invalid gym timezone configuration.".to_string())
+    })?;
+
     match payload.card_id {
         Some(card_id) if !card_id.is_empty() => {
             let member = match sqlx::query_as!(
@@ -463,13 +620,14 @@ pub async fn process_scan_single(
               "SELECT * FROM members WHERE (card_id = ?1 OR short_card_id = ?1) AND is_deleted = FALSE",
               card_id
           )
-          .fetch_optional(&mut *conn)
+          .fetch_optional(&mut *tx)
           .await?
           {
               Some(member) => member,
               None => {
-                  return deny_entry(
-                      &mut conn,
+                  let result = deny_entry(
+                      &mut tx,
+                      &gym_tz,
                       None,
                       None,
                       card_id.as_str(),
@@ -480,13 +638,18 @@ pub async fn process_scan_single(
                       None,
                   )
                   .await;
+                  if let Err(e) = tx.commit().await {
+                      tracing::error!("Failed to commit transaction for denied entry: {}", e);
+                  }
+                  return result;
               }
           };
             let card_id = member.card_id.as_deref().unwrap_or(&card_id);
             let member_full_name = format!("{} {}", member.first_name, member.last_name);
 
-            log_entry_attempt(
-                &mut conn,
+            if let Err(e) = log_entry_attempt(
+                &mut tx,
+                &gym_tz,
                 Some(member.id),
                 Some(&member_full_name),
                 None,
@@ -494,7 +657,29 @@ pub async fn process_scan_single(
                 "allowed_single",
                 "allowed_single",
             )
-            .await?;
+            .await
+            {
+                tracing::error!("Failed to log successful entry: {}", e);
+                let _ = tx.rollback().await;
+                return Err(e);
+            }
+
+            // Commit transaction
+            match tx.commit().await {
+                Ok(_) => {
+                    tracing::info!(
+                        "Successfully processed entry for member: {}",
+                        member_full_name
+                    );
+                }
+                Err(e) => {
+                    tracing::error!("Failed to commit transaction: {}", e);
+                    return Err(AppError::Database(format!(
+                        "Failed to commit entry transaction: {}",
+                        e
+                    )));
+                }
+            }
 
             Ok(ScanProcessingResult {
                 status: EntryStatus::AllowedSingle,
@@ -524,8 +709,10 @@ pub async fn process_scan_single(
                 payload.first_name.as_deref().unwrap_or(""),
                 payload.last_name.as_deref().unwrap_or("")
             );
-            log_entry_attempt(
-                &mut conn,
+
+            if let Err(e) = log_entry_attempt(
+                &mut tx,
+                &gym_tz,
                 None,
                 Some(&member_full_name),
                 None,
@@ -533,7 +720,29 @@ pub async fn process_scan_single(
                 "allowed_single",
                 "allowed_single",
             )
-            .await?;
+            .await
+            {
+                tracing::error!("Failed to log successful entry: {}", e);
+                let _ = tx.rollback().await;
+                return Err(e);
+            }
+
+            // Commit transaction
+            match tx.commit().await {
+                Ok(_) => {
+                    tracing::info!(
+                        "Successfully processed entry for member: {}",
+                        member_full_name
+                    );
+                }
+                Err(e) => {
+                    tracing::error!("Failed to commit transaction: {}", e);
+                    return Err(AppError::Database(format!(
+                        "Failed to commit entry transaction: {}",
+                        e
+                    )));
+                }
+            }
             Ok(ScanProcessingResult {
                 status: EntryStatus::AllowedSingle,
                 message: "allowed_single".to_string(),
@@ -549,7 +758,8 @@ pub async fn process_scan_single(
 
 // Helper to log entry attempts
 async fn log_entry_attempt(
-    conn: &mut SqliteConnection,
+    tx: &mut Transaction<'_, Sqlite>,
+    tz: &Tz,
     member_id: Option<i64>,
     member_name: Option<&String>,
     membership_id: Option<i64>,
@@ -558,10 +768,12 @@ async fn log_entry_attempt(
     notes: &str,
 ) -> AppResult<()> {
     let now = Utc::now().naive_utc();
+    let now_local = Utc::now().with_timezone(tz);
+    let local_date = now_local.date_naive();
     sqlx::query!(
         r#"
-        INSERT INTO entry_logs (member_id, membership_id, member_name, card_id, entry_time, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO entry_logs (member_id, membership_id, member_name, card_id, entry_time, status, notes, local_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         member_id,
         membership_id,
@@ -569,9 +781,10 @@ async fn log_entry_attempt(
         card_id_scanned,
         now,
         status,
-        notes
+        notes,
+        local_date
     )
-    .execute(conn)
+    .execute(&mut **tx)
     .await?;
     Ok(())
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO entry_logs (member_id, membership_id, member_name, card_id, entry_time, status, notes, local_date)\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "321ce09908bb2caff5dc542428ecf23ec55c863d3f81a29dfa5288965a732eef"
+}

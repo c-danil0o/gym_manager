@@ -250,7 +250,7 @@
 			<Card.Title class="text-2xl">{m['common.membership']()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form method="post" onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
+			<form use:enhance method="post" onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
 						<Label class="font-semibold">{m['common.member']()}</Label>

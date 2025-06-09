@@ -9,29 +9,20 @@ use chrono_tz::Tz;
 use tauri::State;
 
 async fn determine_membership_status(
-    start_date: &Option<NaiveDate>,
-    end_date: &Option<NaiveDate>,
-    remaining_visits: Option<i64>,
+    start_date: &NaiveDate,
+    end_date: &NaiveDate,
+    remaining_visits: i64,
     timezone: &Tz,
 ) -> AppResult<String> {
     let now_date = Utc::now().with_timezone(timezone).date_naive();
-    if remaining_visits.is_some() && remaining_visits.unwrap_or(0) <= 0 {
+    if remaining_visits <= 0 || end_date < &now_date {
         return Ok("expired".to_string());
     }
 
-    let start_date = match start_date {
-        None => return Ok("inactive".to_string()),
-        Some(s) => s,
-    };
-
     if start_date > &now_date {
         Ok("pending".to_string())
-    } else if let Some(ed) = end_date {
-        if ed < &now_date {
-            Ok("expired".to_string())
-        } else {
-            Ok("active".to_string())
-        }
+    } else if end_date > &now_date && remaining_visits > 0 {
+        Ok("active".to_string())
     } else {
         Ok("inactive".to_string())
     }
@@ -73,6 +64,7 @@ pub async fn get_all_memberships_for_member(
         LEFT JOIN membership_types mt ON ms.membership_type_id = mt.id AND mt.is_deleted = FALSE
         WHERE
             m.id = ?
+        ORDER BY ms.start_date DESC
         LIMIT ? OFFSET ?
         "#,
         id,
@@ -211,9 +203,9 @@ pub async fn save_membership(
         final_status = "suspended".to_string();
     } else {
         final_status = determine_membership_status(
-            &payload.membership_start_date,
-            &payload.membership_end_date,
-            payload.membership_remaining_visits,
+            &payload.membership_start_date.unwrap(),
+            &payload.membership_end_date.unwrap(),
+            payload.membership_remaining_visits.unwrap(),
             &gym_tz,
         )
         .await?;
