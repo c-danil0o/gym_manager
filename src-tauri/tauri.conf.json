@@ -39,7 +39,7 @@
 	"plugins": {
 		"updater": {
 			"active": true,
-			"endpoints": ["https://api.github.com/repos/c-danil0o/gym_manager/releases/latest"],
+			"endpoints": ["https://github.com/c-danil0o/gym_manager/releases/latest/download/latest.json"],
 			"dialog": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJDM0RBNEQyOEIzRENDQkUKUldTK3pEMkwwcVE5TExXT1BnUEpTSHJVNHdvRnduOVpjTlV6alBBZHNac0Y0UnF3RllCRzJZcjIK",
 			"windows": {

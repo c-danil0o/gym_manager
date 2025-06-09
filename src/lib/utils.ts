@@ -3,9 +3,6 @@ import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
 import { m } from './paraglide/messages';
-import { goto } from '$app/navigation';
-import { browser } from '$app/environment';
-import { auth } from './stores/auth';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -18,8 +15,8 @@ type FlyAndScaleParams = {
 	duration?: number;
 };
 
-export function translateEntryMessage(message: string): string {
-	const [key, param] = message.split('|');
+export function translateEntryMessage(message: string|null): string {
+	const [key, param] = message ?  message.split('|') : ['', ''];
 
 	switch (key) {
 		case 'card_invalid':
@@ -53,7 +50,7 @@ export function translateEntryMessage(message: string): string {
 		case 'allowed_single':
 			return m['scan_message.allowed_single']();
 		default:
-			return message; // fallback if key isn't known
+			return message || ''; // fallback if key isn't known
 	}
 }
 export function translateAccessStatus(status: string | null): string {
