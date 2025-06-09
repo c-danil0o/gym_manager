@@ -191,7 +191,7 @@
 	"active": "active",
 	"expired": "expired",
 	"pending": "pending",
-	"suspended": "suspened",
+	"suspended": "suspended",
 	"inactive": "inactive",
 	"membership_not_found": "Membership not found.",
 	"failed_load_membership": "Failed to load membership.",
