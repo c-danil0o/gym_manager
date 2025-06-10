@@ -60,7 +60,7 @@
 		if (!selectedYear) return;
 		startDate = `${selectedYear}-01-01`;
 		if (String(currentYear) === selectedYear) {
-			endDate = today(getLocalTimeZone()).toString();
+			endDate = today(getLocalTimeZone()).add({days: 1 }).toString();
 		} else {
 			endDate = `${selectedYear}-12-31`;
 		}

@@ -62,7 +62,7 @@ SELECT
 FROM
     entry_logs
 WHERE
-    status = 'allowed'
+    status IN ('allowed', 'allowed_single')
     AND entry_time >= ?1
     AND entry_time <= ?2
 GROUP BY
