@@ -93,7 +93,7 @@
 		"no_membership": "Član nema aktivnu ili predstojeću članarinu",
 		"invalid_membership": "Podaci o članarini nisu kompletni",
 		"no_visits_left": "Član nema preostalih posjeta",
-		"expired_on": "Članarina je isteklo {date}",
+		"expired_on": "Članarina je istekla {date}",
 		"pending": "Članarina je na čekanju. Počinje {date}",
 		"inactive": "Članarina je neaktivna",
 		"suspended": "Članarina je suspendovana",

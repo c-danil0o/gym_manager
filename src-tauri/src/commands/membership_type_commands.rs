@@ -175,9 +175,9 @@ pub async fn add_membership_type(
         }
     }
     if let Some(limit) = payload.visit_limit {
-        if limit <= 0 {
+        if limit < 0 {
             return Err(AppError::Validation(
-                "Visit limit must be positive if provided.".to_string(),
+                "Visit limit must be 0 or positive if provided.".to_string(),
             ));
         }
 

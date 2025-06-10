@@ -26,7 +26,7 @@
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
 		duration_days: null,
-		visit_limit: null,
+		visit_limit: 0,
 		enter_by: null,
 		price: 0,
 		description: '',
@@ -108,7 +108,7 @@
 								<span
 									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
 								>
-									days
+									{m['common.days']()}
 								</span>
 							</div>
 							<Form.FieldErrors />
@@ -139,7 +139,7 @@
 									type="number"
 									min="1"
 									max="24"
-									placeholder="optional"
+									placeholder={m.optional()}
 									bind:value={$formData.enter_by}
 									class="pr-15"
 								/>
