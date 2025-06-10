@@ -95,6 +95,7 @@ pub struct NewMembershipTypePayload {
     pub enter_by: Option<i64>,
     pub price: f64,
     pub description: Option<String>,
+    pub is_active: Option<bool>,
 }
 
 #[derive(Serialize)]

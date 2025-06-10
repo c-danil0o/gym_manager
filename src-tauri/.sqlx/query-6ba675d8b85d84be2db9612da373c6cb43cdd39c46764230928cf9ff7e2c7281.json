@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted\n        FROM membership_types\n        WHERE is_deleted = FALSE\n        ORDER BY name ASC\n        ",
+  "query": "\n        SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted, is_active\n        FROM membership_types\n        WHERE is_deleted = FALSE\n        ORDER BY name ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -52,6 +52,11 @@
         "name": "is_deleted",
         "ordinal": 9,
         "type_info": "Bool"
+      },
+      {
+        "name": "is_active",
+        "ordinal": 10,
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -67,8 +72,9 @@
       true,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "f2a23bfabfc2ffc54df62de1adda54a043715c2151a567f2b78bdc8e8814c962"
+  "hash": "6ba675d8b85d84be2db9612da373c6cb43cdd39c46764230928cf9ff7e2c7281"
 }

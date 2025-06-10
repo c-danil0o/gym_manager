@@ -40,6 +40,7 @@ pub struct MembershipType {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub is_deleted: bool,
+    pub is_active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]

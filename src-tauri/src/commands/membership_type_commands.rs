@@ -17,7 +17,7 @@ pub async fn get_membership_type_by_id(
     let membership_type = sqlx::query_as!(
         MembershipType,
         r#"
-        SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted
+        SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted, is_active
         FROM membership_types
         WHERE id = ? AND is_deleted = FALSE
         "#,
@@ -78,12 +78,13 @@ pub async fn update_membership_type(
     }
 
     let now = chrono::Utc::now().naive_utc();
+    let is_active = payload.is_active.unwrap_or(true);
 
     let result = sqlx::query!(
         r#"
         UPDATE membership_types
-        SET name = ?1, duration_days = ?2, visit_limit = ?3, enter_by = ?4, price = ?5, description = ?6, updated_at = ?7
-        WHERE id = ?8 AND is_deleted = FALSE
+        SET name = ?1, duration_days = ?2, visit_limit = ?3, enter_by = ?4, price = ?5, description = ?6, updated_at = ?7, is_active = ?8
+        WHERE id = ?9 AND is_deleted = FALSE
         "#,
         payload.name,
         payload.duration_days,
@@ -92,6 +93,7 @@ pub async fn update_membership_type(
         payload.price,
         payload.description,
         now,
+        is_active,
         id
     )
     .execute(&state.db_pool)
@@ -111,7 +113,7 @@ pub async fn update_membership_type(
             let updated_type = sqlx::query_as!(
                 MembershipType,
                 r#"
-                SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted
+                SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted, is_active
                 FROM membership_types
                 WHERE id = ?
                 "#,
@@ -195,11 +197,12 @@ pub async fn add_membership_type(
     }
 
     let now = chrono::Utc::now().naive_utc();
+    let is_active = payload.is_active.unwrap_or(true);
 
     let result = sqlx::query!(
             r#"
-            INSERT INTO membership_types (name, duration_days, visit_limit, enter_by, price, description, created_at, updated_at, is_deleted)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, FALSE)
+            INSERT INTO membership_types (name, duration_days, visit_limit, enter_by, price, description, created_at, updated_at, is_deleted, is_active)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, FALSE, ?8)
             "#,
             payload.name,
             payload.duration_days,
@@ -207,7 +210,8 @@ pub async fn add_membership_type(
             payload.enter_by,
             payload.price,
             payload.description,
-            now
+            now,
+            is_active
         )
         .execute(&state.db_pool)
         .await;
@@ -225,7 +229,7 @@ pub async fn add_membership_type(
             let new_type = sqlx::query_as!(
                     MembershipType,
                     r#"
-                    SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted
+                    SELECT id, name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted, is_active
                     FROM membership_types
                     WHERE id = ?
                     "#,
@@ -266,7 +270,7 @@ pub async fn get_all_membership_types(
     let types = sqlx::query_as!(
         MembershipType,
         r#"
-        SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted
+        SELECT id as 'id!', name, duration_days, visit_limit, price, enter_by, description, created_at, updated_at, is_deleted, is_active
         FROM membership_types
         WHERE is_deleted = FALSE
         ORDER BY name ASC
