@@ -26,7 +26,8 @@ export const membershipTypeSchema = z
 			.nullable()
 			.default(null),
 		price: z.coerce.number({ message: m.invalid_character() }).positive(m.price_positive()),
-		description: z.string().optional().nullable().or(z.literal('')).default('')
+		description: z.string().optional().nullable().or(z.literal('')).default(''),
+		is_active: z.boolean().default(true),
 	})
 	.refine(
 			(data) => {

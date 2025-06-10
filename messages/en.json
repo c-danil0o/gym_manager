@@ -133,6 +133,7 @@
 	"membership_type_not_found": "Membership type not found.",
 	"failed_load_membership_data": "Failed to load membership data.",
 	"membership_type_update_success": "Membership type updated successfully!",
+	"membership_type_update_fail": "Failed to update membership type.",
 	"update_membership_type": "Update Membership Type",
 	"select_year": "Select Year",
 	"failed_to_fetch_entry_log": "Failed to fetch entry log data",
@@ -375,5 +376,6 @@
 	"install_update_and_relaunch": "Install Update and Relaunch",
 	"up_to_date": "You're up to date!",
 	"running_latest_version": "Your application is running the latest version.",
-	"check_again": "Check Again"
+	"check_again": "Check Again",
+	"is_active": "Active"
 }

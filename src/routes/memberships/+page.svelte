@@ -17,6 +17,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { enabledForRole } from '../guards';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 
 	let membershipTypes: MembershipType[] = [];
 	let filteredMembershipTypes: MembershipType[] = [];
@@ -124,6 +125,7 @@
 						<Table.Head>{m['common.enter_by']()}</Table.Head>
 						<Table.Head>{m['common.description']()}</Table.Head>
 						<Table.Head class="text-right">{m['common.price']()}</Table.Head>
+						<Table.Head class="text-center">{m.is_active()}</Table.Head>
 						<Table.Head class="text-right pr-12">{m['common.actions']()}</Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -148,6 +150,7 @@
 							<Table.Cell class="text-right"
 								>{type.price.toFixed(2)} {m.locale_currency()}</Table.Cell
 							>
+							<Table.Cell class="text-center"><Checkbox checked={type.is_active} /></Table.Cell>
 							<Table.Cell class="text-right pr-8 space-x-2">
 								<Button
 									onclick={() => handleEdit(type.id)}

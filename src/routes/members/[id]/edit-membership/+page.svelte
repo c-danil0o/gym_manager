@@ -36,6 +36,7 @@
 	const membershipId = $derived(page.url.searchParams.get('membershipId'));
 
 	let membershipTypes = $state<MembershipType[]>([]);
+	let filteredMembershipTypes = $state<MembershipType[]>([]);
 	let selectedMembershipType: MembershipType | null = $state(null);
 	let membership_status: string | null = $state(null);
 	let memberData = $state<{ first_name: string | null; last_name: string | null } | null>(null);
@@ -45,6 +46,7 @@
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
 			membershipTypes = result || [];
+			filteredMembershipTypes = membershipTypes.filter((type) => type.is_active);
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			error = e?.message;
@@ -298,12 +300,12 @@
 									</Select.Trigger>
 									<Select.Content>
 										<Select.Group>
-											{#each membershipTypes as type (type.id)}
+											{#each filteredMembershipTypes as type (type.id)}
 												<Select.Item value={String(type.id)} label={type.name}
 													>{type.name}</Select.Item
 												>
 											{/each}
-											{#if membershipTypes.length === 0}
+											{#if filteredMembershipTypes.length === 0}
 												<div class="px-2 py-1.5 text-sm text-muted-foreground">
 													{m.no_types_available()}
 												</div>

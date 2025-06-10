@@ -23,6 +23,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
 	import { requireRole } from '../../../guards';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 
 	let error: string | null = $state(null);
 
@@ -34,7 +35,8 @@
 		visit_limit: null,
 		enter_by: null,
 		price: 0,
-		description: ''
+		description: '',
+		is_active: true
 	};
 
 	const form = superForm(initialValues, {
@@ -68,7 +70,8 @@
 					visit_limit: result.visit_limit,
 					enter_by: result.enter_by,
 					price: result.price,
-					description: result.description || ''
+					description: result.description || '',
+					is_active: result.is_active
 				});
 			} else {
 				toast.error(m.membership_type_not_found());
@@ -102,7 +105,7 @@
 			if (errorMessage?.error_code && errorMessage?.params) {
 				toast.error(translateErrorCode(errorMessage.error_code, errorMessage.params));
 			} else {
-				toast.error(m.toast_error_membership_type_update_fail());
+				toast.error(m.membership_type_update_fail());
 			}
 		} finally {
 			setLoading(false);
@@ -218,6 +221,18 @@
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m['common.description']()}</Form.Label>
 							<Textarea {...props} bind:value={$formData.description} />
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
+				<Form.Field {form} name="is_active">
+					<Form.Control>
+						{#snippet children({ props })}
+							<div class="space-x-3 flex items-center">
+								<Form.Label class="font-semibold">{m.is_active()}</Form.Label>
+								<Checkbox {...props} bind:checked={$formData.is_active} />
+							</div>
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>

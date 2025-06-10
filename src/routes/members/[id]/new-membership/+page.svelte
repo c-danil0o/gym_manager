@@ -44,7 +44,7 @@
 		error = null;
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
-			membershipTypes = result || [];
+			membershipTypes = result.filter(type => type.is_active) || [];
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			toast.error(m.toast_failed_membership_types());

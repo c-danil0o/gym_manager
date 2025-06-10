@@ -35,6 +35,7 @@
 	const membershipId = $derived(page.url.searchParams.get('membershipId'));
 
 	let membershipTypes = $state<MembershipType[]>([]);
+	let filteredMembershipTypes = $state<MembershipType[]>([]);
 	let selectedMembershipType: MembershipType | null = $state(null);
 	let membership_status: string | null = $state(null);
 	let membershipData = $state<MembershipInfo | null>(null);
@@ -45,6 +46,7 @@
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
 			membershipTypes = result || [];
+			filteredMembershipTypes = membershipTypes.filter((t) => t.is_active);
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			toast.error(m.toast_failed_membership_types());
@@ -85,14 +87,14 @@
 				const newStartDate = parseDate(membershipData.membership_end_date).add({ days: 1 });
 				$formData.membership_start_date = newStartDate.toString();
 				$formData.membership_end_date = newStartDate
-          .add({ days: selectedMembershipType?.duration_days || 0 })
-          .toString();
+					.add({ days: selectedMembershipType?.duration_days || 0 })
+					.toString();
 			}
 		} else {
 			$formData.membership_start_date = today(getLocalTimeZone()).toString();
 			$formData.membership_end_date = today(getLocalTimeZone())
-        .add({ days: selectedMembershipType?.duration_days || 0 })
-        .toString();
+				.add({ days: selectedMembershipType?.duration_days || 0 })
+				.toString();
 		}
 	});
 
@@ -332,12 +334,12 @@
 									</Select.Trigger>
 									<Select.Content>
 										<Select.Group>
-											{#each membershipTypes as type (type.id)}
+											{#each filteredMembershipTypes as type (type.id)}
 												<Select.Item value={String(type.id)} label={type.name}
 													>{type.name}</Select.Item
 												>
 											{/each}
-											{#if membershipTypes.length === 0}
+											{#if filteredMembershipTypes.length === 0}
 												<div class="px-2 py-1.5 text-sm text-muted-foreground">
 													{m.no_types_available()}
 												</div>
