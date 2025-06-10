@@ -19,6 +19,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
 	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
@@ -177,8 +178,8 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Form.Button variant="outline" onclick={handleCancel} class="w-full"
-						>{m['common.cancel']()}</Form.Button
+					<Button variant="outline" onclick={handleCancel} class="w-full"
+						>{m['common.cancel']()}</Button
 					>
 					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
 				</div>

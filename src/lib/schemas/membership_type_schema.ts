@@ -8,9 +8,7 @@ export const membershipTypeSchema = z
 			.number({ message: m.invalid_character() })
 			.int()
 			.min(1, m.duration_min())
-			.max(366, m.duration_max())
-			.nullable()
-			.default(null),
+			.max(366, m.duration_max()),
 		visit_limit: z.coerce
 			.number({ message: m.invalid_character() })
 			.int()
