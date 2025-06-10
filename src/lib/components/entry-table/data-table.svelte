@@ -418,7 +418,7 @@
 {#snippet RowActions({ row }: { row: Row<EntryLog> })}
 	<div class="space-x-2 flex justify-end mr-5">
 		<AlertDialog.Root>
-			<AlertDialog.Trigger>
+			<AlertDialog.Trigger onclick={(e) => e.stopPropagation()}>
 				<Button variant="destructive" size="icon" title="Delete">
 					<Trash2 class="h-4 w-4" />
 				</Button>
