@@ -81,12 +81,18 @@
 		const currentRenewType = renewType;
 
 		if (currentRenewType === 'end') {
-			if (membershipData?.membership_end_date)
-				$formData.membership_start_date = parseDate(membershipData.membership_end_date)
-					.add({ days: 1 })
-					.toString();
+			if (membershipData?.membership_end_date) {
+				const newStartDate = parseDate(membershipData.membership_end_date).add({ days: 1 });
+				$formData.membership_start_date = newStartDate.toString();
+				$formData.membership_end_date = newStartDate
+          .add({ days: selectedMembershipType?.duration_days || 0 })
+          .toString();
+			}
 		} else {
 			$formData.membership_start_date = today(getLocalTimeZone()).toString();
+			$formData.membership_end_date = today(getLocalTimeZone())
+        .add({ days: selectedMembershipType?.duration_days || 0 })
+        .toString();
 		}
 	});
 
@@ -445,7 +451,7 @@
 								type="text"
 								class={getSubtleStatusClasses(membership_status || '')}
 								readonly
-								value={membership_status}
+								value={translateStatus(membership_status)}
 							/>
 						</div>
 

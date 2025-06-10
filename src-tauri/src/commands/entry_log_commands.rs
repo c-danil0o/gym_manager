@@ -498,7 +498,7 @@ pub async fn process_scan(
             scanned_card_id,
             EntryStatus::DeniedAlreadyCheckedIn,
             "denied_already_checked_in",
-            "Member has already checked in today.",
+            "already_checked",
             Some(&member_full_name),
             Some(&membership),
         )

@@ -52,6 +52,7 @@
 	$effect(() => {
 		if (open && result) {
 			startCloseTimer();
+			console.log(result)
 		} else {
 			clearTimeout(timerId);
 			clearInterval(progressIntervalId);
