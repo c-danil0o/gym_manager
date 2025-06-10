@@ -559,7 +559,13 @@
 {/snippet}
 
 <div class="space-y-4">
-	<DataTableToolbar {table} {onSearchChange} {onStartDateChange} {onEndDateChange} {handleClearLog} />
+	<DataTableToolbar
+		{table}
+		{onSearchChange}
+		{onStartDateChange}
+		{onEndDateChange}
+		{handleClearLog}
+	/>
 	<div class="rounded-md border shadow bg-card">
 		<Table.Root>
 			<Table.Header>
@@ -597,6 +603,7 @@
 				{:else}
 					{#each table.getRowModel().rows as row (row.id)}
 						<Table.Row
+							class="cursor-pointer"
 							data-state={row.getIsSelected() && 'selected'}
 							onclick={() => onRowClick(row.original.member_id || null)}
 						>

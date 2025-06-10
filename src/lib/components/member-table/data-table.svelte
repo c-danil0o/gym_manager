@@ -398,7 +398,7 @@
 {#snippet Pagination({ table }: { table: TableType<MemberInfo> })}
 	<div class="flex items-center justify-between px-2">
 		<div class="text-muted-foreground flex-1 text-sm">
-			{m.showing_rows_table({row: serverData?.data?.length || 0, total: serverData?.total || 0 })}
+			{m.showing_rows_table({ row: serverData?.data?.length || 0, total: serverData?.total || 0 })}
 		</div>
 		<div class="flex items-center space-x-6 lg:space-x-8">
 			<div class="flex items-center space-x-2">
@@ -426,7 +426,10 @@
 			<div
 				class="flex w-[100px] items-center justify-center text-sm font-medium text-muted-foreground"
 			>
-				{m.page_of_total({page: pagination?.pageIndex + 1 || 1, total: serverData.total_pages || 1})}
+				{m.page_of_total({
+					page: pagination?.pageIndex + 1 || 1,
+					total: serverData.total_pages || 1
+				})}
 			</div>
 			<div class="flex items-center space-x-2">
 				<Button
@@ -539,11 +542,14 @@
 					</Table.Row>
 				{:else if serverData.data?.length === 0}
 					<Table.Row>
-						<Table.Cell colspan={columns.length} class="h-24 text-center">{m.no_results()}</Table.Cell>
+						<Table.Cell colspan={columns.length} class="h-24 text-center"
+							>{m.no_results()}</Table.Cell
+						>
 					</Table.Row>
 				{:else}
 					{#each table.getRowModel().rows as row (row.id)}
 						<Table.Row
+							class="cursor-pointer"
 							data-state={row.getIsSelected() && 'selected'}
 							onclick={() => handleViewMember(row.original.id)}
 						>
