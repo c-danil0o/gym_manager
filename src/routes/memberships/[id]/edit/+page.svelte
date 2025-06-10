@@ -31,10 +31,10 @@
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
-		duration_days: null,
+		duration_days: 0,
 		visit_limit: null,
 		enter_by: null,
-		price: null,
+		price: 0,
 		description: '',
 		is_active: true
 	};
@@ -66,7 +66,7 @@
 			if (result) {
 				formData.set({
 					name: result.name,
-					duration_days: result.duration_days,
+					duration_days: result.duration_days || 0,
 					visit_limit: result.visit_limit,
 					enter_by: result.enter_by,
 					price: result.price,
@@ -153,7 +153,7 @@
 								<span
 									class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
 								>
-									days
+									{m['common.days']()}
 								</span>
 							</div>
 							<Form.FieldErrors />
