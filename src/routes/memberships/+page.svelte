@@ -162,7 +162,7 @@
 									<Pencil class="h-4 w-4" />
 								</Button>
 								<AlertDialog.Root>
-									<AlertDialog.Trigger>
+									<AlertDialog.Trigger disabled={enabledForRole('admin')}>
 										<Button
 											variant="destructive"
 											size="icon"
