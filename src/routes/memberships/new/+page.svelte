@@ -25,10 +25,10 @@
 
 	const initialValues: z.infer<MembershipTypeSchema> = {
 		name: '',
-		duration_days: 0,
+		duration_days: "" as any,
 		visit_limit: null,
 		enter_by: null,
-		price: 0,
+		price: "" as any,
 		description: '',
 		is_active: true
 	};

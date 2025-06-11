@@ -23,20 +23,22 @@ export const membershipTypeSchema = z
 			.max(24, m.entry_by_min_max())
 			.nullable()
 			.default(null),
-		price: z.coerce.number({ message: m.invalid_character() }).positive(m.price_positive()),
+		price: z.coerce
+			.number({ message: m.invalid_character() })
+			.positive(m.price_positive()),
 		description: z.string().optional().nullable().or(z.literal('')).default(''),
-		is_active: z.boolean().default(true),
+		is_active: z.boolean().default(true)
 	})
 	.refine(
-			(data) => {
-				if (data.visit_limit !== null && data.duration_days !== null) {
-					return data.visit_limit <= data.duration_days;
-				}
-				return true;
-			},
-			{
-				message: m.visit_limit_greater_than_duration(),
-				path: ['visit_limit']
+		(data) => {
+			if (data.visit_limit !== null && data.duration_days !== null) {
+				return data.visit_limit <= data.duration_days;
 			}
-		);
+			return true;
+		},
+		{
+			message: m.visit_limit_greater_than_duration(),
+			path: ['visit_limit']
+		}
+	);
 export type MembershipTypeSchema = typeof membershipTypeSchema;
