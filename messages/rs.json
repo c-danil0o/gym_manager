@@ -123,7 +123,7 @@
 	"toast_membership_type_delete_fail": "Neuspješno brisanje tipa članarine",
 	"toast_membership_type_delete": "Tip članarine {typeName} uspješno obrisan.",
 	"no_membership_types_found": "Nije pronađen nijedan tip članarine.",
-	"membership_types_add_first": "Dodajte prvu tip članarine!",
+	"membership_types_add_first": "Dodajte prvi tip članarine!",
 	"membership_delete_desc": "Ova akcija se ne može poništiti. Ovo će trajno obrisati tip članarine i svaki korisnik koji je bio dodijeljen s njim će izgubiti članarinu!",
 	"toast_new_membership_type_success": "Novi tip članarine uspješno dodan!",
 	"membership_type_update_fail": "Neuspješno ažuriranje tipa članarine",
@@ -223,7 +223,7 @@
 	"friday": "Petak",
 	"saturday": "Subota",
 	"membership_type_distribution": "Distribucija tipova članarina",
-	"membership_type_dist_desc": "Prikazuje broj aktivnih članarina za svaki tip",
+	"membership_type_dist_desc": "Prikazuje broj aktivnih članarina za svaki tip (trenutno)",
 	"memberships": "Članarine",
 	"membership_revenue": "Prihod po tipu članarine",
 	"membership_revenue_desc": "Prikazuje broj članarina i ukupni prihod",
@@ -376,5 +376,6 @@
 	"up_to_date": "Imate najnoviju verziju!",
 	"running_latest_version": "Vaša aplikacija koristi najnoviju verziju.",
 	"check_again": "Provjeri ponovo",
-	"is_active": "Aktivan"
+	"is_active": "Aktivan",
+	"failed_to_load_backups": "Neuspješno učitavanje rezervnih kopija"
 }

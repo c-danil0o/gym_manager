@@ -172,7 +172,7 @@
 								onclick={() => handleEditMember(data?.id)}
 								variant="outline"
 								size="icon"
-								title="m.edit_member()"
+								title={m.edit_member()}
 							>
 								<Pencil class="h-4 w-4" />
 							</Button>
@@ -291,7 +291,12 @@
 								<div class="w-1/2 space-y-2">
 									<Label class="font-semibold">{m.enter_by_hours()}</Label>
 									<div class="relative flex">
-									<Input type="text" class='pr-15' readonly value={data?.membership_type_enter_by ?? ''} />
+										<Input
+											type="text"
+											class="pr-15"
+											readonly
+											value={data?.membership_type_enter_by ?? ''}
+										/>
 										<span
 											class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none text-xs"
 										>
@@ -420,7 +425,7 @@
 									>
 									<Table.Cell>
 										<Badge variant={getMembershipStatusBadgeVariant(item.membership_status)}
-											>{item.membership_status || 'N/A'}</Badge
+											>{translateStatus(item.membership_status || 'N/A')}</Badge
 										>
 									</Table.Cell>
 									<Table.Cell
@@ -441,7 +446,8 @@
 											variant="outline"
 											size="icon"
 											disabled={item.membership_status !== 'active' &&
-												item.membership_status !== 'pending' && item.membership_status !== 'expired'}
+												item.membership_status !== 'pending' &&
+												item.membership_status !== 'expired'}
 											title={m.edit_membership()}
 										>
 											<Pencil class="h-4 w-4" />

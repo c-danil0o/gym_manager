@@ -99,7 +99,7 @@
 	}
 	onMount(() => {
 		setHeader({
-			title: 'New Member',
+			title: m.add_new_member(),
 			showBackButton: true
 		});
 	});

@@ -155,6 +155,7 @@
 	"membership_prompt_cancel": "No, Later",
 	"membership_prompt_yes": "Yes, Add Membership",
 	"failed_to_load_member": "Failed to load member data.",
+	"failed_to_load_last_backup": "Failed to load last backup",
 	"member_update_success": "Member updated successfully!",
 	"edit_member": "Edit Member",
 	"member_delete_success": "Member deleted successfully.",
