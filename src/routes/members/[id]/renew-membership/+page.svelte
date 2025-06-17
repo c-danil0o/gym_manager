@@ -40,6 +40,7 @@
 	let membership_status: string | null = $state(null);
 	let membershipData = $state<MembershipInfo | null>(null);
 	let renewType: 'end' | 'now' = $state('end');
+	let endRenewDisabled = $state(false);
 
 	async function fetchMembershipTypes() {
 		error = null;
@@ -62,10 +63,14 @@
 			if (result) {
 				$formData.member_id = result.member_id;
 				$formData.membership_type_id = result.membership_type_id;
-				if (result?.membership_end_date)
-					$formData.membership_start_date = parseDate(result.membership_end_date)
-						.add({ days: 1 })
-						.toString();
+				if (result?.membership_end_date) {
+					const endDate = parseDate(result.membership_end_date);
+					$formData.membership_start_date = endDate.add({ days: 1 }).toString();
+					if (endDate.compare(today(getLocalTimeZone())) < 0) {
+						renewType = 'now';
+						endRenewDisabled = true;
+					}
+				}
 				selectedMembershipType =
 					membershipTypes.find((t) => t.id === result.membership_type_id) || null;
 				membershipData = result;
@@ -397,7 +402,7 @@
 					</div>
 					<RadioGroup.Root bind:value={renewType} class="flex justify-evenly" name="type">
 						<div class="flex items-center space-x-3 space-y-0">
-							<RadioGroup.Item value="end" />
+							<RadioGroup.Item value="end" disabled={endRenewDisabled} />
 							<Label class="font-normal">{m.from_end_date()}</Label>
 						</div>
 						<div class="flex items-center space-x-3 space-y-0">
