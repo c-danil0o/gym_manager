@@ -32,6 +32,7 @@
 
 	let recentEntries = $state<EntryLog[]>([]);
 	let isLoadingEntries = $state(true);
+	let activeTab = $state('membership');
 
 	async function fetchRecentEntries() {
 		isLoadingEntries = true;
@@ -83,7 +84,7 @@
 	}
 
 	async function handleSingleEntry() {
-		if (!cardIdInput.trim() && (!first_name.trim() && !last_name.trim())) {
+		if (!cardIdInput.trim() && !first_name.trim() && !last_name.trim()) {
 			toast.info(m['scanner.toast_please_provide_card_id_or_name']());
 			return;
 		}
@@ -125,6 +126,18 @@
 	}
 
 	const handleGlobalKeyPress = (event: KeyboardEvent) => {
+		if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+			// Prevent default behavior
+			event.preventDefault();
+
+			// Submit the appropriate form based on active tab
+			if (activeTab === 'membership') {
+				handleSubmitScan();
+			} else if (activeTab === 'single') {
+				handleSingleEntry();
+			}
+			return;
+		}
 		if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
 			// Only allow numbers
 			if (!/^[0-9]$/.test(event.key)) {
@@ -173,11 +186,13 @@
 
 <div class="flex flex-col xl:mt-20 gap-10 justify-between h-full w-full">
 	<!-- Scanner Input Card -->
-	<Tabs.Root value="membership" class="mx-auto w-fit">
+	<Tabs.Root bind:value={activeTab} class="mx-auto w-fit">
 		<Tabs.List class="grid w-full grid-cols-2 h-fit">
-			<Tabs.Trigger value="membership" class="text-lg">{m.membership()}</Tabs.Trigger>
+			<Tabs.Trigger value="membership" class="text-lg cursor-pointer">{m.membership()}</Tabs.Trigger
+			>
 
-			<Tabs.Trigger value="single" class="text-lg">{m.one_time_entry()}</Tabs.Trigger>
+			<Tabs.Trigger value="single" class="text-lg cursor-pointer">{m.one_time_entry()}</Tabs.Trigger
+			>
 		</Tabs.List>
 
 		<Tabs.Content value="membership">
@@ -292,7 +307,11 @@
 									>{entry.card_id || '-'}</Table.Cell
 								>
 								<Table.Cell>
-									<Badge variant={entry.status === 'allowed' || entry.status === 'allowed_single' ? 'default' : 'destructive'}>
+									<Badge
+										variant={entry.status === 'allowed' || entry.status === 'allowed_single'
+											? 'default'
+											: 'destructive'}
+									>
 										{translateAccessStatus(entry.status)}
 									</Badge>
 								</Table.Cell>
