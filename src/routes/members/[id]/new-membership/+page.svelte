@@ -27,7 +27,6 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { setHeader, setLoading } from '$lib/stores/state';
-	import { preventDefault } from '$lib';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
@@ -44,7 +43,7 @@
 		error = null;
 		try {
 			const result = await invoke<MembershipType[]>('get_all_membership_types');
-			membershipTypes = result.filter(type => type.is_active) || [];
+			membershipTypes = result.filter((type) => type.is_active) || [];
 		} catch (e: any) {
 			console.error('Error fetching membership types:', e);
 			toast.error(m.toast_failed_membership_types());
@@ -250,7 +249,7 @@
 			<Card.Title class="text-2xl">{m['common.membership']()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form use:enhance method="post" onsubmit={preventDefault(handleSubmit)} class="space-y-10 w-full">
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-10 w-full">
 				<div class="space-y-6">
 					<div class="w-full space-y-2">
 						<Label class="font-semibold">{m['common.member']()}</Label>
