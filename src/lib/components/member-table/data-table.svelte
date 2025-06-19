@@ -424,7 +424,7 @@
 				</Select.Root>
 			</div>
 			<div
-				class="flex w-[100px] items-center justify-center text-sm font-medium text-muted-foreground"
+				class="flex w-[130px] items-center justify-center text-sm font-medium text-muted-foreground"
 			>
 				{m.page_of_total({
 					page: pagination?.pageIndex + 1 || 1,
