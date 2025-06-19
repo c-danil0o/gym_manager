@@ -378,5 +378,6 @@
 	"up_to_date": "You're up to date!",
 	"running_latest_version": "Your application is running the latest version.",
 	"check_again": "Check Again",
-	"is_active": "Active"
+	"is_active": "Active",
+	"id_must_be_digits": "ID must be digits"
 }

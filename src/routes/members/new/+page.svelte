@@ -158,7 +158,13 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-							<DatePicker {...props} {placeholder} onValueChange={handleDateChange} {locale} weekStartsOn={1} />
+							<DatePicker
+								{...props}
+								{placeholder}
+								onValueChange={handleDateChange}
+								{locale}
+								weekStartsOn={1}
+							/>
 
 							<Form.FieldErrors />
 							<Form.Description class="text-xs">{m.optional()}</Form.Description>
@@ -170,7 +176,16 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.card_number()}</Form.Label>
-							<Input {...props} type="text" bind:value={$formData.card_id} />
+							<Input
+								{...props}
+								type="text"
+								bind:value={$formData.card_id}
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+									}
+								}}
+							/>
 							<Form.Description class="text-xs">{m.use_scanner_or_enter()}</Form.Description>
 							<Form.FieldErrors />
 						{/snippet}

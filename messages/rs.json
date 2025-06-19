@@ -377,5 +377,6 @@
 	"running_latest_version": "Vaša aplikacija koristi najnoviju verziju.",
 	"check_again": "Provjeri ponovo",
 	"is_active": "Aktivan",
-	"failed_to_load_backups": "Neuspješno učitavanje rezervnih kopija"
+	"failed_to_load_backups": "Neuspješno učitavanje rezervnih kopija",
+	"id_must_be_digits": "Broj kartice se mora sastojati od cifara"
 }
