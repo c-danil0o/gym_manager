@@ -18,7 +18,7 @@
 		requireRole('admin');
 		setLoading(true);
 		setHeader({
-			title:m['common.entry_log'](),
+			title: m['common.entry_log'](),
 			showBackButton: false
 		});
 	});
@@ -33,7 +33,7 @@
 	let todayDate: DateValue = today(getLocalTimeZone());
 	let startDate: DateValue = today(getLocalTimeZone()).subtract({ months: 6 });
 	let deleteDialogOpen = $state(false);
-	let selectedPeriod = $state<string | undefined>(null);
+	let selectedPeriod = $state<string | undefined>(undefined);
 
 	let loading = $state(false);
 	let currentParams = $state<QueryRequest>({
@@ -204,7 +204,7 @@
 		onRowClick={handleViewMember}
 		{handleClearLog}
 	/>
-	<Dialog.Root open={deleteDialogOpen}>
+	<Dialog.Root bind:open={deleteDialogOpen}>
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>{m.entry_log_delete()}</Dialog.Title>
