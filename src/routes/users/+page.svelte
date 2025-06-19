@@ -85,7 +85,7 @@
 					onSearchChange(e.currentTarget.value);
 				}
 			}}
-			class="h-8 w-[150px] lg:w-[250px]"
+			class="h-8 w-[150px] lg:w-[250px] bg-card"
 		/>
 		<Button onclick={handleAddNew} class="h-8 text-xs">
 			<PlusCircle class="mr-2 h-4 w-4" />
