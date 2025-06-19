@@ -1,7 +1,7 @@
 {
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "Gym Manager",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"identifier": "com.gym-manager.dc",
 	"build": {
 		"frontendDist": "../build",
@@ -26,7 +26,7 @@
 		}
 	},
 	"bundle": {
- "createUpdaterArtifacts": true,
+		"createUpdaterArtifacts": true,
 		"active": true,
 		"targets": "all",
 		"icon": [
@@ -40,7 +40,9 @@
 	"plugins": {
 		"updater": {
 			"active": true,
-			"endpoints": ["https://github.com/c-danil0o/gym_manager/releases/latest/download/latest.json"],
+			"endpoints": [
+				"https://github.com/c-danil0o/gym_manager/releases/latest/download/latest.json"
+			],
 			"dialog": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJDM0RBNEQyOEIzRENDQkUKUldTK3pEMkwwcVE5TExXT1BnUEpTSHJVNHdvRnduOVpjTlV6alBBZHNac0Y0UnF3RllCRzJZcjIK",
 			"windows": {
