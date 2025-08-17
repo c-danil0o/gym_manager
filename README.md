@@ -58,6 +58,14 @@ Aka Gym is a comprehensive desktop application designed to simplify and streamli
 *   Fitness studio managers.
 *   Anyone needing a reliable, offline-first system to manage memberships and facility access.
 
+## 📷 Screenshots
+![scanner](./images/scanner.png)
+![settings](./images/settings.png)
+![member](./images/member.png)
+![member_details](./images/member_details.png)
+![entry_log](./images/entry_log.png)
+![analytics](./images/analytics.png)
+
 ## 🚀 Getting Started
 
 
