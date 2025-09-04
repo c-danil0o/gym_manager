@@ -1,6 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use gym_manager_lib::{backup, commands, config, db, utils, AppState};
+use gym_manager_lib::{backup, commands, config, db, sync, utils, AppState};
 use tauri::Manager;
 
 fn main() {
@@ -82,6 +82,11 @@ fn main() {
         tauri::async_runtime::spawn(async move {
             backup::spawn_backup_check_task(handle_for_backup_check);
         });
+
+        let handle_for_sync_check = app.handle().clone();
+        tauri::async_runtime::spawn(async move {
+            sync::spawn_sync_check_task(handle_for_sync_check).await;
+        });
         tracing::info!("Background task(s) spawned.");
 
         Ok(())
@@ -127,6 +132,13 @@ fn main() {
             commands::analytics_commands::get_revenue_by_membership_type,
             commands::analytics_commands::get_daily_hourly_visit_count,
             commands::analytics_commands::get_active_memberships_over_time,
+            commands::sync_commands::test_supabase_connection_command,
+            commands::sync_commands::perform_full_sync_command,
+            commands::sync_commands::sync_pending_changes_command,
+            commands::sync_commands::manual_trigger_sync_command,
+            commands::sync_commands::get_pending_changes_info_command,
+            commands::sync_commands::clear_all_pending_changes,
+            commands::sync_commands::clear_failed_pending_changes,
         ])
         // --- Optional: Add Plugins ---
         .plugin(tauri_plugin_updater::Builder::default().build())

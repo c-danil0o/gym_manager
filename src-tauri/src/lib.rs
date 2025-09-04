@@ -6,6 +6,7 @@ pub mod dto;
 pub mod error;
 pub mod models;
 pub mod state;
+pub mod sync;
 pub mod utils;
 
 pub use error::{AppError, Result};
