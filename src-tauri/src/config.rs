@@ -16,6 +16,10 @@ pub struct AppSettings {
     pub backup_enabled: bool,
     pub gym_name: String,
     pub gym_code: String,
+    pub sync_enabled: bool,
+    pub supabase_url: Option<String>,
+    pub supabase_key: Option<String>,
+    pub sync_period_minutes: Option<u64>,
 }
 impl Default for AppSettings {
     fn default() -> Self {
@@ -35,6 +39,10 @@ impl Default for AppSettings {
                     .collect();
                 code
             },
+            sync_enabled: false,
+            supabase_url: None,
+            supabase_key: None,
+            sync_period_minutes: Some(5),
         }
     }
 }
@@ -62,8 +70,35 @@ pub async fn load_settings(app_handle: &AppHandle) -> Result<AppSettings> {
         return Ok(default_settings);
     }
     let content = fs::read_to_string(config_path).await?;
-    let settings: AppSettings = serde_json::from_str(&content)
-        .map_err(|e| AppError::Config(format!("Failed to parse settings file: {}", e)))?;
+
+    // Try to parse settings normally first
+    let settings = match serde_json::from_str::<AppSettings>(&content) {
+        Ok(settings) => settings,
+        Err(_) => {
+            // If parsing fails, merge with defaults
+            tracing::info!("Settings file has missing fields, merging with defaults");
+            let default_settings = AppSettings::default();
+            let default_json = serde_json::to_value(&default_settings)?;
+
+            if let (Ok(mut default_obj), Ok(existing_obj)) = (
+                serde_json::from_value::<serde_json::Map<String, serde_json::Value>>(default_json),
+                serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&content)
+            ) {
+                // Merge existing values into defaults
+                for (key, value) in existing_obj {
+                    default_obj.insert(key, value);
+                }
+
+                serde_json::from_value(serde_json::Value::Object(default_obj))
+                    .unwrap_or(default_settings)
+            } else {
+                default_settings
+            }
+        }
+    };
+
+    // Save the merged settings back to ensure new fields are persisted
+    save_settings(app_handle, &settings).await?;
 
     Ok(settings)
 }

@@ -41,6 +41,8 @@ pub enum AppError {
     NotFound(String),
     #[error("API error: Status {status}, Message: {message}")]
     ApiError { status: u16, message: String },
+    #[error("Sync error: {0}")]
+    Sync(String),
     #[error("Translatable error: {0}")]
     Translatable(#[from] TranslatableError),
 }

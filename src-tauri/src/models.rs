@@ -79,4 +79,16 @@ pub struct CronCheck {
     pub check_type: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct PendingChange {
+    pub id: i64,
+    pub table_name: String,
+    pub record_id: i64,
+    pub operation: String, // INSERT, UPDATE, DELETE
+    pub record_data: Option<String>, // JSON data for INSERT/UPDATE
+    pub created_at: NaiveDateTime,
+    pub retry_count: i64,
+    pub last_error: Option<String>,
+}
+
 // --- API / Command Payloads ---
