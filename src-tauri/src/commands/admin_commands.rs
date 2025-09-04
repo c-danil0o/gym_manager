@@ -245,7 +245,7 @@ pub async fn get_app_settings(app_state: tauri::State<'_, AppState>) -> AppResul
     Ok(app_state.settings.read().await.clone())
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct UpdateAppSettingsPayload {
     pub language: Option<String>,
     pub theme: Option<String>,
@@ -254,6 +254,10 @@ pub struct UpdateAppSettingsPayload {
     pub backup_period_hours: Option<u64>,
     pub backup_enabled: Option<bool>,
     pub gym_name: Option<String>,
+    pub sync_enabled: Option<bool>,
+    pub supabase_url: Option<String>,
+    pub supabase_key: Option<String>,
+    pub sync_period_minutes: Option<u64>,
 }
 
 #[tauri::command]
@@ -317,6 +321,37 @@ pub async fn update_app_settings(
     }
     if payload.backup_period_hours.is_some() {
         settings.backup_period_hours = payload.backup_period_hours;
+        changed = true;
+    }
+
+    // Handle sync settings
+    if let Some(sync_enabled) = payload.sync_enabled {
+        settings.sync_enabled = sync_enabled;
+        changed = true;
+    }
+
+    if payload.supabase_url.is_some() {
+        let supabase_url = payload.supabase_url.as_deref().unwrap_or("");
+        if supabase_url.is_empty() {
+            settings.supabase_url = None;
+        } else {
+            settings.supabase_url = Some(supabase_url.to_string());
+        }
+        changed = true;
+    }
+
+    if payload.supabase_key.is_some() {
+        let supabase_key = payload.supabase_key.as_deref().unwrap_or("");
+        if supabase_key.is_empty() {
+            settings.supabase_key = None;
+        } else {
+            settings.supabase_key = Some(supabase_key.to_string());
+        }
+        changed = true;
+    }
+
+    if payload.sync_period_minutes.is_some() {
+        settings.sync_period_minutes = payload.sync_period_minutes;
         changed = true;
     }
 
