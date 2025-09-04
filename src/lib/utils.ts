@@ -200,6 +200,18 @@ export function translateAppStatus(status: string|null){
       return m.performing_backup();
     case 'backup_failed':
       return m.backup_failed();
+    case 'performing_full_sync':
+      return m.performing_full_sync();
+    case 'full_sync_completed':
+      return m.full_sync_completed();
+    case 'full_sync_failed':
+      return m.full_sync_failed();
+    case 'syncing_changes':
+      return m.syncing_changes();
+    case 'sync_completed':
+      return m.sync_completed();
+    case 'sync_failed':
+      return m.sync_failed();
   }
 }
 
