@@ -9,7 +9,11 @@ export const settingsSchema = z
 		gym_name: z.string(),
 		backup_enabled: z.boolean(),
 		backup_url: z.string().optional().nullable(),
-		backup_period_hours: z.number().optional()
+		backup_period_hours: z.number().optional(),
+		sync_enabled: z.boolean(),
+		supabase_url: z.string().optional().nullable(),
+		supabase_key: z.string().optional().nullable(),
+		sync_period_minutes: z.number().optional()
 	})
 	.refine(
 		(data) => {
@@ -19,6 +23,24 @@ export const settingsSchema = z
 			return true;
 		},
 		{ message: m.backup_url_not_set(), path: ['backup_url'] }
+	)
+	.refine(
+		(data) => {
+			if (data.sync_enabled && (!data.supabase_url || data.supabase_url === '')) {
+				return false;
+			}
+			return true;
+		},
+		{ message: m.supabase_url_required(), path: ['supabase_url'] }
+	)
+	.refine(
+		(data) => {
+			if (data.sync_enabled && (!data.supabase_key || data.supabase_key === '')) {
+				return false;
+			}
+			return true;
+		},
+		{ message: m.supabase_key_required(), path: ['supabase_key'] }
 	);
 
 export type SettingsSchemaType = typeof settingsSchema;

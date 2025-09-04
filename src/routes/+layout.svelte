@@ -95,6 +95,7 @@
 	onMount(() => {
 		let unlisten: () => void;
 		let unlistenStatus: () => void;
+		let unlistenSyncStatus: () => void;
 		async function init() {
 			await loadAndApplySettings();
 
@@ -123,8 +124,22 @@
 			});
 			mounted = true;
 		}
+		async function listenForSyncStatus() {
+			unlistenSyncStatus = await listen<string>('sync_status', (event) => {
+				console.log('Sync status change event received', event.payload);
+				if (event.payload) {
+					status = String(event.payload);
+					// Show error status longer for failed syncs
+					const timeout = event.payload.includes('failed') ? 15000 : 7000;
+					setTimeout(() => {
+						status = null;
+					}, timeout);
+				}
+			});
+		}
 		init();
 		listenForStatus();
+		listenForSyncStatus();
 
 		return () => {
 			if (unlisten) {
@@ -132,6 +147,9 @@
 			}
 			if (unlistenStatus) {
 				unlistenStatus();
+			}
+			if (unlistenSyncStatus) {
+				unlistenSyncStatus();
 			}
 		};
 	});

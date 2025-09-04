@@ -21,7 +21,7 @@
 	import { requireRole } from '../guards';
 	import type { BackupMetadata } from '$lib/models/backup_metadata';
 	import { translateErrorCode } from '$lib/utils';
-	import { DateFormatter } from '@internationalized/date';
+	import { DateFormatter, parseDateTime } from '@internationalized/date';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import { relaunch } from '@tauri-apps/plugin-process';
@@ -34,11 +34,25 @@
 	const locale = m.locale_code() || 'bs-BA';
 	let isBackupDialogOpen = $state(false);
 	let isRestoreDialogOpen = $state(false);
+	let isPushDialogOpen = $state(false);
 
 	const df = new DateFormatter(locale, {
 		dateStyle: 'short',
 		timeStyle: 'short'
 	});
+
+	function formatDate(dateStr: string | null | undefined): string {
+		if (!dateStr) return 'N/A';
+		const date = parseDateTime(dateStr).toDate('UTC');
+		return date.toLocaleString(locale, {
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		});
+	}
 
 	const initialValues: z.infer<SettingsSchemaType> = {
 		gym_name: 'Gym',
@@ -47,7 +61,11 @@
 		timezone: 'UTC',
 		theme: 'light',
 		backup_url: '',
-		backup_period_hours: 0
+		backup_period_hours: 0,
+		sync_enabled: false,
+		supabase_url: '',
+		supabase_key: '',
+		sync_period_minutes: 5
 	};
 
 	const form = superForm(initialValues, {
@@ -63,6 +81,9 @@
 	});
 	let backups = $state<BackupMetadata[] | []>([]);
 	let selectedBackup = $state<string | undefined>();
+	let syncInfo = $state<any>(null);
+	let isTestingConnection = $state(false);
+	let isSyncing = $state(false);
 
 	const { form: formData, enhance } = form;
 
@@ -99,6 +120,89 @@
 		}
 	}
 
+	async function loadSyncInfo() {
+		try {
+			if (!$formData.sync_enabled) return;
+			const info = await invoke('get_pending_changes_info_command');
+			syncInfo = info;
+		} catch (error) {
+			console.error('Failed to load sync info:', error);
+		}
+	}
+
+	async function testSupabaseConnection() {
+		if (!$formData.supabase_url || !$formData.supabase_key) {
+			toast.error(m.supabase_url_required());
+			return;
+		}
+
+		isTestingConnection = true;
+		try {
+			await invoke('test_supabase_connection_command', {
+				url: $formData.supabase_url,
+				key: $formData.supabase_key
+			});
+			toast.success(m.connection_successful());
+		} catch (error) {
+			console.error('Connection test failed:', error);
+			const errorMessage = (error as ErrorResponse)?.message || m.connection_failed();
+			toast.error(errorMessage);
+		} finally {
+			isTestingConnection = false;
+		}
+	}
+
+	async function performFullSync() {
+		if (!$formData.sync_enabled) {
+			toast.error(m.sync_not_enabled());
+			return;
+		}
+
+		isSyncing = true;
+		try {
+			await invoke('perform_full_sync_command');
+			toast.success(m.full_sync_success());
+			await loadSyncInfo();
+		} catch (error) {
+			console.error('Full sync failed:', error);
+			const errorMessage = (error as ErrorResponse)?.message || m.full_sync_error();
+			toast.error(errorMessage);
+		} finally {
+			isSyncing = false;
+		}
+	}
+
+	async function triggerManualSync() {
+		if (!$formData.sync_enabled) {
+			toast.error(m.sync_not_enabled());
+			return;
+		}
+
+		isSyncing = true;
+		try {
+			await invoke('manual_trigger_sync_command');
+			toast.success(m.manual_sync_completed());
+			await loadSyncInfo();
+		} catch (error) {
+			console.error('Manual sync failed:', error);
+			const errorMessage = (error as ErrorResponse)?.message || m.manual_sync_failed();
+			toast.error(errorMessage);
+		} finally {
+			isSyncing = false;
+		}
+	}
+
+	async function clearFailedChanges() {
+		try {
+			await invoke('clear_failed_pending_changes');
+			toast.success(m.failed_changes_cleared());
+			await loadSyncInfo();
+		} catch (error) {
+			console.error('Failed to clear failed changes:', error);
+			toast.error(m.manual_sync_failed());
+		}
+	}
+
 	async function handleSubmit() {
 		setLoading(true);
 		try {
@@ -108,6 +212,7 @@
 				await invoke('update_app_settings', { payload: result.data });
 				toast.success(m.settings_updated());
 				loadBackups();
+				await loadSyncInfo();
 			} else {
 				toast.error('Data is not valid!');
 			}
@@ -179,6 +284,7 @@
 		setLoading(true);
 		await loadSettings();
 		await loadBackups();
+		await loadSyncInfo();
 		setLoading(false);
 	});
 </script>
@@ -388,13 +494,177 @@
 							</AlertDialog.Root>
 						</div>
 					</div>
+				</div>
 
-					<div class="flex gap-20 justify-around mt-10">
-						<Button variant="outline" onclick={handleCancel} class="w-full"
-							>{m['common.cancel']()}</Button
+				<Separator />
+
+				<Card.Title class="text-xl">{m.sync()}</Card.Title>
+
+				<Form.Field {form} name="sync_enabled">
+					<Form.Control>
+						{#snippet children({ props })}
+							<div class="space-x-3 flex items-center">
+								<Form.Label class="font-semibold">{m.enable_sync()}</Form.Label>
+								<Switch {...props} bind:checked={$formData.sync_enabled} />
+							</div>
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
+				<Form.Field {form} name="supabase_url">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.supabase_url()}</Form.Label>
+							<Input
+								{...props}
+								type="text"
+								bind:value={$formData.supabase_url}
+								placeholder="https://your-project.supabase.co"
+							/>
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
+				<Form.Field {form} name="supabase_key">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.supabase_key()}</Form.Label>
+							<Input
+								{...props}
+								type="password"
+								bind:value={$formData.supabase_key}
+								placeholder="Your service role key"
+							/>
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
+				<Form.Field {form} name="sync_period_minutes">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.sync_period_minutes()}</Form.Label>
+							<Select.Root
+								type="single"
+								value={String($formData.sync_period_minutes)}
+								onValueChange={(value) => {
+									$formData.sync_period_minutes = value ? parseInt(value) : undefined;
+								}}
+							>
+								<Select.Trigger {...props}>
+									{$formData?.sync_period_minutes
+										? $formData.sync_period_minutes + ' min'
+										: m.select_period()}
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Group>
+										<Select.Item value="1" label="1 min" />
+										<Select.Item value="5" label="5 min" />
+										<Select.Item value="10" label="10 min" />
+										<Select.Item value="30" label="30 min" />
+										<Select.Item value="60" label="60 min" />
+									</Select.Group>
+								</Select.Content>
+							</Select.Root>
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
+				<div class="w-full space-y-4">
+					<div class="flex gap-4">
+						<Button
+							type="button"
+							variant="outline"
+							onclick={testSupabaseConnection}
+							disabled={isTestingConnection || !$formData.supabase_url || !$formData.supabase_key}
+							class="flex-1"
 						>
-						<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
+							{isTestingConnection ? m.testing_connection() : m.test_connection()}
+						</Button>
 					</div>
+
+					{#if $formData.sync_enabled && syncInfo}
+						<div class="space-y-2">
+							<Label class="font-semibold">{m.sync_status()}</Label>
+							<div class="grid grid-cols-2 gap-4 text-sm">
+								<div>
+									<Label>{m.pending_changes()}</Label>
+									<Input readonly value={syncInfo.pending_count || 0} />
+								</div>
+								<div>
+									<Label>{m.failed_changes()}</Label>
+									<Input readonly value={syncInfo.failed_count || 0} />
+								</div>
+							</div>
+							{#if syncInfo.oldest_change}
+								<div>
+									<Label>{m.oldest_change()}</Label>
+									<Input readonly value={formatDate(syncInfo.oldest_change)} />
+								</div>
+							{/if}
+						</div>
+
+						<div class="flex gap-4 w-full">
+							<Button
+								type="button"
+								variant="outline"
+								onclick={triggerManualSync}
+								disabled={isSyncing}
+								class="flex-1"
+							>
+								{isSyncing ? m.syncing_changes() : m.sync_changes()}
+							</Button>
+							<AlertDialog.Root bind:open={isPushDialogOpen}>
+								<AlertDialog.Trigger class="w-full" type="button">
+									<Button
+										type="button"
+										variant="destructive"
+										disabled={isSyncing}
+										class="w-full"
+									>
+										{isSyncing ? m.syncing_changes() : m.full_sync()}
+									</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>{m['common.are_you_sure']()}</AlertDialog.Title>
+										<AlertDialog.Description>
+											{m.push_sync_desc()}</AlertDialog.Description
+										>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<AlertDialog.Cancel>{m.cancel()}</AlertDialog.Cancel>
+										<AlertDialog.Action
+											onclick={() => {
+												performFullSync();
+											}}>{m.confirm()}</AlertDialog.Action
+										>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						</div>
+
+						{#if syncInfo.failed_count > 0}
+							<Button
+								type="button"
+								variant="destructive"
+								onclick={clearFailedChanges}
+								class="w-full"
+							>
+								{m.clear_failed_changes()}
+							</Button>
+						{/if}
+					{/if}
+				</div>
+
+				<div class="flex gap-20 justify-around mt-10">
+					<Button variant="outline" onclick={handleCancel} class="w-full"
+						>{m['common.cancel']()}</Button
+					>
+					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>
