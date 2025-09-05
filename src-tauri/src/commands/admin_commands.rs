@@ -257,7 +257,7 @@ pub struct UpdateAppSettingsPayload {
     pub sync_enabled: Option<bool>,
     pub supabase_url: Option<String>,
     pub supabase_key: Option<String>,
-    pub sync_period_minutes: Option<u64>,
+    pub sync_period_seconds: Option<u64>,
 }
 
 #[tauri::command]
@@ -350,8 +350,8 @@ pub async fn update_app_settings(
         changed = true;
     }
 
-    if payload.sync_period_minutes.is_some() {
-        settings.sync_period_minutes = payload.sync_period_minutes;
+    if payload.sync_period_seconds.is_some() {
+        settings.sync_period_seconds = payload.sync_period_seconds;
         changed = true;
     }
 

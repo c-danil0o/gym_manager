@@ -5,11 +5,10 @@ use chrono::NaiveDateTime;
 use postgrest::Postgrest;
 use serde_json::Value;
 use sqlx::{Column, Row, TypeInfo};
-use std::time::Duration;
 use tauri::{Emitter, Manager};
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{interval, sleep, Duration, MissedTickBehavior};
 
-const SYNC_CHECK_INTERVAL_MINUTES: u64 = 5;
+const SYNC_CHECK_INTERVAL_SECONDS: u64 = 5;
 const MAX_RETRY_ATTEMPTS: i64 = 3;
 const BATCH_SIZE: i64 = 50;
 
@@ -69,10 +68,10 @@ impl SupabaseClient {
     }
 
     async fn ensure_tables_exist(&self) -> AppResult<()> {
-        // Test if we can access the users table specifically
+        // Test if we can access the members table specifically
         let response = self
             .client
-            .from("users")
+            .from("members")
             .select("id")
             .limit(1)
             .execute()
@@ -275,9 +274,8 @@ pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
     // Emit sync status
     let _ = app_handle.emit("sync_status", "performing_full_sync");
 
-    // Define tables with their specific query logic
+    // Define tables with their specific query logic - only sync relevant tables
     let table_configs = [
-        ("users", "SELECT * FROM users"), // No is_deleted field
         (
             "members",
             "SELECT * FROM members WHERE is_deleted = 0 OR is_deleted IS NULL",
@@ -290,7 +288,6 @@ pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
             "memberships",
             "SELECT * FROM memberships WHERE is_deleted = 0 OR is_deleted IS NULL",
         ),
-        ("entry_logs", "SELECT * FROM entry_logs"), // No is_deleted field
     ];
 
     let mut sync_errors = Vec::new();
@@ -418,8 +415,26 @@ pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
     Ok(())
 }
 
-pub async fn sync_pending_changes(app_handle: &tauri::AppHandle) -> AppResult<()> {
+pub async fn sync_pending_changes(app_handle: &tauri::AppHandle, instant: bool) -> AppResult<()> {
     let state = app_handle.state::<AppState>();
+    let pool = &state.db_pool;
+
+    let check_query = if !instant {
+        "SELECT COUNT(*) FROM pending_changes WHERE status = 'pending'"
+    } else {
+        // Only sync newest changes. Others will be handled by periodic sync worker.
+        "SELECT COUNT(*) FROM pending_changes WHERE status = 'pending' AND created_at > datetime('now', '-1 minute')"
+    };
+    // fast check
+    let pending_count: i64 = sqlx::query_scalar(check_query)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| AppError::Database(format!("Failed to count pending changes: {}", e)))?;
+
+    if pending_count == 0 {
+        return Ok(());
+    }
+
     let settings = state.settings.read().await;
 
     if !settings.sync_enabled {
@@ -435,23 +450,44 @@ pub async fn sync_pending_changes(app_handle: &tauri::AppHandle) -> AppResult<()
         .as_ref()
         .ok_or_else(|| AppError::Sync("Supabase key not configured".to_string()))?;
 
+    tracing::debug!("Found {} pending changes to sync", pending_count);
     let client = SupabaseClient::new(url, key)?;
-    let pool = &state.db_pool;
-
-    // Get pending changes
-    let pending_changes = sqlx::query_as::<_, PendingChange>(
-        "SELECT * FROM pending_changes ORDER BY created_at ASC LIMIT ?",
-    )
-    .bind(BATCH_SIZE)
-    .fetch_all(pool)
-    .await
-    .map_err(|e| AppError::Database(format!("Failed to fetch pending changes: {}", e)))?;
-
-    if pending_changes.is_empty() {
-        return Ok(());
-    }
 
     let _ = app_handle.emit("sync_status", "syncing_changes");
+
+    // Get pending changes
+    let pending_query = if !instant {
+        "SELECT * FROM pending_changes WHERE status = 'pending' ORDER BY created_at ASC LIMIT ?"
+    } else {
+        // Only sync newest changes. Others will be handled by periodic sync worker.
+        "SELECT * FROM pending_changes WHERE status = 'pending' AND created_at > datetime('now', '-1 minute') ORDER BY created_at ASC LIMIT ?"
+    };
+    let pending_changes: Vec<PendingChange> = sqlx::query_as::<_, PendingChange>(pending_query)
+        .bind(BATCH_SIZE)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| AppError::Database(format!("Failed to fetch pending changes: {}", e)))?;
+
+    // update status to 'processing' to avoid duplicate processing
+    let change_ids: Vec<i64> = pending_changes.iter().map(|c| c.id).collect();
+    let update_query = format!(
+        "UPDATE pending_changes SET status = 'processing' WHERE id IN ({})",
+        change_ids
+            .iter()
+            .map(|_| "?".to_string())
+            .collect::<Vec<String>>()
+            .join(", ")
+    );
+
+    sqlx::query(&update_query)
+        .execute(pool)
+        .await
+        .map_err(|e| {
+            AppError::Database(format!(
+                "Failed to update pending changes to processing: {}",
+                e
+            ))
+        })?;
 
     let mut synced_count = 0;
     let mut failed_count = 0;
@@ -476,65 +512,75 @@ pub async fn sync_pending_changes(app_handle: &tauri::AppHandle) -> AppResult<()
                 );
             }
             Err(e) => {
-                // Update retry count and error
+                failed_count += 1;
                 let new_retry_count = change.retry_count + 1;
-                let error_message = e.to_string();
 
                 if new_retry_count >= MAX_RETRY_ATTEMPTS {
-                    // Mark as permanently failed
+                    tracing::error!(
+                        "Change {} failed max retries ({}): {}",
+                        change.id,
+                        MAX_RETRY_ATTEMPTS,
+                        e
+                    );
+                    // Update to failed status
                     sqlx::query(
-                        "UPDATE pending_changes SET retry_count = ?, last_error = ? WHERE id = ?",
+                        "UPDATE pending_changes SET retry_count = ?, last_error = ?, status = 'failed' WHERE id = ?",
                     )
                     .bind(new_retry_count)
-                    .bind(&error_message)
+                    .bind(format!("{}", e))
                     .bind(change.id)
                     .execute(pool)
                     .await
                     .map_err(|e| {
-                        AppError::Database(format!("Failed to update failed change: {}", e))
+                        AppError::Database(format!("Failed to update to failed status: {}", e))
                     })?;
-
-                    tracing::error!(
-                        "Change {} failed permanently after {} attempts: {}",
-                        change.id,
-                        MAX_RETRY_ATTEMPTS,
-                        error_message
-                    );
-                    failed_count += 1;
                 } else {
-                    // Update retry count for next attempt
+                    tracing::warn!(
+                        "Change {} failed (retry {}/{}): {}",
+                        change.id,
+                        new_retry_count,
+                        MAX_RETRY_ATTEMPTS,
+                        e
+                    );
+                    // Reset to pending status for retry
                     sqlx::query(
-                        "UPDATE pending_changes SET retry_count = ?, last_error = ? WHERE id = ?",
+                        "UPDATE pending_changes SET retry_count = ?, last_error = ?, status = 'pending' WHERE id = ?",
                     )
                     .bind(new_retry_count)
-                    .bind(&error_message)
+                    .bind(format!("{}", e))
                     .bind(change.id)
                     .execute(pool)
                     .await
                     .map_err(|e| {
                         AppError::Database(format!("Failed to update retry count: {}", e))
                     })?;
-
-                    tracing::warn!(
-                        "Change {} failed (attempt {}): {}",
-                        change.id,
-                        new_retry_count,
-                        error_message
-                    );
                 }
             }
         }
     }
 
-    if synced_count > 0 || failed_count > 0 {
-        tracing::info!(
-            "Sync completed: {} synced, {} failed",
-            synced_count,
-            failed_count
-        );
+    tracing::info!(
+        "Sync completed: {} synced, {} failed",
+        synced_count,
+        failed_count
+    );
+
+    // Reset any stuck 'processing' records to 'pending' before sync (do this on the next change so it doesn't slow down the sync loop)
+    // This handles cases where the app crashed while processing
+    if let Err(e) = sqlx::query(
+        "UPDATE pending_changes SET status = 'pending' WHERE status = 'processing' AND created_at < datetime('now', '-1 minute')"
+    )
+    .execute(pool)
+    .await {
+        tracing::warn!("Failed to reset stuck processing records: {}", e);
     }
 
-    let _ = app_handle.emit("sync_status", "sync_completed");
+    if failed_count > 0 {
+        let _ = app_handle.emit("sync_status", "sync_partial_failure");
+    } else {
+        let _ = app_handle.emit("sync_status", "sync_success");
+    }
+
     Ok(())
 }
 
@@ -550,8 +596,7 @@ pub async fn get_pending_changes_info(
         .map_err(|e| AppError::Database(format!("Failed to count pending changes: {}", e)))?;
 
     let failed_count: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM pending_changes WHERE retry_count >= ?")
-            .bind(MAX_RETRY_ATTEMPTS)
+        sqlx::query_scalar("SELECT COUNT(*) FROM pending_changes WHERE status = 'failed'")
             .fetch_one(pool)
             .await
             .map_err(|e| AppError::Database(format!("Failed to count failed changes: {}", e)))?;
@@ -580,35 +625,46 @@ pub async fn spawn_sync_check_task(app_handle: tauri::AppHandle) {
         tracing::debug!("Periodic sync check task not started because sync is disabled!");
         return;
     }
-    let sync_period = settings
-        .sync_period_minutes
-        .unwrap_or(SYNC_CHECK_INTERVAL_MINUTES);
+    let sync_period_seconds = settings
+        .sync_period_seconds
+        .unwrap_or(SYNC_CHECK_INTERVAL_SECONDS);
     drop(settings);
 
+    tracing::info!(
+        "Starting sync worker with {} second intervals",
+        sync_period_seconds
+    );
+
     tokio::spawn(async move {
-        let mut check_timer = interval(Duration::from_secs(sync_period * 60));
+        let mut check_timer = interval(Duration::from_secs(sync_period_seconds));
+        // IMPORTANT: Use Delay behavior to ensure previous sync completes before next one starts
         check_timer.set_missed_tick_behavior(MissedTickBehavior::Delay);
 
         loop {
             check_timer.tick().await;
             let state = app_handle.state::<AppState>();
-            let settings = state.settings.read().await;
 
-            // check again if disabled in the meantime
-            if !settings.sync_enabled {
-                tracing::debug!("Periodic sync check skipped because sync is disabled!");
-                continue;
-            }
-
-            drop(settings); // Release the lock
-
-            match sync_pending_changes(&app_handle).await {
+            match sync_pending_changes(&app_handle, false).await {
                 Ok(()) => {
                     tracing::debug!("Periodic sync check completed successfully");
                 }
                 Err(e) => {
                     tracing::error!("Periodic sync check failed: {:?}", e);
                     let _ = app_handle.emit("sync_status", "sync_failed");
+
+                    let pool = &state.db_pool;
+                    // Reset any processing records back to pending on error
+                    if let Err(reset_err) = sqlx::query(
+                        "UPDATE pending_changes SET status = 'pending' WHERE status = 'processing'",
+                    )
+                    .execute(pool)
+                    .await
+                    {
+                        tracing::error!(
+                            "Failed to reset processing records after sync error: {}",
+                            reset_err
+                        );
+                    }
                 }
             }
         }
@@ -616,5 +672,16 @@ pub async fn spawn_sync_check_task(app_handle: tauri::AppHandle) {
 }
 
 pub async fn manual_trigger_sync(app_handle: tauri::AppHandle) -> AppResult<()> {
-    sync_pending_changes(&app_handle).await
+    sync_pending_changes(&app_handle, false).await
+}
+
+pub fn trigger_instant_sync(app_handle: &tauri::AppHandle) {
+    let app_handle_clone = app_handle.clone();
+    tokio::spawn(async move {
+        // Slight delay to allow triggers to finish
+        sleep(Duration::from_millis(2000)).await;
+        if let Err(e) = sync_pending_changes(&app_handle_clone, true).await {
+            tracing::debug!("Instant sync attempt failed (will retry later): {}", e);
+        }
+    });
 }

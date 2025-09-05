@@ -89,6 +89,7 @@ pub struct PendingChange {
     pub created_at: NaiveDateTime,
     pub retry_count: i64,
     pub last_error: Option<String>,
+    pub status: String, // pending, processing, failed
 }
 
 // --- API / Command Payloads ---

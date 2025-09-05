@@ -19,7 +19,7 @@ pub struct AppSettings {
     pub sync_enabled: bool,
     pub supabase_url: Option<String>,
     pub supabase_key: Option<String>,
-    pub sync_period_minutes: Option<u64>,
+    pub sync_period_seconds: Option<u64>,
 }
 impl Default for AppSettings {
     fn default() -> Self {
@@ -42,7 +42,7 @@ impl Default for AppSettings {
             sync_enabled: false,
             supabase_url: None,
             supabase_key: None,
-            sync_period_minutes: Some(5),
+            sync_period_seconds: Some(60), // Default to 5 seconds for fast sync
         }
     }
 }
