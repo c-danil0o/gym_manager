@@ -2,11 +2,7 @@ use crate::{
     dto::{
         EntryLogDisplay, EntryLogQueryParams, EntryStatus, MembershipInfo, PaginatedResponse,
         ScanPayload, ScanPayloadSingle, ScanProcessingResult,
-    },
-    error::Result as AppResult,
-    models::Member,
-    state::AppState,
-    utils, AppError,
+    }, error::Result as AppResult, models::Member, state::AppState, sync::trigger_instant_sync, utils, AppError
 };
 use chrono::{NaiveDate, Timelike, Utc};
 use chrono_tz::Tz;
@@ -21,6 +17,7 @@ async fn calculate_and_update_membership_status_if_needed(
     end_date: NaiveDate,
     remaining_visits: i64,
     tz: &Tz,
+    app_handle: &tauri::AppHandle
 ) -> AppResult<String> {
     // Don't change suspended memberships
     if current_status == "suspended" {
@@ -61,6 +58,7 @@ async fn calculate_and_update_membership_status_if_needed(
                         "Failed to update membership status".to_string(),
                     ));
                 }
+                trigger_instant_sync(&app_handle);
                 tracing::info!(
                     "Updated membership {} status from {} to {}",
                     membership_id,
@@ -121,6 +119,7 @@ async fn deny_entry(
 pub async fn process_scan(
     payload: ScanPayload,
     state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
 ) -> AppResult<ScanProcessingResult> {
     let mut scanned_card_id = payload.card_id.trim();
 
@@ -306,6 +305,7 @@ pub async fn process_scan(
         end_date,
         remaining_visits,
         &gym_tz,
+        &app_handle
     )
     .await
     {
@@ -537,6 +537,8 @@ pub async fn process_scan(
                     "Failed to update membership visits".to_string(),
                 ));
             }
+
+            trigger_instant_sync(&app_handle);
             tracing::info!(
                 "Updated membership {} visits to {}",
                 membership_id,

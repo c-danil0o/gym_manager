@@ -1,5 +1,6 @@
 use crate::dto::{MembershipInfo, MembershipPayload, PaginatedResponse, PaginationPayload};
 use crate::error::{ErrorCodes, TranslatableError};
+use crate::sync::trigger_instant_sync;
 use crate::{
     error::{AppError, Result as AppResult},
     state::AppState,
@@ -152,6 +153,7 @@ pub async fn get_membership_by_id(
 pub async fn save_membership(
     payload: MembershipPayload,
     state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
 ) -> AppResult<MembershipInfo> {
     tracing::info!(
         "Saving membership for member ID: {}, membership ID: {:?}",
@@ -236,6 +238,8 @@ pub async fn save_membership(
         .execute(&state.db_pool)
         .await?;
 
+        trigger_instant_sync(&app_handle);
+
         tracing::info!("Successfully updated membership with ID: {}", membership_id);
     } else if let Some(membership_type_id) = payload.membership_type_id {
         // Create new membership from type
@@ -303,6 +307,7 @@ pub async fn save_membership(
         match insert_result {
             Ok(result) => {
                 tracing::info!("Successfully inserted new membership.");
+                trigger_instant_sync(&app_handle);
                 final_membership_id = Some(result.last_insert_rowid());
             }
             Err(e) => {
@@ -328,7 +333,7 @@ pub async fn save_membership(
 }
 
 #[tauri::command]
-pub async fn delete_membership(id: i64, state: State<'_, AppState>) -> AppResult<()> {
+pub async fn delete_membership(id: i64, state: State<'_, AppState>, app_handle: tauri::AppHandle) -> AppResult<()> {
     tracing::info!("Deleting membership with ID: {}", id);
 
     let now = Utc::now().naive_utc();
@@ -343,6 +348,7 @@ pub async fn delete_membership(id: i64, state: State<'_, AppState>) -> AppResult
     match result {
         Ok(_) => {
             tracing::info!("Successfully deleted membership with ID: {}", id);
+            trigger_instant_sync(&app_handle);
             Ok(())
         }
         Err(e) => {

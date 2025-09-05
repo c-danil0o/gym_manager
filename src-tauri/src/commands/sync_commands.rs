@@ -22,7 +22,7 @@ pub async fn perform_full_sync_command(
 pub async fn sync_pending_changes_command(
     app_handle: tauri::AppHandle,
 ) -> AppResult<()> {
-    sync_pending_changes(&app_handle).await
+    sync_pending_changes(&app_handle, false).await
 }
 
 #[tauri::command]
@@ -44,12 +44,12 @@ pub async fn clear_all_pending_changes(
     state: State<'_, AppState>,
 ) -> AppResult<()> {
     let pool = &state.db_pool;
-    
+
     sqlx::query("DELETE FROM pending_changes")
         .execute(pool)
         .await
         .map_err(|e| crate::error::AppError::Database(format!("Failed to clear pending changes: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -58,11 +58,12 @@ pub async fn clear_failed_pending_changes(
     state: State<'_, AppState>,
 ) -> AppResult<()> {
     let pool = &state.db_pool;
-    
-    sqlx::query("DELETE FROM pending_changes WHERE retry_count >= 3")
+
+    // Clear failed changes for relevant tables only
+    sqlx::query("DELETE FROM pending_changes WHERE status = 'failed'")
         .execute(pool)
         .await
         .map_err(|e| crate::error::AppError::Database(format!("Failed to clear failed pending changes: {}", e)))?;
-    
+
     Ok(())
 }

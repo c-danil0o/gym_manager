@@ -3,6 +3,7 @@ use crate::dto::{
     MemberWithMembership, PaginatedResponse,
 };
 use crate::error::{ErrorCodes, TranslatableError};
+use crate::sync::trigger_instant_sync;
 use crate::utils;
 use crate::{
     error::{AppError, Result as AppResult},
@@ -15,7 +16,11 @@ const DEFAULT_PAGE: i32 = 1;
 const DEFAULT_PAGE_SIZE: i32 = 20;
 
 #[tauri::command]
-pub async fn add_member(payload: MemberPayload, state: State<'_, AppState>) -> AppResult<Member> {
+pub async fn add_member(
+    payload: MemberPayload,
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> AppResult<Member> {
     tracing::info!(
         "Creating new member: {} {}",
         &payload.first_name,
@@ -64,6 +69,7 @@ pub async fn add_member(payload: MemberPayload, state: State<'_, AppState>) -> A
                 payload.first_name,
                 last_insert_id
             );
+            trigger_instant_sync(&app_handle);
 
             let new_type = sqlx::query_as!(
                     Member,
@@ -396,7 +402,7 @@ pub async fn get_member_by_id(
     Ok(member)
 }
 #[tauri::command]
-pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()> {
+pub async fn delete_member(id: i64, state: State<'_, AppState>, app_handle: tauri::AppHandle) -> AppResult<()> {
     tracing::info!("Attempting to delete member with id: {}", id);
 
     let result = sqlx::query!("DELETE FROM members WHERE id = ?", id)
@@ -411,6 +417,8 @@ pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()>
         )));
     }
 
+    trigger_instant_sync(&app_handle);
+
     tracing::info!("Successfully member with id: {}", id);
     Ok(())
 }
@@ -419,6 +427,7 @@ pub async fn delete_member(id: i64, state: State<'_, AppState>) -> AppResult<()>
 pub async fn update_member(
     payload: MemberPayload,
     state: State<'_, AppState>,
+    app_handle: tauri::AppHandle
 ) -> AppResult<Member> {
     tracing::info!(
         "Updating member: {} {}",
@@ -471,6 +480,7 @@ pub async fn update_member(
     match result {
         Ok(_) => {
             tracing::info!("Successfully updated member with ID: {}", member_id);
+            trigger_instant_sync(&app_handle);
             get_member_by_id(
                 GetMemberByIdPayload {
                     id: payload.id.unwrap(),

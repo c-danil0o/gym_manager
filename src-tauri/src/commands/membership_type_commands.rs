@@ -1,5 +1,6 @@
 use crate::dto::NewMembershipTypePayload;
 use crate::error::{ErrorCodes, TranslatableError};
+use crate::sync::trigger_instant_sync;
 use crate::{
     error::{AppError, Result as AppResult},
     models::MembershipType,
@@ -34,6 +35,7 @@ pub async fn update_membership_type(
     id: i64,
     payload: NewMembershipTypePayload,
     state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
 ) -> AppResult<MembershipType> {
     tracing::info!("Updating membership type with id: {}", id);
 
@@ -108,6 +110,7 @@ pub async fn update_membership_type(
                     id
                 )));
             }
+            trigger_instant_sync(&app_handle);
 
             // Fetch the updated membership type to return it
             let updated_type = sqlx::query_as!(
@@ -152,6 +155,7 @@ pub async fn update_membership_type(
 pub async fn add_membership_type(
     payload: NewMembershipTypePayload,
     state: State<'_, AppState>,
+    app_handle: tauri::AppHandle
 ) -> AppResult<MembershipType> {
     tracing::info!("Creating new membership type: {}", &payload.name);
 
@@ -224,7 +228,7 @@ pub async fn add_membership_type(
                 payload.name,
                 last_insert_id
             );
-
+            trigger_instant_sync(&app_handle);
             // Fetch the newly created membership type to return it
             let new_type = sqlx::query_as!(
                     MembershipType,
@@ -283,7 +287,7 @@ pub async fn get_all_membership_types(
 }
 
 #[tauri::command]
-pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppResult<()> {
+pub async fn delete_membership_type(id: i64, state: State<'_, AppState>, app_handle: tauri::AppHandle) -> AppResult<()> {
     tracing::info!(
         "Attempting to (soft) delete membership type with id: {}",
         id
@@ -341,6 +345,7 @@ pub async fn delete_membership_type(id: i64, state: State<'_, AppState>) -> AppR
                 id
             );
             tx.commit().await.map_err(AppError::Sqlx)?;
+            trigger_instant_sync(&app_handle);
             Ok(())
         }
         Err(e) => {
