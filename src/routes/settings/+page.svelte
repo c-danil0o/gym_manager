@@ -65,7 +65,7 @@
 		sync_enabled: false,
 		supabase_url: '',
 		supabase_key: '',
-		sync_period_minutes: 5
+		sync_period_seconds: 10
 	};
 
 	const form = superForm(initialValues, {
@@ -542,29 +542,29 @@
 					</Form.Control>
 				</Form.Field>
 
-				<Form.Field {form} name="sync_period_minutes">
+				<Form.Field {form} name="sync_period_seconds">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">{m.sync_period_minutes()}</Form.Label>
+							<Form.Label class="font-semibold">{m.sync_period_seconds()}</Form.Label>
 							<Select.Root
 								type="single"
-								value={String($formData.sync_period_minutes)}
+								value={String($formData.sync_period_seconds)}
 								onValueChange={(value) => {
-									$formData.sync_period_minutes = value ? parseInt(value) : undefined;
+									$formData.sync_period_seconds = value ? parseInt(value) : undefined;
 								}}
 							>
 								<Select.Trigger {...props}>
-									{$formData?.sync_period_minutes
-										? $formData.sync_period_minutes + ' min'
+									{$formData?.sync_period_seconds
+										? $formData.sync_period_seconds + ' sec'
 										: m.select_period()}
 								</Select.Trigger>
 								<Select.Content>
 									<Select.Group>
-										<Select.Item value="1" label="1 min" />
-										<Select.Item value="5" label="5 min" />
-										<Select.Item value="10" label="10 min" />
-										<Select.Item value="30" label="30 min" />
-										<Select.Item value="60" label="60 min" />
+										<Select.Item value="30" label="30 sec" />
+										<Select.Item value="60" label="60 sec" />
+										<Select.Item value="120" label="120 sec" />
+										<Select.Item value="180" label="180 sec" />
+										<Select.Item value="300" label="300 sec" />
 									</Select.Group>
 								</Select.Content>
 							</Select.Root>
@@ -588,15 +588,24 @@
 
 					{#if $formData.sync_enabled && syncInfo}
 						<div class="space-y-2">
-							<Label class="font-semibold">{m.sync_status()}</Label>
 							<div class="grid grid-cols-2 gap-4 text-sm">
 								<div>
 									<Label>{m.pending_changes()}</Label>
-									<Input readonly value={syncInfo.pending_count || 0} />
+									<Input
+										class={(syncInfo.pending_count || 0) === 0
+											? 'text-green-600'
+											: 'text-yellow-600'}
+										readonly
+										value={syncInfo.pending_count || 0}
+									/>
 								</div>
 								<div>
 									<Label>{m.failed_changes()}</Label>
-									<Input readonly value={syncInfo.failed_count || 0} />
+									<Input
+										class={(syncInfo.failed_count || 0) === 0 ? 'text-green-600' : 'text-red-600'}
+										readonly
+										value={syncInfo.failed_count || 0}
+									/>
 								</div>
 							</div>
 							{#if syncInfo.oldest_change}
@@ -619,12 +628,7 @@
 							</Button>
 							<AlertDialog.Root bind:open={isPushDialogOpen}>
 								<AlertDialog.Trigger class="w-full" type="button">
-									<Button
-										type="button"
-										variant="destructive"
-										disabled={isSyncing}
-										class="w-full"
-									>
+									<Button type="button" variant="destructive" disabled={isSyncing} class="w-full">
 										{isSyncing ? m.syncing_changes() : m.full_sync()}
 									</Button>
 								</AlertDialog.Trigger>

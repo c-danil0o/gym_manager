@@ -13,7 +13,7 @@ export const settingsSchema = z
 		sync_enabled: z.boolean(),
 		supabase_url: z.string().optional().nullable(),
 		supabase_key: z.string().optional().nullable(),
-		sync_period_minutes: z.number().optional()
+		sync_period_seconds: z.number().optional()
 	})
 	.refine(
 		(data) => {

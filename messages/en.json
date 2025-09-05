@@ -368,7 +368,7 @@
 	"enable_sync": "Enable Sync",
 	"supabase_url": "Supabase URL",
 	"supabase_key": "Supabase Key",
-	"sync_period_minutes": "Sync Period (Minutes)",
+	"sync_period_seconds": "Sync Period",
 	"test_connection": "Test Connection",
 	"testing_connection": "Testing...",
 	"connection_successful": "Connection successful!",

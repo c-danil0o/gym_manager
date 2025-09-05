@@ -366,7 +366,7 @@
 	"enable_sync": "Omogući sinhronizaciju",
 	"supabase_url": "Supabase URL",
 	"supabase_key": "Supabase ključ",
-	"sync_period_minutes": "Period sinhronizacije (minut)",
+	"sync_period_seconds": "Period sinhronizacije",
 	"test_connection": "Testiraj konekciju",
 	"testing_connection": "Testiranje...",
 	"connection_successful": "Konekcija uspješna!",
