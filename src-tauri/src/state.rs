@@ -8,6 +8,7 @@ pub struct AppState {
     pub settings: tokio::sync::RwLock<AppSettings>,
     pub last_membership_check: tokio::sync::RwLock<Option<chrono::NaiveDateTime>>,
     pub last_backup: tokio::sync::RwLock<Option<chrono::NaiveDateTime>>,
+    pub sync_mutex: tokio::sync::Mutex<()>,
 }
 
 impl AppState {
@@ -17,6 +18,7 @@ impl AppState {
             settings: tokio::sync::RwLock::new(settings),
             last_membership_check: tokio::sync::RwLock::new(None),
             last_backup: tokio::sync::RwLock::new(None),
+            sync_mutex: tokio::sync::Mutex::new(()),
         }
     }
 }

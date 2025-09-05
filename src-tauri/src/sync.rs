@@ -253,6 +253,9 @@ pub async fn test_supabase_connection(url: &str, key: &str) -> AppResult<()> {
 
 pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
     let state = app_handle.state::<AppState>();
+    // wait for sync mutex to ensure only one sync at a time
+    let _sync_guard = state.sync_mutex.lock().await;
+
     let settings = state.settings.read().await;
 
     let url = settings
@@ -417,6 +420,8 @@ pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
 
 pub async fn sync_pending_changes(app_handle: &tauri::AppHandle, instant: bool) -> AppResult<()> {
     let state = app_handle.state::<AppState>();
+    // wait for sync mutex to ensure only one sync at a time
+    let _sync_guard = state.sync_mutex.lock().await;
     let pool = &state.db_pool;
 
     let check_query = if !instant {
