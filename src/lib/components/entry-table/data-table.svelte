@@ -120,7 +120,7 @@
 
 	// Track previous filter state to prevent infinite loops
 
-	let previousFilterString = $state(JSON.stringify(convertFiltersToBackend(columnFilters)));
+	let previousFilterString = $state(JSON.stringify(convertFiltersToBackend((() => columnFilters)())));
 
 	// Handle filter changes with debouncing and loop prevention
 	let filterTimeout: any;
