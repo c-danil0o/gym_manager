@@ -219,7 +219,7 @@ export function translateAppStatus(status: string|null){
       return m.full_sync_failed();
     case 'syncing_changes':
       return m.syncing_changes();
-    case 'sync_completed':
+    case 'sync_success':
       return m.sync_completed();
     case 'sync_failed':
       return m.sync_failed();
