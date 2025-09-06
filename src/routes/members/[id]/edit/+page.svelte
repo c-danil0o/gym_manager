@@ -18,7 +18,7 @@
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
-	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
+	import DateField from '$lib/components/date-field/date-field.svelte';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -184,7 +184,7 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-								<DatePicker
+								<DateField
 									{...props}
 									value={date_of_birth}
 									onValueChange={handleDobChange}

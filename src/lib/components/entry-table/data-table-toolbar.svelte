@@ -8,7 +8,7 @@
 	import Label from '../ui/label/label.svelte';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
 	import { m } from '$lib/paraglide/messages.js';
-	import DatePicker from '../date-picker/date-picker.svelte';
+	import DateField from '../date-field/date-field.svelte';
 
 	let {
 		table,
@@ -46,11 +46,11 @@
 		<div class="flex items-center gap-6">
 			<div class="flex items-center gap-3">
 				<Label class="text-xs text-muted-foreground">{m.from()}</Label>
-				<DatePicker height={'h-8 py-1'} onValueChange={onStartDateChange} value={startDate} locale={m.locale_code()} />
+				<DateField height={'h-8 py-1'} onValueChange={onStartDateChange} value={startDate} locale={m.locale_code()} />
 			</div>
 			<div class="flex items-center gap-3">
 				<Label class="text-xs text-muted-foreground">{m.to()}</Label>
-				<DatePicker height={'h-8 py-1'} onValueChange={onEndDateChange} value={todayDate} maxValue={todayDate} locale={m.locale_code()} />
+				<DateField height={'h-8 py-1'} onValueChange={onEndDateChange} value={todayDate} maxValue={todayDate} locale={m.locale_code()} />
 			</div>
 		</div>
 

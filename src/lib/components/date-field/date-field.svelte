@@ -1,64 +1,118 @@
 <script lang="ts">
-	import { DateField as DateFieldPrimitive } from 'bits-ui';
-	import { cn } from '$lib/utils';
+	import Calendar from '$lib/components/ui/calendar/calendar.svelte';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { CalendarIcon } from 'lucide-svelte';
-	import type { DateValue } from '@internationalized/date';
+	import { getLocalTimeZone, type DateValue } from '@internationalized/date';
+	import { cn } from '$lib/utils';
+	import { m } from '$lib/paraglide/messages';
 
-	export let value: DateValue | undefined = undefined;
-	export let placeholder: DateValue | undefined = undefined;
-	export let disabled = false;
-	export let readonly = false;
-	export let granularity: 'day' | 'hour' | 'minute' | 'second' = 'day';
-	export let locale = 'en-US';
-	export let hideTimeZone = false;
-	export let hourCycle: 12 | 24 = 24;
-	export let height = 'h-10'; // Default height, can be overridden by parent
+	// Props using runes
+	let {
+		value = $bindable(),
+		placeholder = undefined,
+		disabled = false,
+		readonly = false,
+		locale = 'en-US',
+		open = $bindable(false),
+		minValue = undefined,
+		maxValue = undefined,
+		onValueChange = undefined,
+		onOpenChange = undefined,
+		height = 'h-10',
+		class: className = '',
+		...restProps
+	}: {
+		value?: DateValue | undefined;
+		placeholder?: DateValue | undefined;
+		disabled?: boolean;
+		readonly?: boolean;
+		locale?: string;
+		open?: boolean;
+		minValue?: DateValue | undefined;
+		maxValue?: DateValue | undefined;
+		onValueChange?: ((value: DateValue | undefined) => void) | undefined;
+		onOpenChange?: ((open: boolean) => void) | undefined;
+		height?: string;
+		class?: string;
+		[key: string]: any;
+	} = $props();
 
-	// Form integration props
-	export let attrs: Record<string, any> = {};
+	// Internal state - initialize with the prop value
+	let internalValue = $state(value);
+	let internalOpen = $state(open);
 
-	// Event handlers
-	export let onValueChange: ((value: DateValue | undefined) => void) | undefined = undefined;
+	// Sync internal open state with prop
+	$effect(() => {
+		internalOpen = open;
+	});
+
+	// Sync internal value when prop changes (external updates)
+	$effect(() => {
+		internalValue = value;
+	});
+
+	// Handle open state changes
+	function handleOpenChange(newOpen: boolean) {
+		if (readonly || disabled) return;
+		internalOpen = newOpen;
+		open = newOpen;
+		onOpenChange?.(newOpen);
+	}
+
+	// Handle value changes from calendar selection
+	function handleValueChange(newValue: DateValue | undefined) {
+		if (readonly || disabled) return;
+		internalValue = newValue;
+		value = newValue;
+		onValueChange?.(newValue);
+
+		if (newValue) {
+			internalOpen = false;
+			open = false;
+			onOpenChange?.(false);
+		}
+	}
+
+	// Format date for display
+	function formatDate(date: DateValue | undefined): string {
+		if (!date) return placeholder ? formatDate(placeholder) : m.pick_date();
+		try {
+			return date.toDate(getLocalTimeZone()).toLocaleDateString(locale);
+		} catch (error) {
+			return 'Invalid date';
+		}
+	}
 </script>
 
-<DateFieldPrimitive.Root
-	bind:value
-	{placeholder}
-	{disabled}
-	{readonly}
-	{granularity}
-	{locale}
-	{hideTimeZone}
-	{hourCycle}
-	{onValueChange}
-	{...attrs}
->
-	<div class="relative">
-		<DateFieldPrimitive.Input
-			class={cn(
-				'flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-				'pr-10', height,
-			)}
-		>
-			<!-- Use a snippet to get segments -->
-			{#snippet children({ segments })}
-				{#each segments as { part, value }}
-					<DateFieldPrimitive.Segment
-						{part}
-						class={cn(
-							'inline-block select-none rounded-sm px-0.5 py-0.5 focus:bg-accent hover:bg-accent focus:text-accent-foreground focus:outline-none',
-							part === 'literal' ? 'text-muted-foreground' : 'text-foreground'
-						)}
-					>
-						{value}
-					</DateFieldPrimitive.Segment>
-				{/each}
-			{/snippet}
-		</DateFieldPrimitive.Input>
-
-		<!-- Calendar Icon -->
-		<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-			<CalendarIcon class="h-4 w-4 text-muted-foreground" />
-		</div>
-	</div>
-</DateFieldPrimitive.Root>
+<div class={cn('relative', className)}>
+	<Popover.Root bind:open={internalOpen} onOpenChange={handleOpenChange}>
+		<Popover.Trigger class="w-full">
+			<Button
+				variant="outline"
+				class={cn(
+					'w-full justify-start text-left font-normal',
+					!internalValue && 'text-muted-foreground',
+					height
+				)}
+				{disabled}
+				{...restProps}
+			>
+				<CalendarIcon class="mr-2 h-4 w-4" />
+				{formatDate(internalValue)}
+			</Button>
+		</Popover.Trigger>
+		<Popover.Content class="w-auto p-0" align="start">
+			<Calendar
+				value={internalValue}
+				onValueChange={handleValueChange}
+				{placeholder}
+				{minValue}
+				{maxValue}
+				{locale}
+				type="single"
+				captionLayout="dropdown"
+			/>
+		</Popover.Content>
+	</Popover.Root>
+</div>

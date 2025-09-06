@@ -12,14 +12,14 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import { onMount } from 'svelte';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
 	import { translateErrorCode } from '$lib/utils';
-	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import DateField from '$lib/components/date-field/date-field.svelte';
 
 	let newMember: null | Member = null;
 	let showMembershipPrompt = false;
@@ -48,7 +48,6 @@
 
 	const { form: formData, enhance } = form;
 
-	let placeholder: DateValue = today(getLocalTimeZone());
 
 	function handleDateChange(newValue: DateValue | undefined) {
 		$formData.date_of_birth = newValue ? newValue.toString() : null;
@@ -158,9 +157,9 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.date_of_birth()}</Form.Label>
-							<DatePicker
+							<DateField
+								value={$formData.date_of_birth ? parseDate($formData.date_of_birth) : undefined}
 								{...props}
-								{placeholder}
 								onValueChange={handleDateChange}
 								{locale}
 								weekStartsOn={1}

@@ -28,7 +28,7 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { ErrorResponse } from '$lib/models/error';
 	import { m } from '$lib/paraglide/messages';
-	import DatePicker from '$lib/components/date-picker/date-picker.svelte';
+	import DateField from '$lib/components/date-field/date-field.svelte';
 
 	let error: string | null = $state(null);
 	const memberId = $derived(page.params.id);
@@ -433,7 +433,7 @@
 							<Form.Control>
 								{#snippet children({ props })}
 									<Form.Label class="font-semibold">{m.end_date()}</Form.Label>
-									<DatePicker
+									<DateField
 										{...props}
 										value={end_date}
 										onValueChange={onChangeEndDate}
