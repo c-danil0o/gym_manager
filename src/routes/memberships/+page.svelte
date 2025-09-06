@@ -115,7 +115,7 @@
 			</Card.Content>
 		</Card.Root>
 	{:else}
-		<Card.Root>
+		<Card.Root class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
@@ -150,7 +150,7 @@
 							<Table.Cell class="text-right"
 								>{type.price.toFixed(2)} {m.locale_currency()}</Table.Cell
 							>
-							<Table.Cell class="text-center"><Checkbox checked={type.is_active} /></Table.Cell>
+							<Table.Cell class="text-center"><Checkbox class="mx-auto" checked={type.is_active} readonly /></Table.Cell>
 							<Table.Cell class="text-right pr-8 space-x-2">
 								<Button
 									onclick={() => handleEdit(type.id)}

@@ -194,10 +194,10 @@
 				</Form.Field>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full"
+					<Button variant="outline" onclick={handleCancel} class="flex-1"
 						>{m['common.cancel']()}</Button
 					>
-					<Form.Button type="submit" class="w-full">{m['common.confirm']()}</Form.Button>
+					<Form.Button type="submit" class="flex-1">{m['common.confirm']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

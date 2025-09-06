@@ -152,12 +152,12 @@
 			<Card.Title class="text-2xl">{m.update_user()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
-			<form use:enhance method="post" on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form use:enhance method="post" onsubmit={handleSubmit} class="space-y-6">
 				<Form.Field {form} name="username">
 					<Form.Control>
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.username()}</Form.Label>
-							<Input {...props} type="text" bind:value={$formData.username} />
+							<Input {...props} readonly={$formData.username === "admin"} type="text" bind:value={$formData.username} />
 							<Form.FieldErrors />
 						{/snippet}
 					</Form.Control>
@@ -166,9 +166,9 @@
 				<Form.Field {form} name="role">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Form.Label class="font-semibold">{m['common.duration']()}</Form.Label>
-							<Select.Root type="single" bind:value={$formData.role}>
-								<Select.Trigger {...props}>
+							<Form.Label class="font-semibold">{m.role()}</Form.Label>
+							<Select.Root type="single" bind:value={$formData.role} disabled={$formData.username === "admin"}>
+								<Select.Trigger class="w-full"  {...props}>
 									{$formData?.role
 										? roles.find((role) => role.value === $formData.role)?.label
 										: m.select_role()}
@@ -195,7 +195,7 @@
 
 			<Card.Title class="text-2xl mb-7">{m.change_password()}</Card.Title>
 
-			<form use:enhance2 method="post" on:submit|preventDefault={changePassword} class="space-y-6">
+			<form use:enhance2 method="post" onsubmit={changePassword} class="space-y-6">
 				<Form.Field form={form2} name="new_password">
 					<Form.Control>
 						{#snippet children({ props })}

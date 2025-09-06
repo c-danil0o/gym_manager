@@ -300,7 +300,7 @@
 							<Form.Label class="font-semibold">{m.language()}</Form.Label>
 
 							<Select.Root type="single" bind:value={$formData.language}>
-								<Select.Trigger {...props}>
+								<Select.Trigger class="w-full" {...props}>
 									{languages.find((l) => l.id === $formData.language)
 										? languages.find((l) => l.id === $formData.language)?.name
 										: m.select_language()}
@@ -352,7 +352,7 @@
 						{#snippet children({ props })}
 							<Form.Label class="font-semibold">{m.theme()}</Form.Label>
 							<Select.Root type="single" bind:value={$formData.theme}>
-								<Select.Trigger {...props}>
+								<Select.Trigger class="w-full" {...props}>
 									{$formData?.theme ? $formData.theme : m.select_theme()}
 								</Select.Trigger>
 								<Select.Content>
@@ -402,7 +402,7 @@
 									$formData.backup_period_hours = value ? parseInt(value) : undefined;
 								}}
 							>
-								<Select.Trigger {...props}>
+								<Select.Trigger class="w-full" {...props}>
 									{$formData?.backup_period_hours
 										? $formData.backup_period_hours + 'h'
 										: m.select_period()}
@@ -553,7 +553,7 @@
 									$formData.sync_period_seconds = value ? parseInt(value) : undefined;
 								}}
 							>
-								<Select.Trigger {...props}>
+								<Select.Trigger class="w-full" {...props}>
 									{$formData?.sync_period_seconds
 										? $formData.sync_period_seconds + ' sec'
 										: m.select_period()}
@@ -589,7 +589,7 @@
 					{#if $formData.sync_enabled && syncInfo}
 						<div class="space-y-2">
 							<div class="grid grid-cols-2 gap-4 text-sm">
-								<div>
+								<div class="flex flex-col gap-2" >
 									<Label>{m.pending_changes()}</Label>
 									<Input
 										class={(syncInfo.pending_count || 0) === 0
@@ -599,7 +599,7 @@
 										value={syncInfo.pending_count || 0}
 									/>
 								</div>
-								<div>
+								<div class="flex flex-col gap-2">
 									<Label>{m.failed_changes()}</Label>
 									<Input
 										class={(syncInfo.failed_count || 0) === 0 ? 'text-green-600' : 'text-red-600'}
@@ -665,10 +665,10 @@
 				</div>
 
 				<div class="flex gap-20 justify-around mt-10">
-					<Button variant="outline" onclick={handleCancel} class="w-full"
+					<Button variant="outline" onclick={handleCancel} class="flex-1"
 						>{m['common.cancel']()}</Button
 					>
-					<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
+					<Form.Button type="submit" class="flex-1">{m['common.save']()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

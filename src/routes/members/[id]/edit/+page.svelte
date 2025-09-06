@@ -209,8 +209,8 @@
 					</Form.Field>
 
 					<div class="flex gap-20 justify-around">
-						<Button variant="outline" onclick={handleCancel} class="w-full">{m['common.cancel']()}</Button>
-						<Form.Button type="submit" class="w-full">{m['common.save']()}</Form.Button>
+						<Button variant="outline" onclick={handleCancel} class="flex-1">{m['common.cancel']()}</Button>
+						<Form.Button type="submit" class="flex-1">{m['common.save']()}</Form.Button>
 					</div>
 				</div>
 			</form>

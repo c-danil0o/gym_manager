@@ -115,7 +115,7 @@
 			</Card.Content>
 		</Card.Root>
 	{:else}
-		<Card.Root>
+		<Card.Root class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
@@ -141,8 +141,8 @@
 									<Pencil class="h-4 w-4" />
 								</Button>
 								<AlertDialog.Root>
-									<AlertDialog.Trigger>
-										<Button variant="destructive" size="icon" title={m['common.delete']()}>
+									<AlertDialog.Trigger disabled={type.username === "admin"}>
+										<Button variant="destructive" size="icon" disabled={type.username === "admin"} title={m['common.delete']()}>
 											<Trash2 class="h-4 w-4" />
 										</Button>
 									</AlertDialog.Trigger>

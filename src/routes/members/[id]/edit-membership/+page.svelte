@@ -293,7 +293,7 @@
 										}
 									}}
 								>
-									<Select.Trigger {...props}>
+									<Select.Trigger class="w-full" {...props}>
 										{selectedMembershipType
 											? selectedMembershipType.name
 											: m.select_membership_type()}
@@ -447,8 +447,8 @@
 				</div>
 
 				<div class="flex gap-20 justify-around">
-					<Button variant="outline" onclick={handleCancel} class="w-full">{m.cancel()}</Button>
-					<Form.Button type="submit" class="w-full">{m.save()}</Form.Button>
+					<Button variant="outline" onclick={handleCancel} class="flex-1">{m.cancel()}</Button>
+					<Form.Button type="submit" class="flex-1">{m.save()}</Form.Button>
 				</div>
 			</form>
 		</Card.Content>

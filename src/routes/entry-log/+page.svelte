@@ -234,10 +234,10 @@
 			</div>
 
 			<div class="flex gap-20 justify-around">
-				<Button variant="outline" onclick={() => (deleteDialogOpen = false)} class="w-full"
+				<Button variant="outline" onclick={() => (deleteDialogOpen = false)} class="flex-1"
 					>{m.cancel()}</Button
 				>
-				<Button onclick={handleDeleteLogs} class="w-full">{m.confirm()}</Button>
+				<Button onclick={handleDeleteLogs} class="flex-1">{m.confirm()}</Button>
 			</div>
 		</Dialog.Content>
 	</Dialog.Root>
