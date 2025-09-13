@@ -12,6 +12,7 @@ const SYNC_CHECK_INTERVAL_SECONDS: u64 = 5;
 const MAX_RETRY_ATTEMPTS: i64 = 3;
 const BATCH_SIZE: i64 = 50;
 
+#[derive(Clone)]
 pub struct SupabaseClient {
     client: Postgrest,
 }
@@ -38,31 +39,30 @@ impl SupabaseClient {
         Ok(SupabaseClient { client })
     }
 
-    async fn test_connection(&self) -> AppResult<()> {
-        // Test connection by attempting to query a non-existent table
-        // This should return 404 if the API is working but table doesn't exist
-        // or 200 if table exists, both indicate working connection
+    pub async fn test_connection(&self) -> AppResult<()> {
+        // Ultra-fast connection test using HEAD request with count only (minimal overhead)
         let response = self
             .client
-            .from("connection_test_table_that_should_not_exist")
-            .select("*")
-            .limit(1)
+            .from("members")
+            .select("id")
+            .limit(0)
+            .single()
             .execute()
             .await
             .map_err(|e| AppError::Sync(format!("Connection test failed: {}", e)))?;
 
         let status = response.status();
-        tracing::info!("Connection test response status: {}", status);
 
-        // Accept success, 404 (table not found), 406 (not acceptable) as valid responses
-        // These indicate the API endpoint is working and credentials are valid
-        if status.is_success() || status.as_u16() == 404 || status.as_u16() == 406 {
+        if status.is_success()
+            || status.as_u16() == 404  // table not found (still valid connection)
+            || status.as_u16() == 406  // not acceptable (still valid connection)
+            || status.as_u16() == 409  // conflict from single() on empty result (still valid connection)
+        {
             Ok(())
         } else {
-            let text = response.text().await.unwrap_or_default();
             Err(AppError::Sync(format!(
-                "Connection test failed: {} - {}",
-                status, text
+                "Connection test failed: {}",
+                status
             )))
         }
     }
@@ -256,18 +256,7 @@ pub async fn perform_full_sync(app_handle: &tauri::AppHandle) -> AppResult<()> {
     // wait for sync mutex to ensure only one sync at a time
     let _sync_guard = state.sync_mutex.lock().await;
 
-    let settings = state.settings.read().await;
-
-    let url = settings
-        .supabase_url
-        .as_ref()
-        .ok_or_else(|| AppError::Sync("Supabase URL not configured".to_string()))?;
-    let key = settings
-        .supabase_key
-        .as_ref()
-        .ok_or_else(|| AppError::Sync("Supabase key not configured".to_string()))?;
-
-    let client = SupabaseClient::new(url, key)?;
+    let client = state.get_supabase_client().await?;
 
     // Ensure tables exist
     client.ensure_tables_exist().await?;
@@ -445,18 +434,10 @@ pub async fn sync_pending_changes(app_handle: &tauri::AppHandle, instant: bool) 
     if !settings.sync_enabled {
         return Ok(());
     }
-
-    let url = settings
-        .supabase_url
-        .as_ref()
-        .ok_or_else(|| AppError::Sync("Supabase URL not configured".to_string()))?;
-    let key = settings
-        .supabase_key
-        .as_ref()
-        .ok_or_else(|| AppError::Sync("Supabase key not configured".to_string()))?;
+    drop(settings);
 
     tracing::debug!("Found {} pending changes to sync", pending_count);
-    let client = SupabaseClient::new(url, key)?;
+    let client = state.get_supabase_client().await?;
 
     let _ = app_handle.emit("sync_status", "syncing_changes");
 
