@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                    SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted\n                    FROM members\n                    WHERE id = ?\n                    ",
+  "query": "\n                    SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted, auth_user_id\n                    FROM members\n                    WHERE id = ?\n                    ",
   "describe": {
     "columns": [
       {
@@ -57,6 +57,11 @@
         "name": "is_deleted",
         "ordinal": 10,
         "type_info": "Bool"
+      },
+      {
+        "name": "auth_user_id",
+        "ordinal": 11,
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -73,8 +78,9 @@
       true,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "e1ddf0986a7e8e787f08f86bac4ccabaae8494cea91ac21fc3ca69b77c4ef6ea"
+  "hash": "004bbaee003ae4158082d429940e92733162e882ce48800c2fea515b0fd26f76"
 }

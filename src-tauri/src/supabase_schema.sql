@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE TABLE IF NOT EXISTS public.members (
   id BIGINT PRIMARY KEY,
   card_id TEXT,
+  auth_user_id UUID,
   short_card_id TEXT,
   first_name TEXT,
   last_name TEXT,

@@ -241,6 +241,11 @@ pub struct EntryLogDisplay {
     pub notes: Option<String>,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct InviteMemberPayload {
+    pub member_id: Option<i64>,
+}
+
 impl Default for EntryLogQueryParams {
     fn default() -> Self {
         Self {

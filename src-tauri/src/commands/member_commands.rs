@@ -1,6 +1,6 @@
 use crate::dto::{
-    GetMemberByIdPayload, GetMembersPaginatedPayload, MemberInfo, MemberPayload,
-    MemberWithMembership, PaginatedResponse,
+    GetMemberByIdPayload, GetMembersPaginatedPayload, InviteMemberPayload, MemberInfo,
+    MemberPayload, MemberWithMembership, PaginatedResponse,
 };
 use crate::error::{ErrorCodes, TranslatableError};
 use crate::sync::trigger_instant_sync;
@@ -10,10 +10,13 @@ use crate::{
     models::Member,
     state::AppState,
 };
+use supabase_auth::error::Error;
+use supabase_auth::models::{AuthClient, User};
 use tauri::State;
 
 const DEFAULT_PAGE: i32 = 1;
 const DEFAULT_PAGE_SIZE: i32 = 20;
+const MY_REDIRECT_URL_CONSTANT: &str = "http://localhost:5173";
 
 #[tauri::command]
 pub async fn add_member(
@@ -74,7 +77,7 @@ pub async fn add_member(
             let new_type = sqlx::query_as!(
                     Member,
                     r#"
-                    SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted
+                    SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted, auth_user_id
                     FROM members
                     WHERE id = ?
                     "#,
@@ -384,7 +387,7 @@ pub async fn get_member_by_id(
     let member = sqlx::query_as!(
         Member,
         r#"
-        SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted
+        SELECT id, card_id, short_card_id, first_name, last_name, email, phone, date_of_birth, created_at, updated_at, is_deleted, auth_user_id
         FROM members
         WHERE id = ? AND is_deleted = FALSE
         "#,
@@ -402,7 +405,11 @@ pub async fn get_member_by_id(
     Ok(member)
 }
 #[tauri::command]
-pub async fn delete_member(id: i64, state: State<'_, AppState>, app_handle: tauri::AppHandle) -> AppResult<()> {
+pub async fn delete_member(
+    id: i64,
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> AppResult<()> {
     tracing::info!("Attempting to delete member with id: {}", id);
 
     let result = sqlx::query!("DELETE FROM members WHERE id = ?", id)
@@ -427,7 +434,7 @@ pub async fn delete_member(id: i64, state: State<'_, AppState>, app_handle: taur
 pub async fn update_member(
     payload: MemberPayload,
     state: State<'_, AppState>,
-    app_handle: tauri::AppHandle
+    app_handle: tauri::AppHandle,
 ) -> AppResult<Member> {
     tracing::info!(
         "Updating member: {} {}",
@@ -512,4 +519,80 @@ pub async fn update_member(
             Err(AppError::Sqlx(e)) // Convert general SQLx errors
         }
     }
+}
+
+#[tauri::command]
+pub async fn invite_member_to_app(
+    payload: InviteMemberPayload,
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> AppResult<()> {
+    let pool = &state.db_pool;
+
+    // Get member details
+    let member =
+        sqlx::query_as::<_, Member>("SELECT * FROM members WHERE id = ? AND is_deleted = FALSE")
+            .bind(payload.member_id)
+            .fetch_one(pool)
+            .await?;
+
+    let email = member
+        .email
+        .ok_or_else(|| AppError::Validation("Member must have email to be invited".to_string()))?;
+
+    // Get Supabase settings
+    let settings = state.settings.read().await;
+    let supabase_url = settings
+        .supabase_url
+        .as_ref()
+        .ok_or_else(|| AppError::Config("Supabase URL not configured".to_string()))?;
+    let supabase_key = settings
+        .supabase_key
+        .as_ref() // Service role key needed
+        .ok_or_else(|| AppError::Config("Supabase service role key not configured".to_string()))?;
+    let supabase_jwt = settings
+        .supabase_jwt_secret
+        .as_ref() // Service role key needed
+        .ok_or_else(|| AppError::Config("Supabase jwt secret not configured".to_string()))?;
+
+    // Create Supabase auth client
+    let auth_client = AuthClient::new(supabase_url, supabase_key, supabase_jwt);
+
+    let mut redirect_data = serde_json::Map::new();
+    redirect_data.insert(
+        "redirectTo".to_string(),
+        serde_json::Value::String(MY_REDIRECT_URL_CONSTANT.to_string()),
+    );
+    let redirect_data_value = serde_json::Value::Object(redirect_data);
+
+    // Send invitation via Supabase Auth
+    let invitation_result: Result<User, Error> = auth_client
+        .invite_user_by_email(&email, Some(redirect_data_value), auth_client.api_key())
+        .await;
+    if let Err(e) = &invitation_result {
+        tracing::error!("Failed to send invitation email via Supabase: {:?}", e);
+        return Err(AppError::ExternalService(format!(
+            "Failed to send invitation email: {:?}",
+            e
+        )));
+    }
+    let user: User = invitation_result.unwrap();
+    let user_id = user.id.to_string();
+
+    // Update member record to track invitation
+    sqlx::query!(
+        "UPDATE members SET
+         auth_user_id = ?
+         WHERE id = ?",
+        user_id,
+        member.id
+    )
+    .execute(pool)
+    .await?;
+
+    // Trigger sync to update Supabase
+    trigger_instant_sync(&app_handle);
+
+    tracing::info!("Invited member {} ({}) to mobile app", member.id, email);
+    Ok(())
 }

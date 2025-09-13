@@ -13,6 +13,7 @@ export const settingsSchema = z
 		sync_enabled: z.boolean(),
 		supabase_url: z.string().optional().nullable(),
 		supabase_key: z.string().optional().nullable(),
+		supabase_jwt_secret: z.string().optional().nullable(),
 		sync_period_seconds: z.number().optional()
 	})
 	.refine(
@@ -23,6 +24,15 @@ export const settingsSchema = z
 			return true;
 		},
 		{ message: m.backup_url_not_set(), path: ['backup_url'] }
+	)
+	.refine(
+		(data) => {
+			if (data.sync_enabled && (!data.supabase_jwt_secret || data.supabase_jwt_secret === '')) {
+				return false;
+			}
+			return true;
+		},
+		{ message: m.supabase_jwt_required(), path: ['supabase_jwt_secret'] }
 	)
 	.refine(
 		(data) => {

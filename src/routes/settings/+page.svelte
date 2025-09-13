@@ -65,6 +65,7 @@
 		sync_enabled: false,
 		supabase_url: '',
 		supabase_key: '',
+		supabase_jwt_secret: '',
 		sync_period_seconds: 10
 	};
 
@@ -153,6 +154,7 @@
 	}
 
 	async function performFullSync() {
+		isPushDialogOpen = false;
 		if (!$formData.sync_enabled) {
 			toast.error(m.sync_not_enabled());
 			return;
@@ -542,6 +544,21 @@
 					</Form.Control>
 				</Form.Field>
 
+				<Form.Field {form} name="supabase_jwt_secret">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label class="font-semibold">{m.supabase_jwt()}</Form.Label>
+							<Input
+								{...props}
+								type="text"
+								bind:value={$formData.supabase_jwt_secret}
+								placeholder="Your JWT secret"
+							/>
+							<Form.FieldErrors />
+						{/snippet}
+					</Form.Control>
+				</Form.Field>
+
 				<Form.Field {form} name="sync_period_seconds">
 					<Form.Control>
 						{#snippet children({ props })}
@@ -589,7 +606,7 @@
 					{#if $formData.sync_enabled && syncInfo}
 						<div class="space-y-2">
 							<div class="grid grid-cols-2 gap-4 text-sm">
-								<div class="flex flex-col gap-2" >
+								<div class="flex flex-col gap-2">
 									<Label>{m.pending_changes()}</Label>
 									<Input
 										class={(syncInfo.pending_count || 0) === 0

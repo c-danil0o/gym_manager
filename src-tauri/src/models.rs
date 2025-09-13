@@ -17,6 +17,7 @@ pub struct User {
 pub struct Member {
     pub id: i64,
     pub card_id: Option<String>,
+    pub auth_user_id: Option<String>,
     pub short_card_id: Option<String>,
     pub first_name: String,
     pub last_name: String,

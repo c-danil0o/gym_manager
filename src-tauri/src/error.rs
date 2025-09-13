@@ -28,6 +28,8 @@ pub enum AppError {
 
     #[error("Database: {0}")]
     Database(String),
+    #[error("External service: {0}")]
+    ExternalService(String),
 
     #[error("Membership check failed: {0}")]
     MembershipCheckFailed(String),
@@ -120,6 +122,7 @@ impl ErrorCodes {
     pub const BACKUP_URL_NOT_SET: &'static str = "error.backup_url_not_set";
     pub const INVALID_TIMEZONE: &'static str = "error.invalid_timezone";
     pub const INVALID_BACKUP_URL: &'static str = "error.invalid_backup_url";
+    pub const INVITE_NOT_SENT: &'static str = "error.invite_not_sent";
 }
 
 impl std::error::Error for TranslatableError {}

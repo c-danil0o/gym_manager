@@ -24,6 +24,7 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { QueryResponse } from '$lib/models/table-state';
 	import { m } from '$lib/paraglide/messages';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 
 	let isLoadingHistory = $state(true);
 	let error: string | null = $state(null);
@@ -136,6 +137,22 @@
 		}
 	}
 
+	async function handleInviteMobileUser(id: number | null) {
+		if (!id) return;
+
+		setLoading(true);
+		try {
+			await invoke('invite_member_to_app', { payload: { member_id: id } });
+			toast.success(m.membership_delete_success());
+			fetchMemberWithMembership();
+		} catch (e: any) {
+			console.error('Error deleting membership:', e);
+			toast.error(m.membership_delete_fail());
+		} finally {
+			setLoading(false);
+		}
+	}
+
 	async function handleAddNewMembership(memberId: number | undefined) {
 		if (memberId) await goto(`/members/${memberId}/new-membership`);
 	}
@@ -237,6 +254,17 @@
 						<div class="w-full space-y-2">
 							<Label class="font-semibold">{m.card_number()}</Label>
 							<Input readonly type="text" value={data?.card_id} />
+						</div>
+
+						<div class="w-full space-y-2">
+							<Label class="font-semibold">Mobilna aplikacija</Label>
+							<div class="flex w-full justify-around gap-5 items-center">
+								<div class="flex items-center space-x-4">
+									<Label class="font-normal">{m.status()}:</Label>
+									<Badge class="h-fit">Aktivna</Badge>
+								</div>
+								<Button onclick={() => handleInviteMobileUser(data?.id)}>Posalji poziv</Button>
+							</div>
 						</div>
 					</div>
 				</Card.Content>

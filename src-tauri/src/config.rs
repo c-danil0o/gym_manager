@@ -19,6 +19,7 @@ pub struct AppSettings {
     pub sync_enabled: bool,
     pub supabase_url: Option<String>,
     pub supabase_key: Option<String>,
+    pub supabase_jwt_secret: Option<String>,
     pub sync_period_seconds: Option<u64>,
 }
 impl Default for AppSettings {
@@ -42,6 +43,7 @@ impl Default for AppSettings {
             sync_enabled: false,
             supabase_url: None,
             supabase_key: None,
+            supabase_jwt_secret: None,
             sync_period_seconds: Some(60), // Default to 5 seconds for fast sync
         }
     }

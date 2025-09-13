@@ -257,6 +257,7 @@ pub struct UpdateAppSettingsPayload {
     pub sync_enabled: Option<bool>,
     pub supabase_url: Option<String>,
     pub supabase_key: Option<String>,
+    pub supabase_jwt_secret: Option<String>,
     pub sync_period_seconds: Option<u64>,
 }
 
@@ -346,6 +347,16 @@ pub async fn update_app_settings(
             settings.supabase_key = None;
         } else {
             settings.supabase_key = Some(supabase_key.to_string());
+        }
+        changed = true;
+    }
+
+    if payload.supabase_jwt_secret.is_some() {
+        let supabase_jwt_secret = payload.supabase_jwt_secret.as_deref().unwrap_or("");
+        if supabase_jwt_secret.is_empty() {
+            settings.supabase_jwt_secret = None;
+        } else {
+            settings.supabase_jwt_secret = Some(supabase_jwt_secret.to_string());
         }
         changed = true;
     }

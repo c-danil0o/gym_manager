@@ -57,6 +57,11 @@
         "name": "is_deleted",
         "ordinal": 10,
         "type_info": "Bool"
+      },
+      {
+        "name": "auth_user_id",
+        "ordinal": 11,
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -73,7 +78,8 @@
       true,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
   "hash": "598c904f419f8957bb8782a01a820287f013e3ab72d94d9152c864ba83687a78"

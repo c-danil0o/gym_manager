@@ -117,6 +117,7 @@ fn main() {
             commands::member_commands::update_member,
             commands::member_commands::get_members_with_memberships_paginated,
             commands::member_commands::get_member_by_id_with_membership,
+            commands::member_commands::invite_member_to_app,
             commands::membership_commands::get_all_memberships_for_member,
             commands::membership_commands::save_membership,
             commands::membership_commands::delete_membership,
