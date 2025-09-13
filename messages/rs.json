@@ -414,5 +414,15 @@
 	"check_again": "Provjeri ponovo",
 	"is_active": "Aktivan",
 	"failed_to_load_backups": "Neuspješno učitavanje rezervnih kopija",
-	"id_must_be_digits": "Broj kartice se mora sastojati od cifara"
+	"id_must_be_digits": "Broj kartice se mora sastojati od cifara",
+	"member_invite_success": "Pozivnica za aplikaciju uspješno poslana!",
+	"member_invite_fail": "Neuspješno slanje pozivnice za aplikaciju! Provjerite email člana i internet vezu.",
+	"reset_password_request_success": "Zahtjev za resetovanje lozinke uspješno poslan!",
+	"reset_password_request_fail": "Neuspješno slanje zahtjeva za resetovanje lozinke! Provjerite email člana i internet vezu.",
+  "invite_member": "Pozovi člana",
+	"active_app": "Aktivna",
+	"inactive_app": "Neaktivna",
+	"reset_password_app": "Resetuj lozinku",
+	"send_invite": "Pošalji pozivnicu",
+	"mobile_app": "Mobilna aplikacija"
 }

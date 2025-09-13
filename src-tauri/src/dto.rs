@@ -134,6 +134,7 @@ pub struct MemberWithMembership {
     pub id: i64, // Member ID
     pub card_id: Option<String>,
     pub short_card_id: Option<String>,
+    pub auth_user_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
     pub email: Option<String>,
@@ -243,6 +244,11 @@ pub struct EntryLogDisplay {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct InviteMemberPayload {
+    pub member_id: Option<i64>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ResetMemberPasswordPayload {
     pub member_id: Option<i64>,
 }
 

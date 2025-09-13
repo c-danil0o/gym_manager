@@ -24,7 +24,6 @@
 	import { setHeader, setLoading } from '$lib/stores/state';
 	import type { QueryResponse } from '$lib/models/table-state';
 	import { m } from '$lib/paraglide/messages';
-	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 
 	let isLoadingHistory = $state(true);
 	let error: string | null = $state(null);
@@ -137,17 +136,32 @@
 		}
 	}
 
-	async function handleInviteMobileUser(id: number | null) {
+	async function handleInviteMobileUser(id: number | undefined) {
 		if (!id) return;
 
 		setLoading(true);
 		try {
 			await invoke('invite_member_to_app', { payload: { member_id: id } });
-			toast.success(m.membership_delete_success());
+			toast.success(m.member_invite_success());
 			fetchMemberWithMembership();
 		} catch (e: any) {
-			console.error('Error deleting membership:', e);
-			toast.error(m.membership_delete_fail());
+			console.error('Error on member invite:', e);
+			toast.error(m.member_invite_fail());
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	async function handlePasswordResetRequest(id: number | undefined) {
+		if (!id) return;
+
+		setLoading(true);
+		try {
+			await invoke('reset_member_password', { payload: { member_id: id } });
+			toast.success(m.reset_password_request_success());
+		} catch (e: any) {
+			console.error('Error sending password reset request:', e);
+			toast.error(m.reset_password_request_fail());
 		} finally {
 			setLoading(false);
 		}
@@ -257,13 +271,19 @@
 						</div>
 
 						<div class="w-full space-y-2">
-							<Label class="font-semibold">Mobilna aplikacija</Label>
+							<Label class="font-semibold">{m.mobile_app()}</Label>
 							<div class="flex w-full justify-around gap-5 items-center">
 								<div class="flex items-center space-x-4">
 									<Label class="font-normal">{m.status()}:</Label>
-									<Badge class="h-fit">Aktivna</Badge>
+									<Badge class="h-fit" variant={data?.auth_user_id ? "default" : "outline"}>{data?.auth_user_id ? m.active_app() : m.inactive_app()}</Badge>
 								</div>
-								<Button onclick={() => handleInviteMobileUser(data?.id)}>Posalji poziv</Button>
+								{#if data?.auth_user_id}
+								<Button variant="outline" onclick={() => handlePasswordResetRequest(data?.id)}>{m.reset_password_app()}</Button>
+                {/if}
+                {#if !data?.auth_user_id}
+                  <Button onclick={() => handleInviteMobileUser(data?.id)}>{m.send_invite()}</Button>
+                {/if}
+
 							</div>
 						</div>
 					</div>

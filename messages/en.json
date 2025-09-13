@@ -415,5 +415,15 @@
 	"running_latest_version": "Your application is running the latest version.",
 	"check_again": "Check Again",
 	"is_active": "Active",
-	"id_must_be_digits": "ID must be digits"
+	"id_must_be_digits": "ID must be digits",
+	"member_invite_success": "Member invite sent successfully!",
+	"member_invite_fail": "Failed to send member invite! Check member email and network connection.",
+	"reset_password_request_success": "Password reset email sent successfully!",
+	"reset_password_request_fail": "Failed to send password reset email! Check member email and network connection.",
+  "invite_member": "Invite Member",
+	"active_app": "Active",
+	"inactive_app": "Inactive",
+	"reset_password_app": "Reset password",
+	"send_invite": "Send Invite",
+	"mobile_app": "Mobile App"
 }

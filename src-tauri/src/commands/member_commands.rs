@@ -1,6 +1,6 @@
 use crate::dto::{
     GetMemberByIdPayload, GetMembersPaginatedPayload, InviteMemberPayload, MemberInfo,
-    MemberPayload, MemberWithMembership, PaginatedResponse,
+    MemberPayload, MemberWithMembership, PaginatedResponse, ResetMemberPasswordPayload,
 };
 use crate::error::{ErrorCodes, TranslatableError};
 use crate::sync::trigger_instant_sync;
@@ -313,7 +313,7 @@ pub async fn get_member_by_id_with_membership(
       MemberWithMembership,
       r#"
       SELECT
-          m.id as id, m.card_id, m.short_card_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,
+          m.id as id, m.card_id, m.short_card_id, m.auth_user_id, m.first_name, m.last_name, m.email, m.date_of_birth, m.phone, m.created_at as member_created_at,
           ms.id as membership_id,
           ms.start_date as membership_start_date,
           ms.end_date as membership_end_date,
@@ -594,5 +594,60 @@ pub async fn invite_member_to_app(
     trigger_instant_sync(&app_handle);
 
     tracing::info!("Invited member {} ({}) to mobile app", member.id, email);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn reset_member_password(
+    payload: ResetMemberPasswordPayload,
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> AppResult<()> {
+    let pool = &state.db_pool;
+
+    // Get member details
+    let member =
+        sqlx::query_as::<_, Member>("SELECT * FROM members WHERE id = ? AND is_deleted = FALSE")
+            .bind(payload.member_id)
+            .fetch_one(pool)
+            .await?;
+
+    let email = member.email.ok_or_else(|| {
+        AppError::Validation("Member must have email for the mobile app".to_string())
+    })?;
+
+    member.auth_user_id.ok_or_else(|| {
+        AppError::Validation("Member doesn't have mobile app account!".to_string())
+    })?;
+
+    // Get Supabase settings
+    let settings = state.settings.read().await;
+    let supabase_url = settings
+        .supabase_url
+        .as_ref()
+        .ok_or_else(|| AppError::Config("Supabase URL not configured".to_string()))?;
+    let supabase_key = settings
+        .supabase_key
+        .as_ref() // Service role key needed
+        .ok_or_else(|| AppError::Config("Supabase service role key not configured".to_string()))?;
+    let supabase_jwt = settings
+        .supabase_jwt_secret
+        .as_ref() // Service role key needed
+        .ok_or_else(|| AppError::Config("Supabase jwt secret not configured".to_string()))?;
+
+    // Create Supabase auth client
+    let auth_client = AuthClient::new(supabase_url, supabase_key, supabase_jwt);
+
+    let password_reset_result: Result<(), Error> = auth_client
+        .reset_password_for_email(&email, None)
+        .await;
+    if let Err(e) = &password_reset_result {
+        tracing::error!("Failed to send password reset request email via Supabase: {:?}", e);
+        return Err(AppError::ExternalService(format!(
+            "Failed to send password reset email: {:?}",
+            e
+        )));
+    }
+    tracing::info!("Sent password reset email to member {} ({}) to mobile app", member.id, email);
     Ok(())
 }
