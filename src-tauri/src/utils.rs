@@ -51,7 +51,7 @@ async fn load_last_checked_membership_date(
 
     match check {
         Some(check) => Ok(check.last_check_time),
-        None => Ok(chrono::DateTime::from_timestamp(0, 0).unwrap().naive_utc()),
+        None => Ok(chrono::DateTime::UNIX_EPOCH.naive_utc()),
     }
 }
 
